@@ -1,0 +1,7 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -U Pswm -P 'Pswm@2019' -d AMT_DB -l 20 -W -w 400 -Q \"SET NOCOUNT ON; EXEC dbo.P_UserActivity_Select;\")"
+    ]
+  }
+}
