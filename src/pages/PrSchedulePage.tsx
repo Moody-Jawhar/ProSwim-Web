@@ -161,7 +161,7 @@ export function PrSchedulePage() {
         right={
           <div className="flex gap-2 flex-wrap justify-end">
             {(data?.countsHeader ?? []).filter((c) => n(c.Cnt) > 0).map((c) => (
-              <span key={s(c.Criteria)} className="text-xs font-bold text-red-600 bg-white/90 rounded-lg px-2 py-1">
+              <span key={s(c.Criteria)} className="text-xs font-bold text-red-600 bg-red-50 border border-red-100 rounded-lg px-2 py-1">
                 {n(c.Cnt)} {COUNT_LABELS[s(c.Criteria)] ?? s(c.Criteria)}
               </span>
             ))}

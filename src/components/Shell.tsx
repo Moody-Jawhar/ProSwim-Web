@@ -1,9 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { NavLink, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import {
   Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound,
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
+  Menu, X,
 } from 'lucide-react';
 import { getStoredUser, clearAuth } from '../api/portalApi';
 
@@ -118,6 +119,25 @@ export function Shell() {
     () => groupsContaining(NAV, location.pathname)
   );
 
+  // Under md the sidebar stops being a rail and becomes an off-canvas drawer:
+  // an icon-only rail is the wrong affordance on a phone, so `rail` (the visual
+  // collapse) is suppressed there while `collapsed` keeps the desktop setting.
+  const [isMobile, setIsMobile] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(max-width: 767px)').matches
+  );
+  const [drawerOpen, setDrawerOpen] = useState(false);
+  const rail = collapsed && !isMobile;
+
+  useEffect(() => {
+    const mq = window.matchMedia('(max-width: 767px)');
+    const sync = () => setIsMobile(mq.matches);
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  // Navigating on a phone should dismiss the drawer, not leave it covering the page.
+  useEffect(() => { setDrawerOpen(false); }, [location.pathname]);
+
   function toggleSidebar() {
     setCollapsed((v) => {
       localStorage.setItem('sidebarCollapsed', v ? '0' : '1');
@@ -140,7 +160,7 @@ export function Shell() {
 
   const linkClass = (isActive: boolean, indent = false) =>
     `relative flex items-center py-2.5 text-sm transition-all duration-200 ${
-      collapsed ? 'justify-center px-0 mx-2 rounded-xl' : indent ? 'gap-3 pl-11 pr-4 mx-2 rounded-xl' : 'gap-3 px-4 mx-2 rounded-xl'
+      rail ? 'justify-center px-0 mx-2 rounded-xl' : indent ? 'gap-3 pl-11 pr-4 mx-2 rounded-xl' : 'gap-3 px-4 mx-2 rounded-xl'
     } ${
       isActive
         ? 'bg-white/15 text-white font-semibold shadow-[0_4px_14px_-4px_rgba(0,0,0,0.4)] ring-1 ring-white/15 backdrop-blur-sm'
@@ -152,11 +172,11 @@ export function Shell() {
       return (
         <div
           key={item.to}
-          title={collapsed ? `${item.label} — coming soon` : 'Coming soon'}
-          className={`flex items-center py-2.5 text-sm text-white/30 cursor-not-allowed select-none ${collapsed ? 'justify-center px-0' : 'gap-3 px-5'}`}
+          title={rail ? `${item.label} — coming soon` : 'Coming soon'}
+          className={`flex items-center py-2.5 text-sm text-white/30 cursor-not-allowed select-none ${rail ? 'justify-center px-0' : 'gap-3 px-5'}`}
         >
           <item.icon className="size-4 shrink-0" />
-          {!collapsed && (
+          {!rail && (
             <>
               <span className="whitespace-nowrap">{item.label}</span>
               <span className="ml-auto text-[9px] uppercase tracking-wider bg-white/10 rounded px-1.5 py-0.5">soon</span>
@@ -170,24 +190,57 @@ export function Shell() {
         key={item.to}
         to={item.to}
         end={item.end}
-        title={collapsed ? item.label : undefined}
-        className={({ isActive }) => linkClass(isActive, indent && !collapsed)}
+        title={rail ? item.label : undefined}
+        className={({ isActive }) => linkClass(isActive, indent && !rail)}
       >
         <item.icon className="size-4 shrink-0" />
-        {!collapsed && <span className="whitespace-nowrap">{item.label}</span>}
+        {!rail && <span className="whitespace-nowrap">{item.label}</span>}
       </NavLink>
     );
   }
 
   return (
     <div className="min-h-screen flex">
-      {/* Sidebar — collapses to an icon rail */}
+      {/* Mobile top bar — the only way to reach the nav under md */}
+      <header
+        className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center gap-3 px-4 text-white shadow-md"
+        style={{ background: 'linear-gradient(90deg, #202f4d 0%, #1e5c97 100%)' }}
+      >
+        <button onClick={() => setDrawerOpen(true)} title="Open menu" className="p-1 -ml-1">
+          <Menu className="size-6" />
+        </button>
+        <img src="/ProSwimLogo.png" alt="ProSwim" className="h-6 w-auto bg-white rounded px-1.5 py-0.5" />
+        <span className="text-[10px] tracking-widest uppercase text-white/60">Portal</span>
+      </header>
+
+      {/* Backdrop behind the open drawer */}
+      {drawerOpen && (
+        <div
+          onClick={() => setDrawerOpen(false)}
+          className="md:hidden fixed inset-0 z-40 bg-slate-900/50"
+        />
+      )}
+
+      {/* Sidebar — an icon rail on desktop, an off-canvas drawer under md */}
       <aside
-        className={`${collapsed ? 'w-16' : 'w-60'} shrink-0 text-white flex flex-col transition-[width] duration-200 ease-in-out overflow-hidden`}
+        className={`${rail ? 'w-16' : 'w-60'} shrink-0 text-white flex flex-col transition-transform md:transition-[width] duration-200 ease-in-out overflow-hidden
+          fixed inset-y-0 left-0 z-50 md:static md:z-auto md:translate-x-0
+          ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ background: 'linear-gradient(180deg, #202f4d 0%, #1d3a5f 55%, #1e5c97 130%)' }}
       >
-        <div className={`flex flex-col items-center border-b border-white/10 py-4 ${collapsed ? 'px-1' : 'px-4'}`}>
-          {collapsed ? (
+        {/* Collapse toggle (desktop) / close drawer (mobile) — pinned to the top */}
+        <button
+          onClick={() => (isMobile ? setDrawerOpen(false) : toggleSidebar())}
+          title={isMobile ? 'Close menu' : rail ? 'Expand menu' : 'Collapse menu'}
+          className={`flex items-center pt-3 pb-1 text-white/50 hover:text-white ${rail ? 'justify-center px-0' : 'justify-end px-4'}`}
+        >
+          {isMobile
+            ? <X className="size-5 shrink-0" />
+            : rail ? <PanelLeftOpen className="size-4 shrink-0" /> : <PanelLeftClose className="size-4 shrink-0" />}
+        </button>
+
+        <div className={`flex flex-col items-center border-b border-white/10 pb-4 pt-1 ${rail ? 'px-1' : 'px-4'}`}>
+          {rail ? (
             <div className="w-9 h-9 rounded-xl bg-white flex items-center justify-center shrink-0">
               <Waves className="size-5 text-[#1e5c97]" />
             </div>
@@ -207,7 +260,7 @@ export function Shell() {
             if (!isGroup(entry)) return renderItem(entry);
 
             // When the rail is collapsed, groups flatten to their icon children.
-            if (collapsed) return entry.children.map((c) => renderItem(c));
+            if (rail) return entry.children.map((c) => renderItem(c));
 
             const isOpen = open.has(entry.label);
             const activeInside = entry.children.some((c) => c.to === location.pathname);
@@ -233,18 +286,8 @@ export function Shell() {
           })}
         </nav>
 
-        {/* Collapse toggle */}
-        <button
-          onClick={toggleSidebar}
-          title={collapsed ? 'Expand menu' : 'Collapse menu'}
-          className={`flex items-center py-2.5 text-white/50 hover:text-white hover:bg-white/5 border-t border-white/10 ${collapsed ? 'justify-center px-0' : 'gap-3 px-5'}`}
-        >
-          {collapsed ? <PanelLeftOpen className="size-4 shrink-0" /> : <PanelLeftClose className="size-4 shrink-0" />}
-          {!collapsed && <span className="text-xs whitespace-nowrap">Collapse</span>}
-        </button>
-
-        <div className={`border-t border-white/10 py-4 ${collapsed ? 'px-0 flex flex-col items-center gap-2' : 'px-5'}`}>
-          {!collapsed && (
+        <div className={`border-t border-white/10 py-4 ${rail ? 'px-0 flex flex-col items-center gap-2' : 'px-5'}`}>
+          {!rail && (
             <>
               <p className="text-xs font-semibold truncate">{user?.fullName || 'Signed in'}</p>
               <p className="text-[10px] text-white/50 truncate">{user?.userType || ''}</p>
@@ -253,16 +296,17 @@ export function Shell() {
           <button
             onClick={logout}
             title="Sign out"
-            className={`flex items-center text-xs text-white/60 hover:text-white ${collapsed ? 'justify-center' : 'gap-1.5 mt-2'}`}
+            className={`flex items-center text-xs text-white/60 hover:text-white ${rail ? 'justify-center' : 'gap-1.5 mt-2'}`}
           >
             <LogOut className="size-3.5 shrink-0" />
-            {!collapsed && 'Sign out'}
+            {!rail && 'Sign out'}
           </button>
         </div>
       </aside>
 
-      {/* Main — keyed on the route so every navigation animates in */}
-      <main className="flex-1 min-w-0 overflow-x-hidden">
+      {/* Main — keyed on the route so every navigation animates in.
+          pt-14 clears the fixed mobile top bar. */}
+      <main className="flex-1 min-w-0 overflow-x-hidden pt-14 md:pt-0">
         <div key={location.pathname} className="page-in">
           <Outlet />
         </div>

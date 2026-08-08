@@ -30,6 +30,9 @@ const registrations: ModuleConfig = {
   editBase: '/registrations',
   filters: [
     { param: 'searchFor', label: 'Search student…', type: 'text' },
+    // P_Registration_Select takes no location — the location picker scopes the
+    // semester list, and the semester scopes the rows.
+    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterIds', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
     { param: 'active', label: 'Active', type: 'checkbox', initial: true },
@@ -298,6 +301,8 @@ const sessions: ModuleConfig = {
   idKey: 'SessionId',
   filters: [
     { param: 'searchFor', label: 'Search…', type: 'text' },
+    // As with registrations, P_Classes_Sessions_Select has no location param.
+    { param: 'locationId', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterId', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
     { param: 'day', label: 'Day', type: 'select', options: WEEK_DAYS, width: 'max-w-24' },

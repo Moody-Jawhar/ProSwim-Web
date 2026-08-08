@@ -94,7 +94,8 @@ export function StudentsPage() {
 
   // filter state
   const [search, setSearch] = useState('');
-  const [locationId, setLocationId] = useState(locationLocked ? user!.primaryLocationId! : 0);
+  // Everyone opens scoped to their own location; only locked types can't change it.
+  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
   const [school, setSchool] = useState('');
   const [type, setType] = useState('');
   const [yob, setYob] = useState('');
@@ -221,7 +222,7 @@ export function StudentsPage() {
             {canCreate && (
               <button
                 onClick={() => navigate('/students/new')}
-                className="flex items-center gap-1.5 rounded-lg bg-white text-xs font-semibold text-[#1e5c97] px-3 py-1.5 hover:bg-white/90 transition-colors"
+                className="btn-grad flex items-center gap-1.5 rounded-lg text-xs font-semibold px-3 py-1.5"
               >
                 <Plus className="size-3.5" /> Add New
               </button>
@@ -229,7 +230,7 @@ export function StudentsPage() {
             {user?.canExport && (
               <button
                 onClick={exportCsv}
-                className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-white transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-slate-50 transition-colors"
               >
                 <Download className="size-3.5" /> Export
               </button>

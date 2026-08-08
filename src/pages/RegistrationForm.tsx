@@ -25,10 +25,12 @@ export function RegistrationForm() {
   const [semesters, setSemesters] = useState<Option[]>([]);
   const [levels, setLevels] = useState<Option[]>([]);
   const [classes, setClasses] = useState<Picker[]>([]);
+  const [locations, setLocations] = useState<Option[]>([]);
 
   // form state
   const [studentId, setStudentId] = useState(0);
   const [studentLabel, setStudentLabel] = useState('');
+  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
   const [semesterId, setSemesterId] = useState(0);
   const [levelId, setLevelId] = useState(0);
   const [times, setTimes] = useState(1);
@@ -50,12 +52,42 @@ export function RegistrationForm() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
 
+  // A new form defaults to the location's current semester; an existing one must
+  // keep the semester on the record, until the user actively switches location.
+  const keepSemester = useRef(!isNew);
+
   // Lookups
   useEffect(() => {
-    apiRequest<{ semesters: Option[]; levels: Option[] }>('/api/portal/modules/lookups')
-      .then((lk) => { setSemesters(lk.semesters); setLevels(lk.levels); })
+    apiRequest<{ levels: Option[] }>('/api/portal/modules/lookups')
+      .then((lk) => setLevels(lk.levels))
+      .catch(() => {});
+    apiRequest<{ locations: { locationId: number; locationNickName: string | null }[] }>(
+      '/api/portal/students/lookups'
+    )
+      .then((lk) => setLocations(lk.locations.map((l) => ({ value: l.locationId, label: l.locationNickName ?? `#${l.locationId}` }))))
       .catch(() => {});
   }, []);
+
+  // Location → semester list, defaulting to the semester running right now.
+  useEffect(() => {
+    apiRequest<{ semesters: Row[]; currentSemesterId: number }>(
+      `/api/portal/schedule/semesters?locationId=${locationId}`
+    )
+      .then((r) => {
+        const opts = (r.semesters ?? [])
+          .map((row) => ({ value: n(row.SemesterId ?? row.SemesterID), label: s(row.SemesterName) }))
+          .filter((o) => o.value > 0);
+        setSemesters(opts);
+        if (keepSemester.current) return;
+        setSemesterId(r.currentSemesterId || opts[0]?.value || 0);
+      })
+      .catch(() => {});
+  }, [locationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function changeLocation(id: number) {
+    setLocationId(id);
+    keepSemester.current = false; // re-default onto the new location's current semester
+  }
 
   // Existing registration
   useEffect(() => {
@@ -223,6 +255,14 @@ export function RegistrationForm() {
                   )}
                 </div>
               )}
+            </div>
+
+            <div>
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Location</label>
+              <select value={locationId} onChange={(e) => changeLocation(Number(e.target.value))} className={inputCls}>
+                <option value={0}>All locations</option>
+                {locations.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+              </select>
             </div>
 
             <div>

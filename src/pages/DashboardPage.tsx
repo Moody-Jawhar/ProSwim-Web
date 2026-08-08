@@ -80,7 +80,7 @@ export function DashboardPage() {
         title={`Welcome${user?.fullName ? `, ${user.fullName}` : ''}`}
         subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
         slide={1}
-        right={<img src="/ProSwimLogo.png" alt="" className="h-8 bg-white/90 rounded-lg px-2 py-1 hidden sm:block" />}
+        right={<img src="/ProSwimLogo.png" alt="" className="h-7 w-auto hidden sm:block" />}
       />
 
       {error && (

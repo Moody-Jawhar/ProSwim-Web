@@ -101,7 +101,7 @@ export function CleanupPage() {
         title="Data Cleanup"
         subtitle="Find and merge duplicate free-text values"
         slide={2}
-        right={<Wand2 className="size-6 text-white/90" />}
+        right={<Wand2 className="size-5 text-[#1e5c97]" />}
       />
 
       {/* Field tabs */}

@@ -47,7 +47,8 @@ export function GSchedulePage() {
   const locationLocked = (userType === 'user' || userType === 'guest') && !!user?.primaryLocationId;
 
   const [locations, setLocations] = useState<{ locationId: number; locationNickName: string | null }[]>([]);
-  const [locationId, setLocationId] = useState(locationLocked ? user!.primaryLocationId! : 0);
+  // Everyone opens scoped to their own location; only locked types can't change it.
+  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
   const [semesters, setSemesters] = useState<Row[]>([]);
   const [semesterId, setSemesterId] = useState(0);
   const [search, setSearch] = useState('');
@@ -147,7 +148,7 @@ export function GSchedulePage() {
         slide={3}
         right={
           data ? (
-            <div className="text-sm font-semibold bg-white/90 text-[#1e5c97] rounded-lg px-3 py-1.5">
+            <div className="text-xs font-semibold bg-slate-100 border border-slate-200 text-[#1e5c97] rounded-lg px-3 py-1.5">
               [{distinctClasses} Classes] [
               <span className="text-emerald-600">{data.counts.active} Active</span>
               {' + '}

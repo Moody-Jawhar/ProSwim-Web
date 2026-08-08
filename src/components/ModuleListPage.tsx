@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   Search, Loader2, AlertCircle, ChevronLeft, ChevronRight,
@@ -29,6 +29,10 @@ export interface FilterDef {
   optionsKey?: string;       // key into the lookups map
   initial?: string | number | boolean;
   width?: string;
+  /** false = shown and drives the cascade, but never sent to the API. Needed
+   *  where the endpoint has no such parameter (registrations, sessions): there
+   *  location scopes the semester list, and the semester scopes the rows. */
+  submit?: boolean;
 }
 
 export interface ModuleConfig {
@@ -45,6 +49,16 @@ export interface ModuleConfig {
 }
 
 const PAGE_SIZE = 50;
+
+// Location filters open scoped to the signed-in user's own location rather than
+// to "all locations". Still editable — an explicit `initial` in the config wins.
+const LOCATION_PARAMS = new Set(['locationId', 'locationIds']);
+const SEMESTER_PARAMS = new Set(['semesterId', 'semesterIds']);
+
+// Semester rows come straight off P_Semester_Select, which spells the key both ways.
+function semesterId(r: Row): number {
+  return Number(r.SemesterId ?? r.SemesterID ?? 0);
+}
 
 function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
   if (v == null || v === '') return '—';
@@ -76,7 +90,13 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
   const [lookups, setLookups] = useState<Record<string, FilterOption[]>>({});
   const [values, setValues] = useState<Record<string, string | number | boolean>>(() => {
     const v: Record<string, string | number | boolean> = {};
-    for (const f of config.filters) v[f.param] = f.initial ?? (f.type === 'checkbox' ? false : f.type === 'select' ? 0 : '');
+    for (const f of config.filters) {
+      if (f.initial === undefined && LOCATION_PARAMS.has(f.param) && user?.primaryLocationId) {
+        v[f.param] = user.primaryLocationId;
+        continue;
+      }
+      v[f.param] = f.initial ?? (f.type === 'checkbox' ? false : f.type === 'select' ? 0 : '');
+    }
     return v;
   });
   const [loading, setLoading] = useState(true);
@@ -91,9 +111,42 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
       apiRequest<Record<string, FilterOption[]>>(config.lookups).then(setLookups).catch(() => {});
   }, [config.lookups]);
 
+  // ── Location → semester cascade ───────────────────────────────────────────
+  // When a page filters by both, the semester list is reloaded for the chosen
+  // location and reset to that location's current semester, so the grid always
+  // opens on the semester actually running now.
+  const locationParam = config.filters.find((f) => LOCATION_PARAMS.has(f.param))?.param;
+  const semesterParam = config.filters.find((f) => SEMESTER_PARAMS.has(f.param))?.param;
+  const cascades = !!locationParam && !!semesterParam;
+  const [semOptions, setSemOptions] = useState<FilterOption[] | null>(null);
+
+  // load() reads `values`; the cascade needs the freshest copy without re-firing.
+  const valuesRef = useRef(values);
+  valuesRef.current = values;
+
+  const locValue = locationParam ? values[locationParam] : undefined;
+  useEffect(() => {
+    if (!cascades) return;
+    apiRequest<{ semesters: Row[]; currentSemesterId: number }>(
+      `/api/portal/schedule/semesters?locationId=${Number(locValue) || 0}`
+    )
+      .then((r) => {
+        const opts = (r.semesters ?? [])
+          .map((s) => ({ value: semesterId(s), label: String(s.SemesterName ?? '') }))
+          .filter((o) => o.value > 0);
+        setSemOptions(opts);
+        const sem = r.currentSemesterId || Number(opts[0]?.value) || 0;
+        const next = { ...valuesRef.current, [semesterParam!]: sem };
+        setValues(next);
+        load(next);
+      })
+      .catch(() => setSemOptions(null));
+  }, [locValue, cascades]); // eslint-disable-line react-hooks/exhaustive-deps
+
   function buildQuery(v: Record<string, string | number | boolean>): string {
     const q = new URLSearchParams();
     for (const f of config.filters) {
+      if (f.submit === false) continue;
       const val = v[f.param];
       if (val === '' || val === false || val == null) continue;
       if (f.type === 'select' && Number(val) === 0 && typeof val === 'number') continue;
@@ -111,7 +164,9 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, [config.endpoint]); // eslint-disable-line react-hooks/exhaustive-deps
+  // On cascading pages the semester effect above owns the first load, so we
+  // don't fire a throwaway request against a not-yet-resolved semester.
+  useEffect(() => { if (!cascades) load(); }, [config.endpoint]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sorted = useMemo(() => {
     if (!sortKey) return rows;
@@ -171,7 +226,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
             {canEdit && (
               <button
                 onClick={() => navigate(`${config.editBase}/new`)}
-                className="flex items-center gap-1.5 rounded-lg bg-white text-xs font-semibold text-[#1e5c97] px-3 py-1.5 hover:bg-white/90 transition-colors"
+                className="btn-grad flex items-center gap-1.5 rounded-lg text-xs font-semibold px-3 py-1.5"
               >
                 <Plus className="size-3.5" /> Add New
               </button>
@@ -179,7 +234,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
             {user?.canExport && (
               <button
                 onClick={exportCsv}
-                className="flex items-center gap-1.5 rounded-lg bg-white/90 px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-white transition-colors"
+                className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-slate-50 transition-colors"
               >
                 <Download className="size-3.5" /> Export
               </button>
@@ -224,7 +279,9 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
                 </label>
               );
             case 'select': {
-              const opts = f.options ?? lookups[f.optionsKey || ''] ?? [];
+              const opts =
+                (semOptions && f.param === semesterParam ? semOptions : null) ??
+                f.options ?? lookups[f.optionsKey || ''] ?? [];
               return (
                 <select
                   key={f.param}
