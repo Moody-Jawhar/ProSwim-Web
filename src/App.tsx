@@ -23,8 +23,10 @@ function RequireAuth({ children }: { children: React.ReactNode }) {
 }
 
 export default function App() {
+  // BASE_URL tracks vite's `base`, so routing follows the deploy path
+  // (/V27_WEB/ in production, / in dev) with no second setting to keep in sync.
   return (
-    <BrowserRouter>
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route

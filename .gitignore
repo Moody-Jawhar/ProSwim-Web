@@ -27,6 +27,10 @@ dist-ssr
 .env
 .env.*
 !.env.example
+# Deploy-path settings for the V27_WEB application. VITE_* values are inlined
+# into the client bundle, so these are public by nature — tracked so a server
+# `git pull && npm run build` produces a correctly-pathed build.
+!.env.production
 /test-results
 /playwright-report
 shot.tmp.mjs
