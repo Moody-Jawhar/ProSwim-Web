@@ -75,14 +75,17 @@ const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
     ],
   },
   {
-    title: 'Swimmer Types',
+    // Formerly "Swimmer Types" — one swimmer can be enrolled in several
+    // programs, so the flags read as program enrollment, and the cards above
+    // the form show each active program's schedule/package/attendance.
+    title: 'Programs Enrolled In',
     fields: [
-      { key: 'StudentGroupSwimmer', label: 'Group', type: 'checkbox' },
-      { key: 'StudentPrivateSwimmer', label: 'Private', type: 'checkbox' },
+      { key: 'StudentGroupSwimmer', label: 'Group Training', type: 'checkbox' },
+      { key: 'StudentPrivateSwimmer', label: 'Private Training', type: 'checkbox' },
+      { key: 'StudentEliteSwimmer', label: 'Competitive Team', type: 'checkbox' },
+      { key: 'StudentAquaBabySwimmer', label: 'AquaBaby', type: 'checkbox' },
+      { key: 'StudentAquaGymSwimmer', label: 'AquaGym', type: 'checkbox' },
       { key: 'StudentSchoolSwimmer', label: 'School', type: 'checkbox' },
-      { key: 'StudentAquaBabySwimmer', label: 'Aqua Baby', type: 'checkbox' },
-      { key: 'StudentAquaGymSwimmer', label: 'Aqua Gym', type: 'checkbox' },
-      { key: 'StudentEliteSwimmer', label: 'Elite', type: 'checkbox' },
       { key: 'StudentGiftedSwimmer', label: 'Gifted', type: 'checkbox' },
       { key: 'StudentOthersSwimmer', label: 'Other', type: 'checkbox' },
       { key: 'StudentWaitingList', label: 'Waiting list', type: 'checkbox' },
@@ -392,6 +395,8 @@ export function StudentDetailPage() {
         </div>
       )}
 
+      {!editing && <ProgramsEnrolled studentId={id!} />}
+
       <div className="space-y-4">
         {SECTIONS.map((sec) => (
           <div key={sec.title} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
@@ -426,6 +431,156 @@ export function StudentDetailPage() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Programs Enrolled In ────────────────────────────────────────────────────
+// One card per active program (a swimmer can be in several), each with the
+// enrollment behind it: registrations + attendance for Group Training,
+// packages for Private Training. Flag-only programs render as compact cards.
+
+type Row = Record<string, unknown>;
+
+interface ProgramsData {
+  programs: {
+    groupTraining: boolean;
+    privateTraining: boolean;
+    competitiveTeam: boolean;
+    aquaBaby: boolean;
+    aquaGym: boolean;
+    school: boolean;
+    gifted: boolean;
+    other: boolean;
+  };
+  registrations: Row[];
+  attendance: Row[];
+  packages: Row[];
+}
+
+const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
+const num = (r: Row, k: string) => Number(r[k] ?? 0);
+
+function ProgramsEnrolled({ studentId }: { studentId: string }) {
+  const [data, setData] = useState<ProgramsData | null>(null);
+  const [failed, setFailed] = useState(false);
+
+  useEffect(() => {
+    apiRequest<ProgramsData>(`/api/portal/students/${studentId}/programs`)
+      .then(setData)
+      .catch(() => setFailed(true));
+  }, [studentId]);
+
+  if (failed) return null; // form below still works; cards are an overlay
+  if (!data) {
+    return (
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-4 flex items-center gap-2">
+        <Loader2 className="size-4 text-[#1e5c97] animate-spin" />
+        <p className="text-sm text-slate-400">Loading programs…</p>
+      </div>
+    );
+  }
+
+  const { programs, registrations, attendance, packages } = data;
+  // A program is "active" when its flag is set or real enrollment data exists.
+  const groupActive = programs.groupTraining || registrations.length > 0;
+  const privateActive = programs.privateTraining || packages.length > 0;
+  const flagCards: { label: string; on: boolean; cls: string }[] = [
+    { label: 'Competitive Team', on: programs.competitiveTeam, cls: 'bg-amber-50 border-amber-200 text-amber-800' },
+    { label: 'AquaBaby', on: programs.aquaBaby, cls: 'bg-cyan-50 border-cyan-200 text-cyan-800' },
+    { label: 'AquaGym', on: programs.aquaGym, cls: 'bg-teal-50 border-teal-200 text-teal-800' },
+    { label: 'School', on: programs.school, cls: 'bg-slate-50 border-slate-200 text-slate-700' },
+    { label: 'Gifted', on: programs.gifted, cls: 'bg-pink-50 border-pink-200 text-pink-800' },
+    { label: 'Other', on: programs.other, cls: 'bg-slate-50 border-slate-200 text-slate-700' },
+  ].filter((f) => f.on);
+
+  if (!groupActive && !privateActive && flagCards.length === 0) return null;
+
+  const att = (regId: number) => attendance.find((a) => num(a, 'RegistrationId') === regId);
+
+  return (
+    <div className="mb-4">
+      <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Programs Enrolled In</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {groupActive && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 border-t-4 border-t-[#1e5c97]">
+            <p className="text-sm font-bold text-[#1e5c97] mb-3">Group Training</p>
+            {registrations.length === 0 && (
+              <p className="text-sm text-slate-400">Enrolled — no registrations recorded yet.</p>
+            )}
+            <div className="space-y-3">
+              {registrations.map((reg) => {
+                const regId = num(reg, 'RegistrationId');
+                const classes = [str(reg, 'ClassName1'), str(reg, 'ClassName2'), str(reg, 'ClassName3')]
+                  .filter(Boolean).join(' · ');
+                const a = att(regId);
+                const total = a ? num(a, 'TotalSessions') : 0;
+                const attended = a ? num(a, 'AttendedSessions') : 0;
+                const stopped = reg['RegistrationStudentStopped'] === true;
+                return (
+                  <div key={regId} className="text-sm border-b border-slate-50 last:border-0 pb-2 last:pb-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-slate-800">{str(reg, 'SemesterName') || '—'}</span>
+                      {stopped
+                        ? <span className="text-[11px] font-bold text-red-600 bg-red-50 rounded-full px-2 py-0.5">Stopped</span>
+                        : total > 0 && (
+                          <span className="text-[11px] font-bold text-[#1e5c97] bg-[#e8f0f8] rounded-full px-2 py-0.5">
+                            {attended}/{total} attended{total > 0 ? ` · ${Math.round((attended / total) * 100)}%` : ''}
+                          </span>
+                        )}
+                    </div>
+                    <p className="text-slate-500 mt-0.5">
+                      {classes || 'No classes assigned'}
+                      {str(reg, 'LocationNickName') && <> · {str(reg, 'LocationNickName')}</>}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {privateActive && (
+          <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 border-t-4 border-t-indigo-500">
+            <p className="text-sm font-bold text-indigo-600 mb-3">Private Training</p>
+            {packages.length === 0 && (
+              <p className="text-sm text-slate-400">Enrolled — no packages recorded yet.</p>
+            )}
+            <div className="space-y-3">
+              {packages.map((p) => {
+                const totalSessions = num(p, 'PackageNumberOfSessions');
+                const attended = num(p, 'CountAttended');
+                const closed = p['PackageClosed'] === true;
+                return (
+                  <div key={num(p, 'PackageId')} className="text-sm border-b border-slate-50 last:border-0 pb-2 last:pb-0">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="font-semibold text-slate-800">{str(p, 'PackageName') || `Package #${num(p, 'PackageId')}`}</span>
+                      {closed
+                        ? <span className="text-[11px] font-bold text-slate-500 bg-slate-100 rounded-full px-2 py-0.5">Closed</span>
+                        : totalSessions > 0 && (
+                          <span className="text-[11px] font-bold text-indigo-600 bg-indigo-50 rounded-full px-2 py-0.5">
+                            {attended}/{totalSessions} attended
+                          </span>
+                        )}
+                    </div>
+                    <p className="text-slate-500 mt-0.5">
+                      {[str(p, 'CoachFullName'), str(p, 'LocationNickName'), str(p, 'PackageStatus')]
+                        .filter(Boolean).join(' · ') || '—'}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        )}
+
+        {flagCards.map((f) => (
+          <div key={f.label} className={`rounded-2xl border shadow-soft p-5 border-t-4 ${f.cls}`}>
+            <p className="text-sm font-bold">{f.label}</p>
+            <p className="text-sm opacity-70 mt-1">Enrolled — sessions are tracked under this student's schedule.</p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
