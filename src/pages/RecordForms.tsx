@@ -219,8 +219,8 @@ const student: RecordFormConfig = {
       fields: [
         { key: 'StudentPrimaryLocationId', label: 'Primary location', type: 'select', optionsKey: 'locations' },
         { key: 'StudentStartingDate', label: 'Starting date', type: 'date' },
-        { key: 'StudentGroupSwimmer', label: 'Group', type: 'checkbox' },
-        { key: 'StudentPrivateSwimmer', label: 'Private', type: 'checkbox' },
+        { key: 'StudentGroupSwimmer', label: 'Group Training', type: 'checkbox' },
+        { key: 'StudentPrivateSwimmer', label: 'Private Training', type: 'checkbox' },
         { key: 'StudentSchoolSwimmer', label: 'School', type: 'checkbox' },
         { key: 'StudentActive', label: 'Active', type: 'checkbox' },
       ],
