@@ -4,9 +4,9 @@ import {
   Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound,
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
-  Menu, X,
+  Menu, X, Newspaper, Inbox,
 } from 'lucide-react';
-import { getStoredUser, clearAuth } from '../api/portalApi';
+import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -34,6 +34,8 @@ const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
 const FULL_NAV: NavEntry[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/students', label: 'Students', icon: Users },
+  { to: '/news', label: 'News', icon: Newspaper },
+  { to: '/change-requests', label: 'Requests', icon: Inbox },
   {
     label: 'Group',
     icon: CalendarDays,
@@ -69,6 +71,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/coaches', label: 'Coaches', icon: UserRound },
       { to: '/classes', label: 'Classes', icon: CalendarDays },
       { to: '/semesters', label: 'Semesters', icon: ClipboardCheck },
+      { to: '/competitions', label: 'Competitions', icon: Trophy },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
@@ -127,6 +130,17 @@ export function Shell() {
   );
   const [drawerOpen, setDrawerOpen] = useState(false);
   const rail = collapsed && !isMobile;
+
+  // Pending parent change-requests → badge on the Requests nav item. Refreshed
+  // on navigation so acting on the queue clears the count without a reload.
+  const [pendingRequests, setPendingRequests] = useState(0);
+  const hasRequestsNav = NAV.some((e) => !isGroup(e) && e.to === '/change-requests');
+  useEffect(() => {
+    if (!hasRequestsNav) return;
+    apiRequest<unknown[]>('/api/portal/change-requests?status=Pending')
+      .then((rows) => setPendingRequests(Array.isArray(rows) ? rows.length : 0))
+      .catch(() => {}); // badge is best-effort; the page itself reports errors
+  }, [hasRequestsNav, location.pathname]);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -195,6 +209,15 @@ export function Shell() {
       >
         <item.icon className="size-4 shrink-0" />
         {!rail && <span className="whitespace-nowrap">{item.label}</span>}
+        {item.to === '/change-requests' && pendingRequests > 0 && (
+          rail ? (
+            <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500" />
+          ) : (
+            <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-5 text-center">
+              {pendingRequests}
+            </span>
+          )
+        )}
       </NavLink>
     );
   }

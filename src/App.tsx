@@ -15,6 +15,10 @@ import {
 import { SemesterForm, CoachForm, ClassForm, StudentForm } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { CleanupPage } from './pages/CleanupPage';
+import { NewsAdminPage } from './pages/NewsAdminPage';
+import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
+import { CompPortfolioPage } from './pages/CompPortfolioPage';
+import { CompetitionsPage } from './pages/CompetitionsPage';
 import { getStoredToken } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -40,6 +44,8 @@ export default function App() {
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/new" element={<StudentForm />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
+          <Route path="/students/:id/portfolio" element={<CompPortfolioPage />} />
+          <Route path="/competitions" element={<CompetitionsPage />} />
           <Route path="/schedule" element={<GSchedulePage />} />
           <Route path="/pr-schedule" element={<PrSchedulePage />} />
           <Route path="/registrations" element={<RegistrationsPage />} />
@@ -61,6 +67,8 @@ export default function App() {
           <Route path="/semesters" element={<SemestersPage />} />
           <Route path="/semesters/:id" element={<SemesterForm />} />
           <Route path="/cleanup" element={<CleanupPage />} />
+          <Route path="/news" element={<NewsAdminPage />} />
+          <Route path="/change-requests" element={<ChangeRequestsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 
 // Full proc row, keyed by original column names (PascalCase from SQL).
@@ -50,6 +50,19 @@ const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
       { key: 'StudentEmail2', label: 'Email 2', type: 'text' },
       { key: 'StudentFacebookAccount', label: 'Facebook', type: 'text' },
       { key: 'StudentParentFacebook', label: 'Parent Facebook', type: 'text' },
+    ],
+  },
+  {
+    // Parent-editable via the app's Personal Information screen; staff edit
+    // here. Allergies/medical notes also surface in the red banner up top.
+    title: 'Emergency & Medical',
+    fields: [
+      { key: 'StudentEmergencyContactName', label: 'Emergency contact', type: 'text' },
+      { key: 'StudentEmergencyContactRelation', label: 'Relation', type: 'text' },
+      { key: 'StudentEmergencyContactPhoneCode', label: 'Emergency phone code', type: 'text' },
+      { key: 'StudentEmergencyContactPhone', label: 'Emergency phone', type: 'text' },
+      { key: 'StudentAllergies', label: 'Allergies', type: 'textarea' },
+      { key: 'StudentMedicalNotes', label: 'Medical notes', type: 'textarea' },
     ],
   },
   {
@@ -340,6 +353,14 @@ export function StudentDetailPage() {
           <ArrowLeft className="size-4" /> Back to students
         </Link>
         <div className="flex items-center gap-2">
+          {row.StudentEliteSwimmer === true && !editing && (
+            <Link
+              to={`/students/${id}/portfolio`}
+              className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 text-sm font-semibold text-amber-700 px-4 py-2 hover:bg-amber-100"
+            >
+              <Trophy className="size-4" /> Portfolio
+            </Link>
+          )}
           {editing ? (
             <>
               <button
@@ -395,6 +416,8 @@ export function StudentDetailPage() {
         </div>
       )}
 
+      <MedicalBanner row={row} />
+
       {!editing && <ProgramsEnrolled studentId={id!} />}
 
       <div className="space-y-4">
@@ -431,6 +454,49 @@ export function StudentDetailPage() {
           </button>
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Medical banner ──────────────────────────────────────────────────────────
+// Allergies and medical notes must be impossible to miss for staff, so they
+// get a red banner above the record (visible in both view and edit mode),
+// with the emergency contact right there for when it matters.
+
+function MedicalBanner({ row }: { row: StudentRow }) {
+  const trimmed = (k: string) => String(row[k] ?? '').trim();
+  const allergies = trimmed('StudentAllergies');
+  const medical = trimmed('StudentMedicalNotes');
+  const ecName = trimmed('StudentEmergencyContactName');
+  const ecRelation = trimmed('StudentEmergencyContactRelation');
+  const ecPhone = [trimmed('StudentEmergencyContactPhoneCode'), trimmed('StudentEmergencyContactPhone')]
+    .filter(Boolean).join(' ');
+  if (!allergies && !medical) return null;
+
+  return (
+    <div className="rounded-2xl border-2 border-red-200 bg-red-50 p-4 mb-4">
+      <div className="flex items-start gap-3">
+        <HeartPulse className="size-5 text-red-600 shrink-0 mt-0.5" />
+        <div className="min-w-0">
+          <p className="text-xs font-bold uppercase tracking-widest text-red-600 mb-1">Medical — check before sessions</p>
+          {allergies && (
+            <p className="text-sm text-red-800">
+              <span className="font-bold">Allergies:</span> {allergies}
+            </p>
+          )}
+          {medical && (
+            <p className="text-sm text-red-800">
+              <span className="font-bold">Medical notes:</span> {medical}
+            </p>
+          )}
+          {(ecName || ecPhone) && (
+            <p className="text-sm text-red-700 mt-1.5 flex items-center gap-1.5">
+              <PhoneCall className="size-3.5 shrink-0" />
+              Emergency contact: {ecName || '—'}{ecRelation ? ` (${ecRelation})` : ''}{ecPhone ? ` — ${ecPhone}` : ''}
+            </p>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
