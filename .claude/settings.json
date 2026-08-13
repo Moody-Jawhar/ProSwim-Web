@@ -1,7 +1,15 @@
 {
   "permissions": {
     "allow": [
-      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -U Pswm -P 'Pswm@2019' -d AMT_DB -l 20 -W -w 400 -Q \"SET NOCOUNT ON; EXEC dbo.P_UserActivity_Select;\")"
+      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -U Pswm -P 'Pswm@2019' -d AMT_DB -l 20 -W -w 400 -Q \"SET NOCOUNT ON; EXEC dbo.P_UserActivity_Select;\")",
+      "Bash(cd ~/Library/CloudStorage/Dropbox/__MoeDropBox/_Code/proswim-app && grep -n \"Welcome back\\\\|font-\\\\|serif\\\\|italic\" src/app/pages/SignInPage.tsx | head -8)",
+      "Read(//Users/mohamadjawhar/Library/CloudStorage/Dropbox/__MoeDropBox/_Code/proswim-app/**)",
+      "Bash(cd ~/Library/CloudStorage/Dropbox/__MoeDropBox/_Code/proswim-app && sed -n '55,75p' src/app/pages/SignInPage.tsx)",
+      "Bash(node /private/tmp/claude-501/-Users-mohamadjawhar-Desktop-proswim-web/857a9a4a-bd27-4426-892b-6570ded1b8ac/scratchpad/drive-app.mjs)",
+      "Bash(cd ~/Library/CloudStorage/Dropbox/__MoeDropBox/_Code/proswim-app && npm run build 2>&1 | tail -3)",
+      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -i \"/Users/mohamadjawhar/Library/CloudStorage/Dropbox/__MoeDropBox/ProswimV2026/Projects/AMT/PSWM_API/PSWM_API/sql/FamilyAccounts.sql\")",
+      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -W -w 250 -Q \"SET NOCOUNT ON; EXEC P_Mb_Family_Select 178\")",
+      "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -W -Q \"SET NOCOUNT ON; DECLARE @t TABLE \\(x INT\\); EXEC Mb_Student_Select 178\")"
     ]
   }
 }
