@@ -10,6 +10,9 @@
       "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -i \"/Users/mohamadjawhar/Library/CloudStorage/Dropbox/__MoeDropBox/ProswimV2026/Projects/AMT/PSWM_API/PSWM_API/sql/FamilyAccounts.sql\")",
       "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -W -w 250 -Q \"SET NOCOUNT ON; EXEC P_Mb_Family_Select 178\")",
       "Bash(sqlcmd -S \"92.204.162.94\\\\SQLEXPRESS\" -d AMT_DB -U Pswm -P 'Pswm@2019' -C -W -Q \"SET NOCOUNT ON; DECLARE @t TABLE \\(x INT\\); EXEC Mb_Student_Select 178\")"
+    ],
+    "additionalDirectories": [
+      "/Users/mohamadjawhar/Library/CloudStorage/Dropbox/__MoeDropBox/ProswimV2026/Projects/AMT/PSWM_API/PSWM_API/Controllers"
     ]
   }
 }
