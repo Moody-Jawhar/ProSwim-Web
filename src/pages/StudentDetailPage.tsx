@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy } from 'lucide-react';
-import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useRef } from 'react';
+import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera } from 'lucide-react';
+import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
 
 // Full proc row, keyed by original column names (PascalCase from SQL).
 type StudentRow = Record<string, unknown>;
@@ -392,11 +393,21 @@ export function StudentDetailPage() {
         </div>
       </div>
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-slate-900">{String(row.StudentFullName ?? '')}</h1>
-        <p className="text-sm text-slate-500 mt-0.5">
-          #{String(row.StudentId)} · {String(row.locationNickName ?? '—')} · {String(row.StudentLatestLevelName ?? '—')}
-        </p>
+      <div className="mb-6 flex items-center gap-4">
+        <StudentAvatar
+          studentId={id!}
+          name={String(row.StudentFullName ?? '')}
+          photoUrl={row.StudentPhotoUrl ? String(row.StudentPhotoUrl) : null}
+          canSave={canSave}
+          onUploaded={(url) => setRow((r) => (r ? { ...r, StudentPhotoUrl: url } : r))}
+          onError={setError}
+        />
+        <div>
+          <h1 className="text-2xl font-bold text-slate-900">{String(row.StudentFullName ?? '')}</h1>
+          <p className="text-sm text-slate-500 mt-0.5">
+            #{String(row.StudentId)} · {String(row.locationNickName ?? '—')} · {String(row.StudentLatestLevelName ?? '—')}
+          </p>
+        </div>
       </div>
 
       {error && (
@@ -453,6 +464,67 @@ export function StudentDetailPage() {
             Save changes
           </button>
         </div>
+      )}
+    </div>
+  );
+}
+
+// ─── Profile photo (supervisor-managed) ──────────────────────────────────────
+
+function StudentAvatar({ studentId, name, photoUrl, canSave, onUploaded, onError }: {
+  studentId: string;
+  name: string;
+  photoUrl: string | null;
+  canSave: boolean;
+  onUploaded: (url: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const input = useRef<HTMLInputElement | null>(null);
+  const initials = name.split(' ').filter(Boolean).slice(0, 2).map((p) => p[0]).join('').toUpperCase();
+
+  async function handle(file: File | undefined | null) {
+    if (!file) return;
+    setUploading(true);
+    onError('');
+    try {
+      const res = await apiUpload<{ url: string }>(`/api/portal/students/${studentId}/photo`, file);
+      onUploaded(res.url);
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Photo upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div className="relative shrink-0">
+      <div className="w-16 h-16 rounded-full overflow-hidden bg-[#e8f0f8] flex items-center justify-center border border-slate-200">
+        {uploading ? (
+          <Loader2 className="size-5 text-[#1e5c97] animate-spin" />
+        ) : photoUrl ? (
+          <img src={photoUrl} alt={name} className="w-full h-full object-cover" />
+        ) : (
+          <span className="text-lg font-bold text-[#1e5c97]">{initials || '?'}</span>
+        )}
+      </div>
+      {canSave && (
+        <>
+          <button
+            onClick={() => input.current?.click()}
+            title="Upload profile photo"
+            className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-[#1e5c97] text-white flex items-center justify-center hover:bg-[#17497a] shadow"
+          >
+            <Camera className="size-3.5" />
+          </button>
+          <input
+            ref={input}
+            type="file"
+            accept=".png,.jpg,.jpeg,image/png,image/jpeg"
+            className="hidden"
+            onChange={(e) => { handle(e.target.files?.[0]); e.target.value = ''; }}
+          />
+        </>
       )}
     </div>
   );

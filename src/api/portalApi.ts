@@ -92,6 +92,32 @@ async function apiRequest<T>(
   return res.json() as Promise<T>;
 }
 
+/** Multipart file upload — same auth as apiRequest, but the browser sets the
+ *  Content-Type (multipart boundary) itself. */
+export async function apiUpload<T>(path: string, file: File): Promise<T> {
+  const fd = new FormData();
+  fd.append("file", file);
+  const headers: Record<string, string> = {
+    Accept: "application/json",
+    "X-API-KEY": API_KEY,
+  };
+  const token = getStoredToken();
+  if (token) headers["Authorization"] = `Bearer ${token}`;
+
+  const res = await fetch(`${API_BASE_URL}${path}`, { method: "POST", body: fd, headers });
+  if (!res.ok) {
+    const txt = await res.text().catch(() => "");
+    try {
+      const parsed = JSON.parse(txt);
+      throw new ApiError(parsed.message || `Upload failed (${res.status})`, res.status);
+    } catch (e) {
+      if (e instanceof ApiError) throw e;
+      throw new ApiError(txt || `Upload failed (${res.status})`, res.status);
+    }
+  }
+  return res.json() as Promise<T>;
+}
+
 // --- Auth ---
 
 export interface LoginResponse extends PortalUser {

@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Newspaper } from 'lucide-react';
-import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useEffect, useRef, useState } from 'react';
+import { Loader2, AlertCircle, Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Newspaper, UploadCloud, FileText } from 'lucide-react';
+import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
 
 // Raw rows from /api/portal/news (P_News_SelectAll passthrough).
 interface NewsRow {
@@ -249,11 +249,12 @@ export function NewsAdminPage() {
               <label className="block text-xs font-semibold text-slate-500 mb-1">Body</label>
               <textarea value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} rows={5} className={inputCls} />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-              <div>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Image URL (optional)</label>
-                <input value={form.imageURL} onChange={(e) => setForm((f) => ({ ...f, imageURL: e.target.value }))} className={inputCls} placeholder="https://…" />
-              </div>
+            <MediaDrop
+              value={form.imageURL}
+              onChange={(url) => setForm((f) => ({ ...f, imageURL: url }))}
+              onError={setError}
+            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Audience</label>
                 <select value={form.locationId} onChange={(e) => setForm((f) => ({ ...f, locationId: Number(e.target.value) }))} className={inputCls}>
@@ -383,6 +384,101 @@ export function NewsAdminPage() {
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ─── Media drop zone ─────────────────────────────────────────────────────────
+// Drop (or browse for) a PNG/JPG/PDF; it uploads to the API and the returned
+// URL becomes the article's image/attachment. A URL can still be pasted below.
+
+function MediaDrop({ value, onChange, onError }: {
+  value: string;
+  onChange: (url: string) => void;
+  onError: (msg: string) => void;
+}) {
+  const [uploading, setUploading] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
+  const fileInput = useRef<HTMLInputElement | null>(null);
+  const isPdf = value.toLowerCase().split('?')[0].endsWith('.pdf');
+
+  async function handleFile(file: File | undefined | null) {
+    if (!file) return;
+    const ok = ['image/png', 'image/jpeg', 'application/pdf'].includes(file.type)
+      || /\.(png|jpe?g|pdf)$/i.test(file.name);
+    if (!ok) {
+      onError('Only PNG, JPG or PDF files are allowed.');
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      onError('File is larger than 10 MB.');
+      return;
+    }
+    setUploading(true);
+    onError('');
+    try {
+      const res = await apiUpload<{ url: string }>('/api/portal/news/upload', file);
+      onChange(res.url);
+    } catch (e) {
+      onError(e instanceof Error ? e.message : 'Upload failed.');
+    } finally {
+      setUploading(false);
+    }
+  }
+
+  return (
+    <div>
+      <label className="block text-xs font-semibold text-slate-500 mb-1">Image or PDF (optional)</label>
+      <div
+        onClick={() => !uploading && fileInput.current?.click()}
+        onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+        onDragLeave={() => setDragOver(false)}
+        onDrop={(e) => { e.preventDefault(); setDragOver(false); handleFile(e.dataTransfer.files?.[0]); }}
+        className={`rounded-xl border-2 border-dashed p-4 text-center cursor-pointer transition-colors ${
+          dragOver ? 'border-[#1e5c97] bg-[#e8f0f8]/60' : 'border-slate-200 bg-slate-50/60 hover:border-[#1e5c97]/40'
+        }`}
+      >
+        {uploading ? (
+          <div className="flex items-center justify-center gap-2 py-4 text-sm text-slate-500">
+            <Loader2 className="size-4 animate-spin text-[#1e5c97]" /> Uploading…
+          </div>
+        ) : value ? (
+          <div className="flex items-center justify-center gap-3">
+            {isPdf ? (
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-slate-700 bg-white border border-slate-200 rounded-lg px-3 py-2">
+                <FileText className="size-4 text-red-500" /> PDF attached
+              </span>
+            ) : (
+              <img src={value} alt="preview" className="h-20 rounded-lg object-cover" />
+            )}
+            <button
+              onClick={(e) => { e.stopPropagation(); onChange(''); }}
+              title="Remove"
+              className="text-slate-400 hover:text-red-600 p-1"
+            >
+              <X className="size-4" />
+            </button>
+          </div>
+        ) : (
+          <div className="py-3 text-sm text-slate-500">
+            <UploadCloud className="size-6 text-[#1e5c97] mx-auto mb-1" />
+            Drop a <b>PNG</b>, <b>JPG</b> or <b>PDF</b> here — or click to browse
+          </div>
+        )}
+      </div>
+      <input
+        ref={fileInput}
+        type="file"
+        accept=".png,.jpg,.jpeg,.pdf,image/png,image/jpeg,application/pdf"
+        className="hidden"
+        onChange={(e) => { handleFile(e.target.files?.[0]); e.target.value = ''; }}
+      />
+      <input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="mt-2 w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-xs text-slate-500 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
+        placeholder="…or paste a URL directly"
+      />
     </div>
   );
 }
