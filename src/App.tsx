@@ -19,6 +19,7 @@ import { NewsAdminPage } from './pages/NewsAdminPage';
 import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
 import { CompPortfolioPage } from './pages/CompPortfolioPage';
 import { CompetitionsPage } from './pages/CompetitionsPage';
+import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { getStoredToken } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -69,6 +70,7 @@ export default function App() {
           <Route path="/cleanup" element={<CleanupPage />} />
           <Route path="/news" element={<NewsAdminPage />} />
           <Route path="/change-requests" element={<ChangeRequestsPage />} />
+          <Route path="/announcements" element={<AnnouncementsPage />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
