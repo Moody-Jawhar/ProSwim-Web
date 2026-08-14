@@ -19,6 +19,7 @@ import { NewsAdminPage } from './pages/NewsAdminPage';
 import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
 import { CompPortfolioPage } from './pages/CompPortfolioPage';
 import { CompetitionsPage } from './pages/CompetitionsPage';
+import { CompSwimmersPage } from './pages/CompSwimmersPage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { getStoredToken } from './api/portalApi';
 
@@ -47,6 +48,7 @@ export default function App() {
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/students/:id/portfolio" element={<CompPortfolioPage />} />
           <Route path="/competitions" element={<CompetitionsPage />} />
+          <Route path="/comp-swimmers" element={<CompSwimmersPage />} />
           <Route path="/schedule" element={<GSchedulePage />} />
           <Route path="/pr-schedule" element={<PrSchedulePage />} />
           <Route path="/registrations" element={<RegistrationsPage />} />

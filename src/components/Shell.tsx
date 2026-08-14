@@ -4,7 +4,7 @@ import {
   Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound,
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
-  Menu, X, Newspaper, Inbox, Megaphone,
+  Menu, X, Newspaper, Inbox, Megaphone, Medal,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 
@@ -58,6 +58,14 @@ const FULL_NAV: NavEntry[] = [
     ],
   },
   {
+    label: 'Competitive Team',
+    icon: Trophy,
+    children: [
+      { to: '/comp-swimmers', label: 'Competitive Swimmers', icon: Medal },
+      { to: '/competitions', label: 'Competitions', icon: Trophy },
+    ],
+  },
+  {
     label: 'Extra & Members',
     icon: Layers,
     children: [
@@ -72,7 +80,6 @@ const FULL_NAV: NavEntry[] = [
       { to: '/coaches', label: 'Coaches', icon: UserRound },
       { to: '/classes', label: 'Classes', icon: CalendarDays },
       { to: '/semesters', label: 'Semesters', icon: ClipboardCheck },
-      { to: '/competitions', label: 'Competitions', icon: Trophy },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
