@@ -744,20 +744,43 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
   };
   useEffect(load, [studentId]);
 
-  async function runSearch() {
-    const q = search.trim();
+  async function runSearch(term?: string) {
+    const q = (term ?? search).trim();
     if (q.length < 2) { setResults(null); return; }
     setSearching(true);
     try {
       const rows = await apiRequest<Row[]>(`/api/portal/students?searchFor=${encodeURIComponent(q)}`);
       const linked = new Set((links ?? []).map((l) => num(l, 'SiblingId')));
-      setResults(rows.filter((r) => num(r, 'StudentId') !== Number(studentId) && !linked.has(num(r, 'StudentId'))).slice(0, 8));
+      const ql = q.toLowerCase();
+      const matches = rows
+        .filter((r) => num(r, 'StudentId') !== Number(studentId) && !linked.has(num(r, 'StudentId')))
+        // Best matches first: names that start with the query, then names
+        // containing it, then everything else (the proc also matches phone,
+        // email, notes, school...).
+        .sort((a, b) => {
+          const rank = (r: Row) => {
+            const name = str(r, 'StudentFullName').toLowerCase();
+            if (name.startsWith(ql)) return 0;
+            if (name.includes(ql)) return 1;
+            return 2;
+          };
+          return rank(a) - rank(b) || str(a, 'StudentFullName').localeCompare(str(b, 'StudentFullName'));
+        });
+      setResults(matches.slice(0, 30));
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Search failed.');
     } finally {
       setSearching(false);
     }
   }
+
+  // Live search: fires 350ms after the admin stops typing.
+  useEffect(() => {
+    if (!adding) return;
+    const t = setTimeout(() => { runSearch(search); }, 350);
+    return () => clearTimeout(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, adding]);
 
   async function addSibling(siblingId: number) {
     setBusy(true);
@@ -836,7 +859,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
               className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
               autoFocus
             />
-            <button onClick={runSearch} disabled={searching}
+            <button onClick={() => runSearch()} disabled={searching}
               className="rounded-lg bg-[#1e5c97] text-white text-xs font-semibold px-3 py-1.5 disabled:opacity-50">
               {searching ? 'Searching…' : 'Search'}
             </button>
@@ -846,7 +869,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
             </button>
           </div>
           {results !== null && (
-            <div className="mt-2 divide-y divide-slate-100">
+            <div className="mt-2 divide-y divide-slate-100 max-h-80 overflow-y-auto">
               {results.length === 0 && <p className="text-sm text-slate-400 py-2">No matches.</p>}
               {results.map((r) => (
                 <button
@@ -857,7 +880,9 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
                 >
                   <span className="text-sm text-slate-800">{str(r, 'StudentFullName')}</span>
                   <span className="text-xs text-slate-400">
-                    #{num(r, 'StudentId')} · {str(r, 'LocationNickName') || '—'}
+                    #{num(r, 'StudentId')}
+                    {str(r, 'StudentDateOfBirth') ? ` · b. ${new Date(str(r, 'StudentDateOfBirth')).getFullYear()}` : ''}
+                    {' · '}{str(r, 'LocationNickName') || '—'}
                   </span>
                 </button>
               ))}
