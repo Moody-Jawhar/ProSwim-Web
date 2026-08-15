@@ -753,18 +753,18 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
       const linked = new Set((links ?? []).map((l) => num(l, 'SiblingId')));
       const ql = q.toLowerCase();
       const matches = rows
-        .filter((r) => num(r, 'StudentId') !== Number(studentId) && !linked.has(num(r, 'StudentId')))
+        .filter((r) => num(r, 'studentId') !== Number(studentId) && !linked.has(num(r, 'studentId')))
         // Best matches first: names that start with the query, then names
         // containing it, then everything else (the proc also matches phone,
         // email, notes, school...).
         .sort((a, b) => {
           const rank = (r: Row) => {
-            const name = str(r, 'StudentFullName').toLowerCase();
+            const name = str(r, 'studentFullName').toLowerCase();
             if (name.startsWith(ql)) return 0;
             if (name.includes(ql)) return 1;
             return 2;
           };
-          return rank(a) - rank(b) || str(a, 'StudentFullName').localeCompare(str(b, 'StudentFullName'));
+          return rank(a) - rank(b) || str(a, 'studentFullName').localeCompare(str(b, 'studentFullName'));
         });
       setResults(matches.slice(0, 30));
     } catch (e) {
@@ -873,16 +873,16 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
               {results.length === 0 && <p className="text-sm text-slate-400 py-2">No matches.</p>}
               {results.map((r) => (
                 <button
-                  key={num(r, 'StudentId')}
-                  onClick={() => addSibling(num(r, 'StudentId'))}
+                  key={num(r, 'studentId')}
+                  onClick={() => addSibling(num(r, 'studentId'))}
                   disabled={busy}
                   className="w-full flex items-center justify-between py-2 text-left hover:bg-slate-50 px-1 rounded disabled:opacity-50"
                 >
-                  <span className="text-sm text-slate-800">{str(r, 'StudentFullName')}</span>
+                  <span className="text-sm text-slate-800">{str(r, 'studentFullName')}</span>
                   <span className="text-xs text-slate-400">
-                    #{num(r, 'StudentId')}
-                    {str(r, 'StudentDateOfBirth') ? ` · b. ${new Date(str(r, 'StudentDateOfBirth')).getFullYear()}` : ''}
-                    {' · '}{str(r, 'LocationNickName') || '—'}
+                    #{num(r, 'studentId')}
+                    {str(r, 'studentDateOfBirth') ? ` · b. ${new Date(str(r, 'studentDateOfBirth')).getFullYear()}` : ''}
+                    {' · '}{str(r, 'locationNickName') || '—'}
                   </span>
                 </button>
               ))}
