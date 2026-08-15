@@ -4,7 +4,7 @@ import {
   Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound,
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
-  Menu, X, Newspaper, Inbox, Megaphone, Medal,
+  Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 
@@ -78,6 +78,7 @@ const FULL_NAV: NavEntry[] = [
     icon: Wrench,
     children: [
       { to: '/coaches', label: 'Coaches', icon: UserRound },
+      { to: '/locations', label: 'Locations', icon: MapPin },
       { to: '/classes', label: 'Classes', icon: CalendarDays },
       { to: '/semesters', label: 'Semesters', icon: ClipboardCheck },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },

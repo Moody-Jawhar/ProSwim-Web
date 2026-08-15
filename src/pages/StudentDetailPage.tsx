@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useRef } from 'react';
-import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera } from 'lucide-react';
+import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus } from 'lucide-react';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
 
 // Full proc row, keyed by original column names (PascalCase from SQL).
@@ -431,6 +431,8 @@ export function StudentDetailPage() {
 
       {!editing && <ProgramsEnrolled studentId={id!} />}
 
+      {!editing && <FamilyLinks studentId={id!} canSave={canSave} />}
+
       <div className="space-y-4">
         {SECTIONS.map((sec) => (
           <div key={sec.title} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
@@ -719,6 +721,186 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
           </div>
         ))}
       </div>
+    </div>
+  );
+}
+
+// ─── Family links (manual siblings) ──────────────────────────────────────────
+// Families are staff-made links only — no automatic phone grouping. Links are
+// DIRECTIONAL: linking a sibling from this page makes THIS swimmer the main
+// account — the family signs in with the main's credentials and switches.
+function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boolean }) {
+  const [links, setLinks] = useState<Row[] | null>(null);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const [adding, setAdding] = useState(false);
+  const [search, setSearch] = useState('');
+  const [results, setResults] = useState<Row[] | null>(null);
+  const [searching, setSearching] = useState(false);
+
+  const load = () => {
+    apiRequest<Row[]>(`/api/portal/students/${studentId}/family`).then(setLinks)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Could not load family links.'));
+  };
+  useEffect(load, [studentId]);
+
+  async function runSearch() {
+    const q = search.trim();
+    if (q.length < 2) { setResults(null); return; }
+    setSearching(true);
+    try {
+      const rows = await apiRequest<Row[]>(`/api/portal/students?searchFor=${encodeURIComponent(q)}`);
+      const linked = new Set((links ?? []).map((l) => num(l, 'SiblingId')));
+      setResults(rows.filter((r) => num(r, 'StudentId') !== Number(studentId) && !linked.has(num(r, 'StudentId'))).slice(0, 8));
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Search failed.');
+    } finally {
+      setSearching(false);
+    }
+  }
+
+  async function addSibling(siblingId: number) {
+    setBusy(true);
+    setError('');
+    try {
+      await apiRequest(`/api/portal/students/${studentId}/family`, {
+        method: 'POST',
+        body: JSON.stringify({ siblingId }),
+      });
+      setAdding(false);
+      setSearch('');
+      setResults(null);
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not link the sibling.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeLink(linkId: number) {
+    setBusy(true);
+    setError('');
+    try {
+      await apiRequest(`/api/portal/students/family/${linkId}`, { method: 'DELETE' });
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not remove the link.');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-4">
+      <div className="flex items-center justify-between mb-3">
+        <p className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+          <Users className="size-4" /> Family — Siblings
+        </p>
+        {canSave && !adding && (
+          <button
+            onClick={() => setAdding(true)}
+            className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] text-white text-xs font-semibold px-3 py-1.5 hover:bg-[#174a7c] transition-colors"
+          >
+            <UserPlus className="size-3.5" /> Link sibling
+          </button>
+        )}
+      </div>
+
+      {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+
+      {/* This swimmer sits under someone else's main account */}
+      {(links ?? []).some((l) => num(l, 'IsMainSide') === 0) && (
+        <p className="text-sm text-slate-600 mb-2 bg-slate-50 border border-slate-100 rounded-lg px-3 py-2">
+          Main account:{' '}
+          {(links ?? []).filter((l) => num(l, 'IsMainSide') === 0).map((l, i) => (
+            <span key={num(l, 'LinkId')}>
+              {i > 0 && ', '}
+              <Link to={`/students/${num(l, 'SiblingId')}`} className="font-semibold text-[#1e5c97]">
+                {str(l, 'SiblingFullName')}
+              </Link>
+            </span>
+          ))}
+          {' '}— the family signs in with that swimmer's login.
+        </p>
+      )}
+
+      {adding && (
+        <div className="mb-3 border border-slate-200 rounded-xl p-3">
+          <div className="flex gap-2">
+            <input
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && runSearch()}
+              placeholder="Search swimmer by name…"
+              className="flex-1 rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
+              autoFocus
+            />
+            <button onClick={runSearch} disabled={searching}
+              className="rounded-lg bg-[#1e5c97] text-white text-xs font-semibold px-3 py-1.5 disabled:opacity-50">
+              {searching ? 'Searching…' : 'Search'}
+            </button>
+            <button onClick={() => { setAdding(false); setSearch(''); setResults(null); }}
+              className="rounded-lg border border-slate-200 text-slate-500 text-xs font-semibold px-2 py-1.5">
+              <X className="size-3.5" />
+            </button>
+          </div>
+          {results !== null && (
+            <div className="mt-2 divide-y divide-slate-100">
+              {results.length === 0 && <p className="text-sm text-slate-400 py-2">No matches.</p>}
+              {results.map((r) => (
+                <button
+                  key={num(r, 'StudentId')}
+                  onClick={() => addSibling(num(r, 'StudentId'))}
+                  disabled={busy}
+                  className="w-full flex items-center justify-between py-2 text-left hover:bg-slate-50 px-1 rounded disabled:opacity-50"
+                >
+                  <span className="text-sm text-slate-800">{str(r, 'StudentFullName')}</span>
+                  <span className="text-xs text-slate-400">
+                    #{num(r, 'StudentId')} · {str(r, 'LocationNickName') || '—'}
+                  </span>
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {links === null && !error && <Loader2 className="size-5 animate-spin text-[#1e5c97]" />}
+      {links !== null && links.length === 0 && (
+        <p className="text-sm text-slate-400">
+          No linked siblings — link one to make this swimmer the family's main
+          account (the login the whole family uses).
+        </p>
+      )}
+      {links !== null && links.some((l) => num(l, 'IsMainSide') === 1) && (
+        <div className="flex flex-wrap gap-2">
+          {links.filter((l) => num(l, 'IsMainSide') === 1).map((l) => (
+            <div key={num(l, 'LinkId')}
+              className="flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 pl-1.5 pr-2 py-1">
+              <span className="w-7 h-7 rounded-full overflow-hidden bg-[#1e5c97]/10 flex items-center justify-center shrink-0">
+                {str(l, 'StudentPhotoUrl') ? (
+                  <img src={str(l, 'StudentPhotoUrl')} alt="" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-[10px] font-bold text-[#1e5c97]">
+                    {str(l, 'SiblingFullName').split(/\s+/).map((p) => p[0]).slice(0, 2).join('').toUpperCase()}
+                  </span>
+                )}
+              </span>
+              <Link to={`/students/${num(l, 'SiblingId')}`} className="text-sm font-medium text-slate-800 hover:text-[#1e5c97]">
+                {str(l, 'SiblingFullName')}
+              </Link>
+              {canSave && (
+                <button onClick={() => removeLink(num(l, 'LinkId'))} disabled={busy}
+                  aria-label="Remove link"
+                  className="text-slate-400 hover:text-red-500 disabled:opacity-50">
+                  <X className="size-3.5" />
+                </button>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
