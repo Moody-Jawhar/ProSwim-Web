@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, AlertCircle, Check, X, Phone, Mail, Inbox, MoveRight } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, Phone, Mail, Inbox, MoveRight, CalendarClock } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 
@@ -38,12 +38,40 @@ export function ChangeRequestsPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  const [schedRows, setSchedRows] = useState<Row[] | null>(null);
+
   const load = useCallback(() => {
     setError('');
     apiRequest<Row[]>('/api/portal/change-requests')
       .then(setRows)
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load change requests.'));
+    apiRequest<Row[]>('/api/portal/change-requests/schedule')
+      .then(setSchedRows)
+      .catch(() => setSchedRows([]));
   }, []);
+
+  async function decideSchedule(id: number, approve: boolean) {
+    let note: string | null = null;
+    if (approve) {
+      if (!window.confirm('Approve this schedule change? The session is MOVED to the requested date/time immediately.')) return;
+    } else {
+      note = window.prompt('Reason for declining (the parent sees this):', '');
+      if (note === null) return;
+    }
+    setBusyId(-id);
+    setError('');
+    setNotice('');
+    try {
+      await apiRequest(`/api/portal/change-requests/schedule/${id}/${approve ? 'approve' : 'reject'}`,
+        { method: 'POST', body: JSON.stringify({ note }) });
+      setNotice(approve ? 'Session moved and request approved.' : 'Request declined.');
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Decision failed.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   useEffect(() => { load(); }, [load]);
 
@@ -104,6 +132,60 @@ export function ChangeRequestsPage() {
       {notice && (
         <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4">
           <p className="text-sm text-emerald-700">{notice}</p>
+        </div>
+      )}
+
+      {/* ── Private schedule-change requests ── */}
+      {schedRows && schedRows.length > 0 && (
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+            <CalendarClock className="size-4" /> Schedule Changes — Private Sessions
+          </p>
+          <div className="space-y-3">
+            {schedRows.map((r) => {
+              const id = num(r, 'RequestId');
+              return (
+                <div key={`s${id}`} className="bg-white rounded-2xl border border-violet-100 shadow-soft p-4">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-2 py-0.5 bg-violet-50 text-violet-700">
+                      <CalendarClock className="size-3" /> Session move
+                    </span>
+                    <Link to={`/students/${num(r, 'StudentId')}`} className="font-semibold text-slate-800 hover:text-[#1e5c97] text-sm">
+                      {str(r, 'StudentFullName')}
+                    </Link>
+                    <span className="text-xs text-slate-500">{str(r, 'PackageName')}{str(r, 'CoachFullName') ? ` · ${str(r, 'CoachFullName')}` : ''}</span>
+                    <span className="text-[11px] font-bold rounded-full px-2 py-0.5 bg-amber-50 text-amber-700 border border-amber-200">
+                      {num(r, 'UsedCount')}/2 used
+                    </span>
+                    <span className="text-xs text-slate-400 ml-auto">{fmtDate(str(r, 'CreatedDate'))}</span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2 mt-3 text-sm">
+                    <span className="text-slate-500 line-through decoration-slate-300">
+                      {fmtDate(str(r, 'PrivateSessionDate')).split(',')[0]} {str(r, 'PrivateSessionTime')}
+                    </span>
+                    <MoveRight className="size-4 text-slate-300 shrink-0" />
+                    <span className="font-semibold text-slate-900">
+                      {r.RequestedNewDate ? fmtDate(str(r, 'RequestedNewDate')).split(',')[0] : '(same day)'} {str(r, 'RequestedNewTime')}
+                    </span>
+                  </div>
+                  {str(r, 'Reason') && <p className="text-xs text-slate-500 mt-1.5">“{str(r, 'Reason')}”</p>}
+                  {canDecide && (
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => decideSchedule(id, true)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold px-4 py-1.5 hover:bg-emerald-700 disabled:opacity-60">
+                        {busyId === -id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                        Approve &amp; move session
+                      </button>
+                      <button onClick={() => decideSchedule(id, false)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl border border-red-200 bg-white text-red-600 text-sm font-semibold px-4 py-1.5 hover:bg-red-50 disabled:opacity-60">
+                        <X className="size-4" /> Decline
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
