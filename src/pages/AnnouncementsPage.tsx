@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Loader2, AlertCircle, Megaphone, Users, Search, X, Send } from 'lucide-react';
+import { Loader2, AlertCircle, Megaphone, Users, Search, X, Send, Trash2 } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 
@@ -35,6 +35,28 @@ export function AnnouncementsPage() {
   const [results, setResults] = useState<Picker[]>([]);
   const searchTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  const [sent, setSent] = useState<Record<string, unknown>[] | null>(null);
+  const [removingKey, setRemovingKey] = useState<string | null>(null);
+
+  const loadSent = () =>
+    apiRequest<Record<string, unknown>[]>('/api/portal/notify/sent')
+      .then(setSent)
+      .catch(() => setSent([]));
+
+  async function removeSent(type: string, desc: string) {
+    if (!window.confirm('Remove this announcement from every parent\'s in-app inbox? Already-delivered phone notifications cannot be recalled.')) return;
+    setRemovingKey(type + desc);
+    try {
+      await apiRequest('/api/portal/notify/sent/delete', {
+        method: 'POST',
+        body: JSON.stringify({ type, desc }),
+      });
+      loadSent();
+    } catch { /* the list simply stays */ } finally {
+      setRemovingKey(null);
+    }
+  }
+
   const [preview, setPreview] = useState<PreviewResult | null>(null);
   const [previewing, setPreviewing] = useState(false);
   const [sending, setSending] = useState(false);
@@ -42,6 +64,7 @@ export function AnnouncementsPage() {
   const [notice, setNotice] = useState('');
 
   useEffect(() => {
+    loadSent();
     apiRequest<Lookups>('/api/portal/students/lookups')
       .then((lk) => setLocations(lk.locations ?? []))
       .catch(() => {});
@@ -230,6 +253,42 @@ export function AnnouncementsPage() {
           )}
         </div>
       </div>
+
+      {/* Sent announcements — with removal */}
+      {sent && sent.length > 0 && (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-4 mb-4">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Sent announcements (last 90 days)</p>
+          <div className="divide-y divide-slate-100">
+            {sent.map((r, i) => {
+              const type = String(r.Type ?? '');
+              const desc = String(r.Desc ?? '');
+              const when = r.SentDate ? new Date(String(r.SentDate)).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+              const key = type + desc;
+              return (
+                <div key={i} className="py-2.5 flex items-start gap-3">
+                  <span className={`shrink-0 text-[11px] font-bold rounded-full px-2 py-0.5 mt-0.5 ${
+                    type === 'Urgent' ? 'bg-red-50 text-red-600' : 'bg-[#e8f0f8] text-[#1e5c97]'
+                  }`}>{type}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm text-slate-800" style={{ overflowWrap: 'anywhere' }}>{desc}</p>
+                    <p className="text-xs text-slate-400 mt-0.5">{when} · {Number(r.Recipients ?? 0)} recipient(s)</p>
+                  </div>
+                  {canSend && (
+                    <button
+                      onClick={() => removeSent(type, desc)}
+                      disabled={removingKey !== null}
+                      className="shrink-0 flex items-center gap-1 rounded-lg border border-red-200 text-red-600 text-xs font-semibold px-2.5 py-1.5 hover:bg-red-50 disabled:opacity-50"
+                    >
+                      {removingKey === key ? <Loader2 className="size-3.5 animate-spin" /> : <Trash2 className="size-3.5" />}
+                      Remove
+                    </button>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {canSend && (
         <button

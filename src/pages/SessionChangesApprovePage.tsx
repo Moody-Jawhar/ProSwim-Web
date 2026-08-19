@@ -35,6 +35,7 @@ export function SessionChangesApprovePage() {
   const [approveNote, setApproveNote] = useState('');
 
   const [freezeRows, setFreezeRows] = useState<Row[] | null>(null);
+  const [absRows, setAbsRows] = useState<Row[] | null>(null);
 
   const load = useCallback(() => {
     setError('');
@@ -44,7 +45,33 @@ export function SessionChangesApprovePage() {
     apiRequest<Row[]>('/api/portal/change-requests/freezes')
       .then(setFreezeRows)
       .catch(() => setFreezeRows([]));
+    apiRequest<Row[]>('/api/portal/change-requests/absences')
+      .then(setAbsRows)
+      .catch(() => setAbsRows([]));
   }, []);
+
+  async function decideAbsence(id: number, approve: boolean) {
+    let note: string | null = null;
+    if (approve) {
+      if (!window.confirm('Approve a makeup for this absence? The session itself is never changed automatically — arrange the makeup with the coach.')) return;
+    } else {
+      note = window.prompt('Note for the parent (absence stays recorded, no makeup):', '');
+      if (note === null) return;
+    }
+    setBusyId(2000000 + id);
+    setError('');
+    setNotice('');
+    try {
+      await apiRequest(`/api/portal/change-requests/absences/${id}/${approve ? 'approve' : 'reject'}`,
+        { method: 'POST', body: JSON.stringify({ note }) });
+      setNotice(approve ? 'Makeup approved — arrange it with the coach.' : 'Absence recorded without a makeup.');
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Decision failed.');
+    } finally {
+      setBusyId(null);
+    }
+  }
 
   async function decideFreeze(id: number, approve: boolean) {
     let note: string | null = null;
@@ -135,6 +162,53 @@ export function SessionChangesApprovePage() {
         </div>
       )}
 
+      {/* ── Group absence notices ── */}
+      {absRows && absRows.length > 0 && (
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+            <CalendarX className="size-4" /> Absence Notices — Group Sessions
+          </p>
+          <div className="space-y-3">
+            {absRows.map((r) => {
+              const id = num(r, 'NoticeId');
+              return (
+                <div key={`a${id}`} className="bg-white rounded-2xl border border-amber-100 shadow-soft p-4">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-2 py-0.5 bg-amber-50 text-amber-700">
+                      <CalendarX className="size-3" /> Absence notice
+                    </span>
+                    <Link to={`/students/${num(r, 'StudentId')}`} className="font-semibold text-slate-800 hover:text-[#1e5c97] text-sm">
+                      {str(r, 'StudentFullName')}
+                    </Link>
+                    <span className="text-xs text-slate-500">
+                      {str(r, 'ClassDay')}{str(r, 'ClassTimeFrom') ? ` ${str(r, 'ClassTimeFrom')}` : ''}{str(r, 'LocationNickName') ? ` · ${str(r, 'LocationNickName')}` : ''}
+                    </span>
+                    <span className="text-xs text-slate-400 ml-auto">{fmtDate(str(r, 'CreatedDate'))}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
+                    Session: {fmtDate(str(r, 'SessionDate')).split(',')[0]}
+                  </p>
+                  {str(r, 'Reason') && <p className="text-xs text-slate-500 mt-1.5">“{str(r, 'Reason')}”</p>}
+                  {canDecide && (
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => decideAbsence(id, true)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl bg-emerald-600 text-white text-sm font-semibold px-4 py-1.5 hover:bg-emerald-700 disabled:opacity-60">
+                        {busyId === 2000000 + id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                        Approve makeup
+                      </button>
+                      <button onClick={() => decideAbsence(id, false)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold px-4 py-1.5 hover:bg-slate-50 disabled:opacity-60">
+                        <X className="size-4" /> Record only
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
       {/* ── Package freeze requests ── */}
       {freezeRows && freezeRows.length > 0 && (
         <div className="mb-6">
@@ -190,7 +264,7 @@ export function SessionChangesApprovePage() {
       ) : rows.length === 0 ? (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-10 text-center">
           <Inbox className="size-8 text-slate-300 mx-auto mb-2" />
-          <p className="text-sm text-slate-500">No pending cancellation requests — all caught up.</p>
+          <p className="text-sm text-slate-500">No pending cancellation requests</p>
         </div>
       ) : (
         <div className="space-y-3">
