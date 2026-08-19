@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, AlertCircle, Check, X, Inbox, CalendarX } from 'lucide-react';
+import { Loader2, AlertCircle, Check, X, Inbox, CalendarX, Snowflake } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 
@@ -34,12 +34,40 @@ export function SessionChangesApprovePage() {
   const [autoAccept, setAutoAccept] = useState(false);
   const [approveNote, setApproveNote] = useState('');
 
+  const [freezeRows, setFreezeRows] = useState<Row[] | null>(null);
+
   const load = useCallback(() => {
     setError('');
     apiRequest<Row[]>('/api/portal/change-requests/cancellations')
       .then(setRows)
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load requests.'));
+    apiRequest<Row[]>('/api/portal/change-requests/freezes')
+      .then(setFreezeRows)
+      .catch(() => setFreezeRows([]));
   }, []);
+
+  async function decideFreeze(id: number, approve: boolean) {
+    let note: string | null = null;
+    if (approve) {
+      if (!window.confirm("Approve this freeze? Sessions inside the range are marked 'Freeze Package'.")) return;
+    } else {
+      note = window.prompt('Reason for declining (the parent sees this). The package continues — the spot and coach time stay reserved:', '');
+      if (note === null) return;
+    }
+    setBusyId(1000000 + id);
+    setError('');
+    setNotice('');
+    try {
+      await apiRequest(`/api/portal/change-requests/freezes/${id}/${approve ? 'approve' : 'reject'}`,
+        { method: 'POST', body: JSON.stringify({ note }) });
+      setNotice(approve ? 'Freeze approved — sessions in the range are marked Freeze Package.' : 'Freeze declined — the package continues.');
+      load();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Decision failed.');
+    } finally {
+      setBusyId(null);
+    }
+  }
   useEffect(() => { load(); }, [load]);
 
   async function confirmApprove(id: number) {
@@ -104,6 +132,54 @@ export function SessionChangesApprovePage() {
       {notice && (
         <div className="bg-emerald-50 border border-emerald-100 rounded-xl p-3 mb-4">
           <p className="text-sm text-emerald-700">{notice}</p>
+        </div>
+      )}
+
+      {/* ── Package freeze requests ── */}
+      {freezeRows && freezeRows.length > 0 && (
+        <div className="mb-6">
+          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
+            <Snowflake className="size-4" /> Freeze Requests — Private Packages
+          </p>
+          <div className="space-y-3">
+            {freezeRows.map((r) => {
+              const id = num(r, 'RequestId');
+              return (
+                <div key={`f${id}`} className="bg-white rounded-2xl border border-sky-100 shadow-soft p-4">
+                  <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+                    <span className="inline-flex items-center gap-1.5 text-[11px] font-bold rounded-full px-2 py-0.5 bg-sky-50 text-sky-700">
+                      <Snowflake className="size-3" /> Freeze package
+                    </span>
+                    <Link to={`/students/${num(r, 'StudentId')}`} className="font-semibold text-slate-800 hover:text-[#1e5c97] text-sm">
+                      {str(r, 'StudentFullName')}
+                    </Link>
+                    <span className="text-xs text-slate-500">{str(r, 'PackageName')}{str(r, 'CoachFullName') ? ` · ${str(r, 'CoachFullName')}` : ''}</span>
+                    <span className="text-[11px] font-bold rounded-full px-2 py-0.5 bg-sky-50 text-sky-700 border border-sky-200">
+                      {num(r, 'SessionsInRange')} session{num(r, 'SessionsInRange') === 1 ? '' : 's'} in range
+                    </span>
+                    <span className="text-xs text-slate-400 ml-auto">{fmtDate(str(r, 'CreatedDate'))}</span>
+                  </div>
+                  <p className="mt-3 text-sm font-semibold text-slate-900">
+                    {fmtDate(str(r, 'FreezeFrom')).split(',')[0]} → {fmtDate(str(r, 'FreezeTo')).split(',')[0]}
+                  </p>
+                  {str(r, 'Reason') && <p className="text-xs text-slate-500 mt-1.5">“{str(r, 'Reason')}”</p>}
+                  {canDecide && (
+                    <div className="flex gap-2 mt-3">
+                      <button onClick={() => decideFreeze(id, true)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl bg-sky-600 text-white text-sm font-semibold px-4 py-1.5 hover:bg-sky-700 disabled:opacity-60">
+                        {busyId === 1000000 + id ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />}
+                        Approve freeze
+                      </button>
+                      <button onClick={() => decideFreeze(id, false)} disabled={busyId !== null}
+                        className="flex items-center gap-1.5 rounded-xl border border-slate-200 bg-white text-slate-600 text-sm font-semibold px-4 py-1.5 hover:bg-slate-50 disabled:opacity-60">
+                        <X className="size-4" /> Decline (package continues)
+                      </button>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
         </div>
       )}
 
