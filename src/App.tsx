@@ -21,6 +21,8 @@ import { CompPortfolioPage } from './pages/CompPortfolioPage';
 import { CompetitionsPage } from './pages/CompetitionsPage';
 import { CompSwimmersPage } from './pages/CompSwimmersPage';
 import { LocationsAdminPage } from './pages/LocationsAdminPage';
+import { SessionChangesManualPage } from './pages/SessionChangesManualPage';
+import { SessionChangesApprovePage } from './pages/SessionChangesApprovePage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { getStoredToken } from './api/portalApi';
 
@@ -51,6 +53,8 @@ export default function App() {
           <Route path="/competitions" element={<CompetitionsPage />} />
           <Route path="/comp-swimmers" element={<CompSwimmersPage />} />
           <Route path="/locations" element={<LocationsAdminPage />} />
+          <Route path="/session-changes/manual" element={<SessionChangesManualPage />} />
+          <Route path="/session-changes/approve" element={<SessionChangesApprovePage />} />
           <Route path="/schedule" element={<GSchedulePage />} />
           <Route path="/pr-schedule" element={<PrSchedulePage />} />
           <Route path="/registrations" element={<RegistrationsPage />} />

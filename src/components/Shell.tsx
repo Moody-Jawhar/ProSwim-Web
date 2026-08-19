@@ -4,7 +4,7 @@ import {
   Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound,
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
-  Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin,
+  Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 
@@ -36,6 +36,14 @@ const FULL_NAV: NavEntry[] = [
   { to: '/students', label: 'Students', icon: Users },
   { to: '/news', label: 'News', icon: Newspaper },
   { to: '/change-requests', label: 'Requests', icon: Inbox },
+  {
+    label: 'Session Changes',
+    icon: CalendarX,
+    children: [
+      { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
+      { to: '/session-changes/approve', label: 'Approve Requests', icon: ClipboardCheck },
+    ],
+  },
   { to: '/announcements', label: 'Announce', icon: Megaphone },
   {
     label: 'Group',
