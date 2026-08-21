@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Search, AlertTriangle, OctagonX, Phone, Cake, StickyNote } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Loader2, AlertCircle, Search, AlertTriangle, OctagonX, Phone, Cake, StickyNote, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 
@@ -74,6 +75,29 @@ export function GSchedulePage() {
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load semesters.'));
   }, [locationId]);
+
+  const LEGACY = 'https://admin.proswim-lb.com/ASPXPages';
+  const [shownPhones, setShownPhones] = useState<Set<string>>(new Set());
+  const togglePhone = (key: string) =>
+    setShownPhones((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key); else next.add(key);
+      return next;
+    });
+
+  async function editRemark(studentId: number, current: string) {
+    const remark = window.prompt('Remark for this student (empty clears it):', current);
+    if (remark === null) return;
+    try {
+      await apiRequest('/api/portal/schedule/remark', {
+        method: 'POST',
+        body: JSON.stringify({ remarkType: 'Student', remarkTypeId: studentId, remark }),
+      });
+      load(semesterId, search);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save the remark.');
+    }
+  }
 
   const load = useCallback((semId: number, q: string) => {
     if (!semId) return;
@@ -282,13 +306,33 @@ export function GSchedulePage() {
                                         : 'bg-emerald-500 border-emerald-700'
                                     }`}
                                   />
-                                  <span className="truncate max-w-[120px]">{s(r.StudentName)}</span>
+                                  {/* Name -> the registration record */}
+                                  <Link
+                                    to={`/registrations/${n(r.RegistrationId)}`}
+                                    className="truncate max-w-[120px] hover:underline hover:text-[#1e5c97]"
+                                    title="Open registration"
+                                  >
+                                    {s(r.StudentName)}
+                                  </Link>
+                                  {/* Due -> legacy add-payment popup, like the old portal */}
                                   {n(r.DuePercent) > 0 && (
-                                    <span className="text-red-600 font-semibold">Due {n(r.DuePercent)}%</span>
+                                    <a
+                                      href={`${LEGACY}/PaymentsIndividual.aspx?StudentId=${n(r.studentid)}&SemesterID=${semesterId}`}
+                                      target="_blank" rel="noreferrer"
+                                      title={`Add payment${r.DueAmount != null ? ` — due ${s(r.DueAmount)}` : ''}`}
+                                      className="text-red-600 font-semibold hover:underline"
+                                    >
+                                      Due {n(r.DuePercent)}%
+                                    </a>
                                   )}
                                   {s(r.Contact) && (
-                                    <span title={s(r.Contact).replace(/,/g, ' ')}>
-                                      <Phone className="size-3 text-slate-500" />
+                                    <button type="button" onClick={() => togglePhone(`${n(r.studentid)}`)} title="Show phone">
+                                      <Phone className="size-3 text-slate-500 hover:text-[#1e5c97]" />
+                                    </button>
+                                  )}
+                                  {s(r.Contact) && shownPhones.has(`${n(r.studentid)}`) && (
+                                    <span className="text-[10px] font-semibold text-[#1e5c97] bg-[#e8f0f8] rounded px-1">
+                                      {s(r.Contact).replace(/,/g, ' ')}
                                     </span>
                                   )}
                                   {isBirthdayNear(r.DOB) && (
@@ -296,11 +340,13 @@ export function GSchedulePage() {
                                       <Cake className="size-3 text-pink-500" />
                                     </span>
                                   )}
-                                  {s(r.StudentRemark) && (
-                                    <span title={s(r.StudentRemark)}>
-                                      <StickyNote className="size-3 text-amber-600" />
-                                    </span>
-                                  )}
+                                  {/* Remark: view + edit (empty state shows an add icon) */}
+                                  <button type="button" onClick={() => editRemark(n(r.studentid), s(r.StudentRemark))}
+                                    title={s(r.StudentRemark) || 'Add remark'}>
+                                    {s(r.StudentRemark)
+                                      ? <StickyNote className="size-3 text-amber-600" />
+                                      : <MessageSquarePlus className="size-3 text-slate-300 hover:text-amber-600" />}
+                                  </button>
                                 </div>
                               ))}
                             </div>

@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Pause, StickyNote } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Pause, StickyNote, Phone, CreditCard, Package, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 
@@ -147,6 +148,41 @@ export function PrSchedulePage() {
     return hit ? s(hit.Remark) : '';
   }
 
+  const LEGACY = 'https://admin.proswim-lb.com/ASPXPages';
+  const [phones, setPhones] = useState<Record<number, string>>({});
+
+  // Phone numbers aren't in the schedule proc — fetched per student on tap.
+  async function showPhone(studentId: number) {
+    if (phones[studentId]) {
+      setPhones((prev) => { const next = { ...prev }; delete next[studentId]; return next; });
+      return;
+    }
+    try {
+      const st = await apiRequest<Record<string, unknown>>(`/api/portal/students/${studentId}`);
+      const nums = [
+        [st.StudentPhoneNumberCode1, st.StudentPhoneNumber1].filter(Boolean).join(' '),
+        [st.StudentPhoneNumberCode2, st.StudentPhoneNumber2].filter(Boolean).join(' '),
+      ].filter((x) => x.trim().length > 0).join(' / ');
+      setPhones((prev) => ({ ...prev, [studentId]: nums || '—' }));
+    } catch {
+      setPhones((prev) => ({ ...prev, [studentId]: '—' }));
+    }
+  }
+
+  async function editRemark(studentId: number) {
+    const remark = window.prompt('Remark for this student (empty clears it):', '');
+    if (remark === null) return;
+    try {
+      await apiRequest('/api/portal/schedule/remark', {
+        method: 'POST',
+        body: JSON.stringify({ remarkType: 'Student', remarkTypeId: studentId, remark }),
+      });
+      load(dateFrom, dateTo);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not save the remark.');
+    }
+  }
+
   const todayISO = fmtISO(new Date());
   const selectCls =
     'rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
@@ -264,6 +300,10 @@ export function PrSchedulePage() {
                     coachRows={coachRows}
                     todayISO={todayISO}
                     timeRemark={timeRemark}
+                    legacy={LEGACY}
+                    phones={phones}
+                    onPhone={showPhone}
+                    onRemark={editRemark}
                   />
                 );
               })}
@@ -288,7 +328,7 @@ export function PrSchedulePage() {
   );
 }
 
-function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, todayISO, timeRemark }: {
+function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, todayISO, timeRemark, legacy, phones, onPhone, onRemark }: {
   coach: { name: string; id: number; remark: string };
   total: number;
   remarksOnly: number;
@@ -297,6 +337,10 @@ function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, today
   coachRows: Row[];
   todayISO: string;
   timeRemark: (coachId: number, dateStr: string, time: string) => string;
+  legacy: string;
+  phones: Record<number, string>;
+  onPhone: (studentId: number) => void;
+  onRemark: (studentId: number) => void;
 }) {
   return (
     <>
@@ -354,14 +398,14 @@ function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, today
                 {free && remark && <div className="p-1 text-[10px] text-slate-600">{remark}</div>}
                 {real.map((r, i) => (
                   <div key={i} className="rounded p-1 mb-0.5" style={{ ...boxStyle(r), ...boxBorder(r) }}>
-                    <a
-                      href={`http://www.proswim-lb.com/student.aspx?StudentId=${n(r.Std1ID)}`}
-                      target="_blank" rel="noreferrer"
+                    <Link
+                      to={`/students/${n(r.Std1ID)}`}
+                      title="Open student page"
                       className="font-bold text-[12px] uppercase hover:underline"
                       style={{ color: n(r.DuePercent) > 0 ? '#dc2626' : '#000' }}
                     >
                       {s(r.STD1)}
-                    </a>
+                    </Link>
                     <div className="flex items-center gap-1.5 mt-0.5">
                       <span
                         title={r.PrivateSessionAttended === true ? 'Attended' : 'Not attended'}
@@ -387,6 +431,28 @@ function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, today
                       )}
                       {s(r.PackageFollowUp) && (
                         <span className="text-[9px] font-semibold bg-white/60 rounded px-1">{s(r.PackageFollowUp)}</span>
+                      )}
+                    </div>
+                    {/* Actions: package, add payment (legacy popups), remark, phone */}
+                    <div className="flex items-center gap-1.5 mt-1">
+                      <a href={`${legacy}/PrivatePackagesIndividual.aspx?PackageID=${n(r.PackageId)}`}
+                        target="_blank" rel="noreferrer" title="Open package">
+                        <Package className="size-3 text-slate-600 hover:text-[#1e5c97]" />
+                      </a>
+                      <a href={`${legacy}/PrivatePaymentsIndividual.aspx?PackageID=${n(r.PackageId)}`}
+                        target="_blank" rel="noreferrer" title="Add payment">
+                        <CreditCard className={`size-3 ${n(r.DuePercent) > 0 ? 'text-red-600' : 'text-slate-600'} hover:text-[#1e5c97]`} />
+                      </a>
+                      <button type="button" onClick={() => onRemark(n(r.Std1ID))} title="Add remark">
+                        <MessageSquarePlus className="size-3 text-slate-600 hover:text-amber-600" />
+                      </button>
+                      <button type="button" onClick={() => onPhone(n(r.Std1ID))} title="Show phone">
+                        <Phone className="size-3 text-slate-600 hover:text-[#1e5c97]" />
+                      </button>
+                      {phones[n(r.Std1ID)] && (
+                        <span className="text-[9px] font-semibold text-[#1e5c97] bg-white/70 rounded px-1">
+                          {phones[n(r.Std1ID)]}
+                        </span>
                       )}
                     </div>
                   </div>
