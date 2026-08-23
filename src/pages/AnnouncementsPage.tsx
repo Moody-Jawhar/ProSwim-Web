@@ -107,7 +107,7 @@ export function AnnouncementsPage() {
     setError('');
     setNotice('');
     try {
-      const res = await apiRequest<{ recipients: number; message: string }>(
+      const res = await apiRequest<{ recipients: number; message: string; pushWarning?: string | null }>(
         '/api/portal/notify/announce',
         {
           method: 'POST',
@@ -122,7 +122,7 @@ export function AnnouncementsPage() {
           }),
         },
       );
-      setNotice(res.message);
+      setNotice(res.pushWarning ? `${res.message} ⚠️ ${res.pushWarning}` : res.message);
       setTitle('');
       setBody('');
       setUrgent(false);
