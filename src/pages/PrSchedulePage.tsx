@@ -148,7 +148,6 @@ export function PrSchedulePage() {
     return hit ? s(hit.Remark) : '';
   }
 
-  const LEGACY = 'https://admin.proswim-lb.com/ASPXPages';
   const [phones, setPhones] = useState<Record<number, string>>({});
 
   // Phone numbers aren't in the schedule proc — fetched per student on tap.
@@ -300,7 +299,6 @@ export function PrSchedulePage() {
                     coachRows={coachRows}
                     todayISO={todayISO}
                     timeRemark={timeRemark}
-                    legacy={LEGACY}
                     phones={phones}
                     onPhone={showPhone}
                     onRemark={editRemark}
@@ -328,7 +326,7 @@ export function PrSchedulePage() {
   );
 }
 
-function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, todayISO, timeRemark, legacy, phones, onPhone, onRemark }: {
+function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, todayISO, timeRemark, phones, onPhone, onRemark }: {
   coach: { name: string; id: number; remark: string };
   total: number;
   remarksOnly: number;
@@ -337,7 +335,6 @@ function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, today
   coachRows: Row[];
   todayISO: string;
   timeRemark: (coachId: number, dateStr: string, time: string) => string;
-  legacy: string;
   phones: Record<number, string>;
   onPhone: (studentId: number) => void;
   onRemark: (studentId: number) => void;
@@ -433,16 +430,14 @@ function FragmentRows({ coach, total, remarksOnly, days, times, coachRows, today
                         <span className="text-[9px] font-semibold bg-white/60 rounded px-1">{s(r.PackageFollowUp)}</span>
                       )}
                     </div>
-                    {/* Actions: package, add payment (legacy popups), remark, phone */}
+                    {/* Actions: package, add payment (in-app forms), remark, phone */}
                     <div className="flex items-center gap-1.5 mt-1">
-                      <a href={`${legacy}/PrivatePackagesIndividual.aspx?PackageID=${n(r.PackageId)}`}
-                        target="_blank" rel="noreferrer" title="Open package">
+                      <Link to={`/privates/${n(r.PackageId)}`} title="Open package">
                         <Package className="size-3 text-slate-600 hover:text-[#1e5c97]" />
-                      </a>
-                      <a href={`${legacy}/PrivatePaymentsIndividual.aspx?PackageID=${n(r.PackageId)}`}
-                        target="_blank" rel="noreferrer" title="Add payment">
+                      </Link>
+                      <Link to={`/pr-payments/new?packageId=${n(r.PackageId)}`} title="Add payment">
                         <CreditCard className={`size-3 ${n(r.DuePercent) > 0 ? 'text-red-600' : 'text-slate-600'} hover:text-[#1e5c97]`} />
-                      </a>
+                      </Link>
                       <button type="button" onClick={() => onRemark(n(r.Std1ID))} title="Add remark">
                         <MessageSquarePlus className="size-3 text-slate-600 hover:text-amber-600" />
                       </button>

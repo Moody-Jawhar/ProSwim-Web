@@ -14,6 +14,9 @@ import {
 } from './pages/ModulePages';
 import { SemesterForm, CoachForm, ClassForm, StudentForm } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
+import { PrivatePackageForm } from './pages/PrivatePackageForm';
+import { PaymentForm } from './pages/PaymentForm';
+import { PrivatePaymentForm } from './pages/PrivatePaymentForm';
 import { CleanupPage } from './pages/CleanupPage';
 import { NewsAdminPage } from './pages/NewsAdminPage';
 import { ChangeRequestsPage } from './pages/ChangeRequestsPage';
@@ -62,9 +65,15 @@ export default function App() {
           <Route path="/registrations/:id" element={<RegistrationForm />} />
           <Route path="/sessions" element={<SessionsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
+          <Route path="/payments/new" element={<PaymentForm />} />
+          <Route path="/payments/:id" element={<PaymentForm />} />
           <Route path="/payments-due" element={<PaymentsDuePage />} />
           <Route path="/privates" element={<PrivatePackagesPage />} />
+          <Route path="/privates/new" element={<PrivatePackageForm />} />
+          <Route path="/privates/:id" element={<PrivatePackageForm />} />
           <Route path="/pr-payments" element={<PrivatePaymentsPage />} />
+          <Route path="/pr-payments/new" element={<PrivatePaymentForm />} />
+          <Route path="/pr-payments/:id" element={<PrivatePaymentForm />} />
           <Route path="/ex-payments" element={<ExtraPaymentsPage />} />
           <Route path="/m-payments" element={<MembershipPaymentsPage />} />
           <Route path="/extra-classes" element={<ExtraClassesPage />} />

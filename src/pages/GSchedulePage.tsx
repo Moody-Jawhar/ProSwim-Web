@@ -76,7 +76,6 @@ export function GSchedulePage() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load semesters.'));
   }, [locationId]);
 
-  const LEGACY = 'https://admin.proswim-lb.com/ASPXPages';
   const [shownPhones, setShownPhones] = useState<Set<string>>(new Set());
   const togglePhone = (key: string) =>
     setShownPhones((prev) => {
@@ -314,16 +313,15 @@ export function GSchedulePage() {
                                   >
                                     {s(r.StudentName)}
                                   </Link>
-                                  {/* Due -> legacy add-payment popup, like the old portal */}
+                                  {/* Due -> in-app payment form, prefilled for this student */}
                                   {n(r.DuePercent) > 0 && (
-                                    <a
-                                      href={`${LEGACY}/PaymentsIndividual.aspx?StudentId=${n(r.studentid)}&SemesterID=${semesterId}`}
-                                      target="_blank" rel="noreferrer"
+                                    <Link
+                                      to={`/payments/new?studentId=${n(r.studentid)}&semesterId=${semesterId}&studentName=${encodeURIComponent(s(r.StudentName))}`}
                                       title={`Add payment${r.DueAmount != null ? ` — due ${s(r.DueAmount)}` : ''}`}
                                       className="text-red-600 font-semibold hover:underline"
                                     >
                                       Due {n(r.DuePercent)}%
-                                    </a>
+                                    </Link>
                                   )}
                                   {s(r.Contact) && (
                                     <button type="button" onClick={() => togglePhone(`${n(r.studentid)}`)} title="Show phone">

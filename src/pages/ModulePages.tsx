@@ -70,6 +70,7 @@ const payments: ModuleConfig = {
   endpoint: '/api/portal/modules/payments',
   lookups: LOOKUPS,
   idKey: 'PaymentID',
+  editBase: '/payments',
   filters: [
     { param: 'searchFor', label: 'Search…', type: 'text' },
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
@@ -126,6 +127,7 @@ const privatePackages: ModuleConfig = {
   endpoint: '/api/portal/modules/private-packages',
   lookups: LOOKUPS,
   idKey: 'PackageId',
+  editBase: '/privates',
   filters: [
     { param: 'searchFor', label: 'Search…', type: 'text' },
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
@@ -161,6 +163,8 @@ function privatePaymentsConfig(mode: string, title: string): ModuleConfig {
     endpoint: `/api/portal/modules/private-payments?mode=${mode}`,
     lookups: LOOKUPS,
     idKey: 'PrivatePaymentID',
+    // Only true private payments have an in-app form; extra/membership stay list-only.
+    ...(mode === 'private' ? { editBase: '/pr-payments' } : {}),
     filters: [
       { param: 'searchFor', label: 'Search…', type: 'text' },
       { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
