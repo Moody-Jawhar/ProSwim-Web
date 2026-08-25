@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import {
-  Loader2, AlertCircle, Sparkles, CalendarDays, BookOpen,
-  CreditCard, GraduationCap, RefreshCw, UserPlus, UserRound,
+  Loader2, AlertCircle, CalendarDays, BookOpen,
+  CreditCard, GraduationCap, UserPlus, UserRound,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { AiRiskRadar } from '../components/AiRiskRadar';
 
 interface Stats {
   date: string;
@@ -18,8 +19,6 @@ interface Stats {
   paymentsThisMonth: { count: number; paidByCurrency: Record<string, number> };
   privatePackagesAttention: Record<string, number>;
 }
-
-interface AiOverview { overview: string | null; error: string | null }
 
 // Order matters — the card lists them in this sequence. Two proc criteria map
 // to payment attention, so they get distinct labels rather than duplicating.
@@ -44,8 +43,6 @@ export function DashboardPage() {
   const [stats, setStats] = useState<Stats | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
-  const [ai, setAi] = useState<AiOverview | null>(null);
-  const [aiLoading, setAiLoading] = useState(false);
 
   useEffect(() => {
     if (userType === 'guest') return;
@@ -54,15 +51,6 @@ export function DashboardPage() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load dashboard.'))
       .finally(() => setLoading(false));
   }, [userType]);
-
-  function loadAi() {
-    setAiLoading(true);
-    setAi(null);
-    apiRequest<AiOverview>('/api/portal/dashboard/ai-overview')
-      .then(setAi)
-      .catch((e) => setAi({ overview: null, error: e instanceof Error ? e.message : 'AI overview failed.' }))
-      .finally(() => setAiLoading(false));
-  }
 
   // Restricted personas have no dashboard in the legacy menu.
   if (userType === 'guest') return <Navigate to="/students" replace />;
@@ -169,48 +157,8 @@ export function DashboardPage() {
               )}
             </Link>
 
-            {/* AI overview */}
-            <div className="rise-in rise-3 lg:col-span-2 relative overflow-hidden rounded-2xl border border-[#1e5c97]/15 shadow-soft p-6 bg-gradient-to-br from-white via-[#eaf2fb] to-[#dcebfb]">
-              <div className="pointer-events-none absolute -bottom-16 -right-10 w-48 h-48 rounded-full bg-gradient-to-br from-[#2d7dc4] to-[#1e5c97] opacity-10 blur-3xl" />
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2.5">
-                  <span className="w-11 h-11 rounded-2xl flex items-center justify-center text-white shadow-md bg-gradient-to-br from-[#2d7dc4] to-[#1e5c97] floaty">
-                    <Sparkles className="size-5" />
-                  </span>
-                  <div>
-                    <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">AI overview</p>
-                    <p className="text-sm font-semibold text-slate-700">Today at a glance</p>
-                  </div>
-                </div>
-                <button
-                  onClick={loadAi}
-                  disabled={aiLoading}
-                  className="flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#2d7dc4] to-[#1e5c97] text-white text-xs font-semibold px-4 py-2 shadow-md hover:shadow-lg hover:brightness-110 transition-all disabled:opacity-60"
-                >
-                  {aiLoading ? <Loader2 className="size-3.5 animate-spin" /> : <RefreshCw className="size-3.5" />}
-                  {ai ? 'Regenerate' : 'Generate overview'}
-                </button>
-              </div>
-
-              {aiLoading && (
-                <p className="text-sm text-slate-400">Analyzing today's numbers…</p>
-              )}
-              {!aiLoading && !ai && (
-                <p className="text-sm text-slate-400">
-                  Get a plain-language summary of today's dashboard — attendance, collections,
-                  outstanding dues, and what needs attention.
-                </p>
-              )}
-              {!aiLoading && ai?.error && (
-                <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
-                  <AlertCircle className="size-4 text-amber-500 shrink-0 mt-0.5" />
-                  <p className="text-sm text-amber-700">{ai.error}</p>
-                </div>
-              )}
-              {!aiLoading && ai?.overview && (
-                <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{ai.overview}</p>
-              )}
-            </div>
+            {/* AI overview: on-device risk radar over all active registrations */}
+            <AiRiskRadar />
           </div>
 
           {/* Quick actions */}

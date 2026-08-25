@@ -347,3 +347,118 @@ export async function buildStudentOverview(
 
   return { signals, scores, insights: generateInsights(signals, scores) };
 }
+
+// ── Dashboard risk radar ─────────────────────────────────────────────────────
+// Runs the same model over every active registration and ranks the students
+// who most need attention. One bulk fetch, then pure on-device scoring.
+
+export interface RadarEntry {
+  studentId: number | null;
+  name: string;
+  phone: string;
+  semester: string;
+  scores: Record<OutputName, number>;
+  topRisk: 'attendance' | 'churn' | 'payment';
+  topScore: number;
+  reasons: string[];
+}
+
+export interface RiskRadar {
+  entries: RadarEntry[]; // flagged students, worst first (capped)
+  scanned: number;       // distinct active students scored
+  flagged: number;       // students at or above the flag threshold
+}
+
+const FLAG_THRESHOLD = 0.55;
+const RADAR_CAP = 8;
+
+export async function buildRiskRadar(): Promise<RiskRadar> {
+  const rows = await apiRequest<Row[]>('/api/portal/modules/registrations?active=true&stopped=false');
+
+  // Group registrations by student (id when the proc exposes one, else name).
+  const byStudent = new Map<string, Row[]>();
+  for (const r of rows) {
+    const id = r['StudentID'] ?? r['StudentId'];
+    const key = id != null ? `#${id}` : str(r, 'StudentFullName').trim().toLowerCase();
+    if (!key || key === '#0') continue;
+    const list = byStudent.get(key);
+    if (list) list.push(r); else byStudent.set(key, [r]);
+  }
+
+  const net = getModel();
+  const entries: RadarEntry[] = [];
+  let flagged = 0;
+
+  for (const regRows of byStudent.values()) {
+    const regs: RegStat[] = regRows.map((r) => ({
+      total: num(r, 'SessionsTotal'),
+      attended: num(r, 'SessionsAttended'),
+      due: num(r, 'DueAmount'),
+      net: num(r, 'RegistrationNetToPay'),
+      stopped: false,
+      active: true,
+      semester: str(r, 'SemesterName'),
+      order: new Date(str(r, 'RegistrationDate')).getTime() || num(r, 'RegistrationID'),
+    })).sort((a, b) => b.order - a.order);
+
+    const withSessions = regs.filter((g) => g.total > 0);
+    const recent = withSessions[0] ?? null;
+    const totals = withSessions.reduce((s, g) => ({ t: s.t + g.total, a: s.a + g.attended }), { t: 0, a: 0 });
+    const ratioRows = regs.filter((g) => g.net > 0).slice(0, 3);
+    const dueRatio = ratioRows.length
+      ? ratioRows.reduce((s, g) => s + clamp01(g.due / g.net), 0) / ratioRows.length : 0;
+    const dueByCurrency: Record<string, number> = {};
+    for (const g of regs) {
+      if (g.due > 0) dueByCurrency[currencyOf(g.due)] = (dueByCurrency[currencyOf(g.due)] ?? 0) + g.due;
+    }
+    const enoughData = totals.t >= 6;
+    const attRecent = recent ? recent.attended / recent.total : 0;
+    const attOverall = totals.t > 0 ? totals.a / totals.t : 0;
+
+    const outVec = net.predict([
+      enoughData ? attRecent : 0.7,
+      totals.t > 0 ? attOverall : 0.7,
+      clamp01(((enoughData ? attRecent : 0.7) - (totals.t > 0 ? attOverall : 0.7) + 1) / 2),
+      0, 1,               // active registration, not stopped
+      dueRatio, 1,        // dues are known for module rows
+      0.5, 0,             // no package info at radar granularity
+      0.5,                // tenure unknown → neutral
+    ]);
+    const scores = {} as Record<OutputName, number>;
+    OUTPUTS.forEach((name, i) => { scores[name] = outVec[i]; });
+
+    // Attendance/churn flags need real history; payment only needs dues.
+    const risks: [RadarEntry['topRisk'], number][] = [
+      ['attendance', enoughData ? scores.attendanceRisk : 0],
+      ['churn', enoughData ? scores.churnRisk : 0],
+      ['payment', Object.keys(dueByCurrency).length ? scores.paymentRisk : 0],
+    ];
+    risks.sort((a, b) => b[1] - a[1]);
+    const [topRisk, topScore] = risks[0];
+    if (topScore < FLAG_THRESHOLD) continue;
+    flagged++;
+
+    const reasons: string[] = [];
+    if (enoughData && scores.attendanceRisk >= FLAG_THRESHOLD && recent) {
+      reasons.push(`${recent.attended}/${recent.total} attended in ${recent.semester || 'latest semester'}`);
+      if (attOverall - attRecent > 0.15) reasons.push(`down from ${Math.round(attOverall * 100)}% overall`);
+    }
+    if (Object.keys(dueByCurrency).length && scores.paymentRisk >= FLAG_THRESHOLD) {
+      reasons.push(`due ${moneyList(dueByCurrency)}`);
+    }
+    if (reasons.length === 0) reasons.push('multiple weak signals across registrations');
+
+    const first = regRows[0];
+    const id = first['StudentID'] ?? first['StudentId'];
+    entries.push({
+      studentId: id != null ? Number(id) : null,
+      name: str(first, 'StudentFullName'),
+      phone: str(first, 'PhoneNumber1'),
+      semester: recent?.semester ?? str(first, 'SemesterName'),
+      scores, topRisk, topScore, reasons,
+    });
+  }
+
+  entries.sort((a, b) => b.topScore - a.topScore);
+  return { entries: entries.slice(0, RADAR_CAP), scanned: byStudent.size, flagged };
+}
