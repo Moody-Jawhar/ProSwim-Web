@@ -5,6 +5,8 @@ import {
   BookOpen, CreditCard, Trophy, LayoutDashboard, LogOut, Waves,
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
+  Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
+  Shield, Clock, MessageSquare,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 
@@ -16,6 +18,8 @@ interface NavItem {
   icon: Icon;
   end?: boolean;
   soon?: boolean;
+  /** Live count rendered as a red pill next to the label. */
+  badge?: 'requests' | 'notifs';
 }
 
 interface NavGroup {
@@ -33,18 +37,15 @@ const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
 // dropdowns). Single links stay flat.
 const FULL_NAV: NavEntry[] = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { to: '/students', label: 'Students', icon: Users },
-  { to: '/news', label: 'News', icon: Newspaper },
-  { to: '/change-requests', label: 'Requests', icon: Inbox },
   {
-    label: 'Session Changes',
-    icon: CalendarX,
+    label: 'Students',
+    icon: Users,
     children: [
-      { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
-      { to: '/session-changes/approve', label: 'Approve Requests', icon: ClipboardCheck },
+      { to: '/students', label: 'Students', icon: Users },
+      { to: '/comp-swimmers', label: 'Competitive Swimmers', icon: Medal },
+      { to: '/competitions', label: 'Competitions', icon: Trophy },
     ],
   },
-  { to: '/announcements', label: 'Announce', icon: Megaphone },
   {
     label: 'Group',
     icon: CalendarDays,
@@ -54,6 +55,10 @@ const FULL_NAV: NavEntry[] = [
       { to: '/sessions', label: 'Sessions', icon: ClipboardCheck },
       { to: '/payments', label: 'Payments', icon: CreditCard },
       { to: '/payments-due', label: 'Due Payments', icon: CreditCard },
+      { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
+      { to: '/session-changes/approve', label: 'Approve Changes', icon: ClipboardCheck },
+      { to: '/payment-delivery', label: 'Payment Delivery', icon: Truck, soon: true },
+      { to: '/expenses', label: 'Expenses', icon: Receipt, soon: true },
     ],
   },
   {
@@ -63,22 +68,33 @@ const FULL_NAV: NavEntry[] = [
       { to: '/pr-schedule', label: 'Schedule', icon: CalendarDays },
       { to: '/privates', label: 'Packages', icon: GraduationCap },
       { to: '/pr-payments', label: 'Payments', icon: CreditCard },
+      { to: '/pr-payment-delivery', label: 'Payment Delivery', icon: Truck, soon: true },
     ],
   },
   {
-    label: 'Competitive Team',
-    icon: Trophy,
-    children: [
-      { to: '/comp-swimmers', label: 'Competitive Swimmers', icon: Medal },
-      { to: '/competitions', label: 'Competitions', icon: Trophy },
-    ],
-  },
-  {
-    label: 'Extra & Members',
+    label: 'Extras & Membership',
     icon: Layers,
     children: [
       { to: '/extra-classes', label: 'Extra Classes', icon: BookOpen },
       { to: '/members', label: 'Memberships', icon: UserRound },
+      { to: '/ex-payments', label: 'Extra Payments', icon: CreditCard },
+      { to: '/m-payments', label: 'Membership Payments', icon: CreditCard },
+    ],
+  },
+  {
+    label: 'Mobile App',
+    icon: Smartphone,
+    children: [
+      { to: '/change-requests', label: 'Requests', icon: Inbox, badge: 'requests' },
+      { to: '/news', label: 'News', icon: Newspaper },
+      { to: '/announcements', label: 'Notifications', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'Communication',
+    icon: MessageCircle,
+    children: [
+      { to: '/bulk-whatsapp', label: 'Bulk WhatsApp', icon: MessageCircle, soon: true },
     ],
   },
   {
@@ -87,12 +103,37 @@ const FULL_NAV: NavEntry[] = [
     children: [
       { to: '/coaches', label: 'Coaches', icon: UserRound },
       { to: '/locations', label: 'Locations', icon: MapPin },
-      { to: '/classes', label: 'Classes', icon: CalendarDays },
-      { to: '/semesters', label: 'Semesters', icon: ClipboardCheck },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
-  { to: '/payroll', label: 'Payroll', icon: Trophy, soon: true },
+  {
+    label: 'Setup Group',
+    icon: CalendarDays,
+    children: [
+      { to: '/classes', label: 'Classes', icon: CalendarDays },
+      { to: '/semesters', label: 'Semesters', icon: ClipboardCheck },
+    ],
+  },
+  {
+    label: 'Setup Private',
+    icon: GraduationCap,
+    children: [
+      { to: '/pack-types', label: 'Pack Types', icon: Layers, soon: true },
+    ],
+  },
+  {
+    label: 'Payroll',
+    icon: Wallet,
+    children: [
+      { to: '/payroll/timesheets', label: 'Timesheets', icon: Clock, soon: true },
+      { to: '/payroll/addons', label: 'Add-ons', icon: Wallet, soon: true },
+      { to: '/payroll/coach-attendance', label: 'Coach Attendance', icon: ClipboardCheck, soon: true },
+    ],
+  },
+  { to: '/feedback', label: 'Feedback', icon: MessageSquare, soon: true },
+  { to: '/settings', label: 'Settings', icon: Settings, soon: true },
+  { to: '/users', label: 'Users', icon: Shield, soon: true },
+  { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
 // Legacy Admin_TopMenu short-circuits for restricted personas — kept flat.
@@ -148,16 +189,28 @@ export function Shell() {
   const [drawerOpen, setDrawerOpen] = useState(false);
   const rail = collapsed && !isMobile;
 
-  // Pending parent change-requests → badge on the Requests nav item. Refreshed
-  // on navigation so acting on the queue clears the count without a reload.
-  const [pendingRequests, setPendingRequests] = useState(0);
-  const hasRequestsNav = NAV.some((e) => !isGroup(e) && e.to === '/change-requests');
+  // Live nav badges (pending parent requests, sent notifications). Refreshed
+  // on navigation so acting on a queue updates the count without a reload.
+  const [badgeCounts, setBadgeCounts] = useState<Record<'requests' | 'notifs', number>>(
+    { requests: 0, notifs: 0 }
+  );
+  const allItems = NAV.flatMap((e) => (isGroup(e) ? e.children : [e]));
+  const wantsBadge = (b: 'requests' | 'notifs') => allItems.some((i) => i.badge === b);
+  const hasRequestsBadge = wantsBadge('requests');
+  const hasNotifsBadge = wantsBadge('notifs');
   useEffect(() => {
-    if (!hasRequestsNav) return;
-    apiRequest<unknown[]>('/api/portal/change-requests?status=Pending')
-      .then((rows) => setPendingRequests(Array.isArray(rows) ? rows.length : 0))
-      .catch(() => {}); // badge is best-effort; the page itself reports errors
-  }, [hasRequestsNav, location.pathname]);
+    // Badges are best-effort; the pages themselves report errors.
+    if (hasRequestsBadge) {
+      apiRequest<unknown[]>('/api/portal/change-requests?status=Pending')
+        .then((rows) => setBadgeCounts((b) => ({ ...b, requests: Array.isArray(rows) ? rows.length : 0 })))
+        .catch(() => {});
+    }
+    if (hasNotifsBadge) {
+      apiRequest<unknown[]>('/api/portal/notify/sent')
+        .then((rows) => setBadgeCounts((b) => ({ ...b, notifs: Array.isArray(rows) ? rows.length : 0 })))
+        .catch(() => {});
+    }
+  }, [hasRequestsBadge, hasNotifsBadge, location.pathname]);
 
   useEffect(() => {
     const mq = window.matchMedia('(max-width: 767px)');
@@ -226,12 +279,12 @@ export function Shell() {
       >
         <item.icon className="size-4 shrink-0" />
         {!rail && <span className="whitespace-nowrap">{item.label}</span>}
-        {item.to === '/change-requests' && pendingRequests > 0 && (
+        {item.badge && badgeCounts[item.badge] > 0 && (
           rail ? (
             <span className="absolute top-1.5 right-1.5 size-2 rounded-full bg-red-500" />
           ) : (
             <span className="ml-auto text-[10px] font-bold bg-red-500 text-white rounded-full px-1.5 py-0.5 min-w-5 text-center">
-              {pendingRequests}
+              {badgeCounts[item.badge]}
             </span>
           )
         )}
