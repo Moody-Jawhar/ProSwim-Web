@@ -3,6 +3,7 @@ import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useRef } from 'react';
 import { ArrowLeft, Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus } from 'lucide-react';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
+import { AiStudentOverview } from '../components/AiStudentOverview';
 
 // Full proc row, keyed by original column names (PascalCase from SQL).
 type StudentRow = Record<string, unknown>;
@@ -428,6 +429,14 @@ export function StudentDetailPage() {
       )}
 
       <MedicalBanner row={row} />
+
+      {!editing && (
+        <AiStudentOverview
+          studentId={id!}
+          studentFullName={String(row.StudentFullName ?? '')}
+          startingDate={row.StudentStartingDate ? String(row.StudentStartingDate) : null}
+        />
+      )}
 
       {!editing && <ProgramsEnrolled studentId={id!} />}
 
