@@ -110,6 +110,7 @@ interface RegStat {
   active: boolean;
   semester: string;
   order: number; // recency: RegistrationDate epoch, or RegistrationId as fallback
+  date: number | null; // RegistrationDate epoch when known
 }
 
 export interface StudentSignals {
@@ -122,6 +123,8 @@ export interface StudentSignals {
   totalSessions: number;
   stopped: boolean;
   activeReg: boolean;
+  /** Days since the newest registration, when its date is known. */
+  staleDays: number | null;
   hasDueData: boolean;
   dueRatio: number;
   dueByCurrency: Record<string, number>;
@@ -132,6 +135,20 @@ export interface StudentSignals {
 
 // Matches effectiveCurrency() in the student app: large amounts are LBP.
 const currencyOf = (amount: number) => (amount > 10000 ? 'LBP' : 'USD');
+
+const DAY_MS = 86400000;
+const regAgeDays = (g: RegStat | null) =>
+  g && g.date != null ? Math.max(0, (Date.now() - g.date) / DAY_MS) : null;
+const isStale = (g: RegStat, days: number) => {
+  const a = regAgeDays(g);
+  return a != null && a > days;
+};
+// Recency weight for year-aware averaging: exponential decay by age, or by
+// list position (newest first) when registration dates are unavailable.
+const regWeight = (g: RegStat, idx: number) => {
+  const a = regAgeDays(g);
+  return a != null ? Math.exp(-a / 365) : Math.exp(-idx / 3);
+};
 
 function buildSignals(programs: ProgramsData, moduleRows: Row[] | null, startingDate: string | null): StudentSignals {
   const regs: RegStat[] = [];
@@ -149,6 +166,7 @@ function buildSignals(programs: ProgramsData, moduleRows: Row[] | null, starting
         active: status.includes('active'),
         semester: str(r, 'SemesterName'),
         order: new Date(str(r, 'RegistrationDate')).getTime() || num(r, 'RegistrationID'),
+        date: new Date(str(r, 'RegistrationDate')).getTime() || null,
       });
     }
   } else {
@@ -165,6 +183,7 @@ function buildSignals(programs: ProgramsData, moduleRows: Row[] | null, starting
         active: false,
         semester: str(reg, 'SemesterName'),
         order: regId,
+        date: null,
       });
     }
   }
@@ -174,16 +193,25 @@ function buildSignals(programs: ProgramsData, moduleRows: Row[] | null, starting
   const recent = withSessions[0] ?? null;
   const totals = withSessions.reduce((s, r) => ({ t: s.t + r.total, a: s.a + r.attended }), { t: 0, a: 0 });
 
+  // Year-aware rates: recent registrations dominate, old years fade out
+  // (half-life ~8 months by date; by list position when dates are unknown).
+  const wTotals = withSessions.reduce((s, r, i) => {
+    const w = regWeight(r, i);
+    return { t: s.t + w * r.total, a: s.a + w * r.attended };
+  }, { t: 0, a: 0 });
+
   const hasDueData = !!moduleRows && moduleRows.length > 0;
   // Currency-safe due pressure: average of per-registration due/net ratios
-  // over the latest few registrations (amounts are mixed LBP/USD).
-  const ratioRows = regs.filter((r) => r.net > 0).slice(0, 3);
+  // over the latest few registrations (amounts are mixed LBP/USD). Dues on
+  // registrations older than two years are history, not a current problem.
+  const ratioRows = regs.filter((r) => r.net > 0 && !isStale(r, 730)).slice(0, 3);
   const dueRatio = ratioRows.length
     ? ratioRows.reduce((s, r) => s + clamp01(r.due / r.net), 0) / ratioRows.length : 0;
   const dueByCurrency: Record<string, number> = {};
   for (const r of regs) {
-    if (r.due > 0) dueByCurrency[currencyOf(r.due)] = (dueByCurrency[currencyOf(r.due)] ?? 0) + r.due;
+    if (r.due > 0 && !isStale(r, 730)) dueByCurrency[currencyOf(r.due)] = (dueByCurrency[currencyOf(r.due)] ?? 0) + r.due;
   }
+  const staleDays = regAgeDays(regs[0] ?? null);
 
   const openPkgs = programs.packages
     .filter((p) => p['PackageClosed'] !== true && num(p, 'PackageNumberOfSessions') > 0)
@@ -202,13 +230,15 @@ function buildSignals(programs: ProgramsData, moduleRows: Row[] | null, starting
   return {
     regs,
     attRecent: recent ? recent.attended / recent.total : 0,
-    attOverall: totals.t > 0 ? totals.a / totals.t : 0,
+    attOverall: wTotals.t > 0 ? wTotals.a / wTotals.t : 0,
     recentSemester: recent?.semester ?? '',
     recentAttended: recent?.attended ?? 0,
     recentTotal: recent?.total ?? 0,
     totalSessions: totals.t,
     stopped: regs[0]?.stopped ?? false,
-    activeReg: hasDueData ? regs.some((r) => r.active && !r.stopped) : !(regs[0]?.stopped ?? true),
+    activeReg: (hasDueData ? regs.some((r) => r.active && !r.stopped) : !(regs[0]?.stopped ?? true))
+      && !(staleDays != null && staleDays > 400),
+    staleDays,
     hasDueData,
     dueRatio,
     dueByCurrency,
@@ -283,7 +313,11 @@ export function generateInsights(s: StudentSignals, scores: Record<OutputName, n
   if (scores.churnRisk >= 0.6) {
     const reasons: string[] = [];
     if (s.stopped) reasons.push('the latest registration is marked stopped');
-    if (!s.activeReg) reasons.push('there is no active registration');
+    if (s.staleDays != null && s.staleDays > 365) {
+      reasons.push(`the last registration dates back ${Math.round(s.staleDays / 30)} months`);
+    } else if (!s.activeReg) {
+      reasons.push('there is no active registration');
+    }
     if (s.enoughData && s.attRecent < 0.6) reasons.push('recent attendance is low');
     if (s.dueRatio > 0.3) reasons.push('payments are lagging');
     out.push(ins('churn', scores.churnRisk >= 0.8 ? 'alert' : 'warn', scores.churnRisk,
@@ -388,6 +422,7 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
   const net = getModel();
   const entries: RadarEntry[] = [];
   let flagged = 0;
+  let scanned = 0;
 
   for (const regRows of byStudent.values()) {
     const regs: RegStat[] = regRows.map((r) => ({
@@ -399,21 +434,31 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
       active: true,
       semester: str(r, 'SemesterName'),
       order: new Date(str(r, 'RegistrationDate')).getTime() || num(r, 'RegistrationID'),
+      date: new Date(str(r, 'RegistrationDate')).getTime() || null,
     })).sort((a, b) => b.order - a.order);
+
+    // Year gate: the radar is about current students. Anyone whose newest
+    // registration is over ~13 months old belongs to a past year — skip.
+    if (regs.length === 0 || isStale(regs[0], 400)) continue;
+    scanned++;
 
     const withSessions = regs.filter((g) => g.total > 0);
     const recent = withSessions[0] ?? null;
     const totals = withSessions.reduce((s, g) => ({ t: s.t + g.total, a: s.a + g.attended }), { t: 0, a: 0 });
-    const ratioRows = regs.filter((g) => g.net > 0).slice(0, 3);
+    const wTotals = withSessions.reduce((s, g, i) => {
+      const w = regWeight(g, i);
+      return { t: s.t + w * g.total, a: s.a + w * g.attended };
+    }, { t: 0, a: 0 });
+    const ratioRows = regs.filter((g) => g.net > 0 && !isStale(g, 730)).slice(0, 3);
     const dueRatio = ratioRows.length
       ? ratioRows.reduce((s, g) => s + clamp01(g.due / g.net), 0) / ratioRows.length : 0;
     const dueByCurrency: Record<string, number> = {};
     for (const g of regs) {
-      if (g.due > 0) dueByCurrency[currencyOf(g.due)] = (dueByCurrency[currencyOf(g.due)] ?? 0) + g.due;
+      if (g.due > 0 && !isStale(g, 730)) dueByCurrency[currencyOf(g.due)] = (dueByCurrency[currencyOf(g.due)] ?? 0) + g.due;
     }
     const enoughData = totals.t >= 6;
     const attRecent = recent ? recent.attended / recent.total : 0;
-    const attOverall = totals.t > 0 ? totals.a / totals.t : 0;
+    const attOverall = wTotals.t > 0 ? wTotals.a / wTotals.t : 0;
 
     const outVec = net.predict([
       enoughData ? attRecent : 0.7,
@@ -460,5 +505,5 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
   }
 
   entries.sort((a, b) => b.topScore - a.topScore);
-  return { entries: entries.slice(0, RADAR_CAP), scanned: byStudent.size, flagged };
+  return { entries: entries.slice(0, RADAR_CAP), scanned, flagged };
 }

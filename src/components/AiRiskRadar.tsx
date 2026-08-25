@@ -75,10 +75,15 @@ export function AiRiskRadar() {
       )}
 
       {radar && radar.entries.length > 0 && (
-        <ul className="divide-y divide-slate-100/80">
-          {radar.entries.map((e) => {
-            const content = (
-              <>
+        <ul className="space-y-2">
+          {radar.entries.map((e) => (
+            <li key={`${e.studentId ?? e.name}`}>
+              <Link
+                to={e.studentId != null
+                  ? `/students/${e.studentId}`
+                  : `/students?searchFor=${encodeURIComponent(e.name)}`}
+                className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white/85 px-3.5 py-2.5 shadow-sm hover:shadow-md hover:border-[#1e5c97]/40 hover:bg-white active:scale-[0.99] transition-all"
+              >
                 <div className="min-w-0 flex-1">
                   <p className="text-sm font-bold text-slate-800 truncate">{e.name}</p>
                   <p className="text-xs text-slate-500 truncate">
@@ -89,23 +94,11 @@ export function AiRiskRadar() {
                   <span className={`text-[11px] font-bold rounded-full border px-2 py-0.5 ${riskColor(e.topScore)}`}>
                     {RISK_LABEL[e.topRisk]} {Math.round(e.topScore * 100)}%
                   </span>
-                  {e.studentId != null && <ChevronRight className="size-4 text-slate-300" />}
+                  <ChevronRight className="size-4 text-slate-400" />
                 </div>
-              </>
-            );
-            const cls = 'flex items-center gap-3 py-2.5';
-            return (
-              <li key={`${e.studentId ?? e.name}`}>
-                {e.studentId != null ? (
-                  <Link to={`/students/${e.studentId}`} className={`${cls} hover:bg-white/60 -mx-2 px-2 rounded-lg transition-colors`}>
-                    {content}
-                  </Link>
-                ) : (
-                  <div className={cls}>{content}</div>
-                )}
-              </li>
-            );
-          })}
+              </Link>
+            </li>
+          ))}
         </ul>
       )}
     </div>

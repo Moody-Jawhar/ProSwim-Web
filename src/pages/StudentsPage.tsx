@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Loader2, AlertCircle, ChevronLeft, ChevronRight,
   ArrowUpDown, ArrowUp, ArrowDown, Download, Send, ExternalLink, Pencil, Plus,
@@ -92,8 +92,11 @@ export function StudentsPage() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  // Deep links (e.g. the dashboard risk radar) can pre-fill the search.
+  const [urlParams] = useSearchParams();
+  const initialSearch = urlParams.get('searchFor') ?? '';
   // filter state
-  const [search, setSearch] = useState('');
+  const [search, setSearch] = useState(initialSearch);
   // Everyone opens scoped to their own location; only locked types can't change it.
   const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
   const [school, setSchool] = useState('');
@@ -102,7 +105,8 @@ export function StudentsPage() {
   const [occupation, setOccupation] = useState('');
   const [showDeleted, setShowDeleted] = useState(false);
   const [showInactive, setShowInactive] = useState(true);
-  const [query, setQuery] = useState(''); // committed query string
+  const [query, setQuery] = useState( // committed query string
+    initialSearch ? new URLSearchParams({ searchFor: initialSearch }).toString() : '');
 
   // grid state
   const [sortKey, setSortKey] = useState<SortKey>('studentFullName');
