@@ -12,7 +12,10 @@ import {
   ExtraClassesPage, MembershipsPage, CoachesPage, ClassesPage,
   SemestersPage, SessionsPage,
 } from './pages/ModulePages';
-import { SemesterForm, CoachForm, ClassForm, StudentForm } from './pages/RecordForms';
+import {
+  SemesterForm, CoachForm, ClassForm, StudentForm,
+  ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm,
+} from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { PrivatePackageForm } from './pages/PrivatePackageForm';
 import { PaymentForm } from './pages/PaymentForm';
@@ -28,6 +31,15 @@ import { SessionChangesManualPage } from './pages/SessionChangesManualPage';
 import { SessionChangesApprovePage } from './pages/SessionChangesApprovePage';
 import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { NotificationsListPage } from './pages/NotificationsListPage';
+import {
+  ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
+  CoachAttendancePage, UsersAdminPage,
+} from './pages/LegacyModulePages';
+import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
+import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
+import { SettingsAdminPage } from './pages/SettingsAdminPage';
+import { PayrollSheetPage } from './pages/PayrollSheetPage';
+import { AddonFormPage } from './pages/AddonFormPage';
 import { getStoredToken } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -90,6 +102,23 @@ export default function App() {
           <Route path="/change-requests" element={<ChangeRequestsPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
           <Route path="/notifications-list" element={<NotificationsListPage />} />
+          <Route path="/expenses" element={<ExpensesListPage />} />
+          <Route path="/expenses/:id" element={<ExpenseForm />} />
+          <Route path="/payment-delivery" element={<PaymentDeliveriesPage />} />
+          <Route path="/pr-payment-delivery" element={<PrivateDeliveriesPage />} />
+          <Route path="/bulk-whatsapp" element={<BulkWhatsAppPage />} />
+          <Route path="/pack-types" element={<PackTypesPage />} />
+          <Route path="/pack-types/:id" element={<PackTypeForm />} />
+          <Route path="/settings" element={<SettingsAdminPage />} />
+          <Route path="/users" element={<UsersAdminPage />} />
+          <Route path="/users/:id" element={<UserForm />} />
+          <Route path="/payroll/timesheets" element={<TimesheetsPage />} />
+          <Route path="/payroll/timesheets/:id" element={<TimesheetForm />} />
+          <Route path="/payroll/sheet/:timesheetId" element={<PayrollSheetPage />} />
+          <Route path="/payroll/addons" element={<AddonsListPage />} />
+          <Route path="/payroll/addons/:id" element={<AddonFormPage />} />
+          <Route path="/payroll/coach-attendance" element={<CoachAttendancePage />} />
+          <Route path="/payroll/coach-attendance/:id" element={<CoachAttendanceForm />} />
         </Route>
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>

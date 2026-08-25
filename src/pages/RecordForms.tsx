@@ -235,7 +235,210 @@ const student: RecordFormConfig = {
 // The blood-type lookup isn't in the generic modules lookups endpoint; the
 // student form falls back gracefully (dropdown just shows "—" until picked).
 
+// ── Expense (ExpensesIndividual.aspx) ────────────────────────────────────────
+
+const expense: RecordFormConfig = {
+  title: 'Expense',
+  listPath: '/expenses',
+  slug: 'expense',
+  idKey: 'ExpenseId',
+  titleKey: 'ExpenseType',
+  lookups: '/api/portal/modules/lookups',
+  heroSlide: 3,
+  createDefaults: {
+    ExpensePaidCurrency: 'USD',
+    ExpensePaidCurrencyRate: 1500,
+    ExpenseType: 'Other',
+    ExpenseCoachId: 0,
+  },
+  sections: [
+    {
+      title: 'Expense',
+      fields: [
+        { key: 'ExpenseSemesterId', label: 'Semester', type: 'select', optionsKey: 'semesters' },
+        { key: 'ExpenseDate', label: 'Date', type: 'date' },
+        { key: 'ExpensePaidAmount', label: 'Amount Paid', type: 'number' },
+        { key: 'ExpensePaidCurrency', label: 'Currency', type: 'select', options: [
+          { value: 'LBP', label: 'LBP' }, { value: 'USD', label: 'USD' },
+        ] },
+        { key: 'ExpensePaidCurrencyRate', label: 'USD to LBP Rate', type: 'number' },
+        { key: 'ExpenseAmount', label: 'Amount (normalized)', type: 'number' },
+        { key: 'ExpenseType', label: 'Type', type: 'select', options: [
+          'Loan', 'Return/Refund', 'Tools', 'M.Sakr', 'Gr Pay By M.Sakr', 'Pr Pay By M.Sakr', 'Other',
+        ].map((v) => ({ value: v, label: v })) },
+        { key: 'ExpenseCoachId', label: 'Coach', type: 'select', optionsKey: 'coaches' },
+        { key: 'ExpenseRemarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+  ],
+};
+
+// ── Private package type (PrivatePackagesSettingsIndividual.aspx) ────────────
+
+const packType: RecordFormConfig = {
+  title: 'Pack Type',
+  listPath: '/pack-types',
+  slug: 'pack-type',
+  idKey: 'PrivatePackageId',
+  titleKey: 'PrivatePackageName',
+  lookups: '/api/portal/modules/lookups',
+  heroSlide: 4,
+  createDefaults: {
+    PrivatePackageCurrency: 'LBP',
+    PrivatePackageSessionsCount: 10,
+    PrivatePackageActive: true,
+  },
+  sections: [
+    {
+      title: 'Package Type',
+      fields: [
+        { key: 'PrivatePackageLocationId', label: 'Location', type: 'select', optionsKey: 'locations' },
+        { key: 'PrivatePackageName', label: 'Package Name', type: 'text' },
+        { key: 'PrivatePackageCurrency', label: 'Currency (fixed after create)', type: 'select', options: [
+          { value: 'LBP', label: 'LBP' }, { value: 'USD', label: 'USD' },
+        ] },
+        { key: 'PrivatePackageSessionsCount', label: 'Sessions', type: 'number' },
+        { key: 'PrivatePackagePriceForOneStudent', label: 'Price For One', type: 'number' },
+        { key: 'PrivatePackagePriceForTwoStudents', label: 'Price For Two', type: 'number' },
+        { key: 'PrivatePackagePriceForThreeStudents', label: 'Price For Three', type: 'number' },
+        { key: 'PrivatePackageActive', label: 'Active', type: 'checkbox' },
+      ],
+    },
+  ],
+};
+
+// ── Portal user (UsersIndividual.aspx) ───────────────────────────────────────
+
+const portalUser: RecordFormConfig = {
+  title: 'User',
+  listPath: '/users',
+  slug: 'user',
+  idKey: 'UserID',
+  titleKey: 'UserFullname',
+  lookups: '/api/portal/modules/lookups',
+  heroSlide: 1,
+  createDefaults: {
+    UserType: 'User',
+    UserActive: true,
+    UserExport: true,
+    UserSaving: true,
+    UserNotifications: true,
+  },
+  sections: [
+    {
+      title: 'Account',
+      fields: [
+        { key: 'UserFullname', label: 'Full Name', type: 'text' },
+        { key: 'UserEmail', label: 'Email', type: 'text' },
+        { key: 'UserPhoneNumber', label: 'Phone Number', type: 'text' },
+        { key: 'UserType', label: 'User Type', type: 'select', options: [
+          'SiteMaster', 'SuperUser', 'Payment/Audit', 'User', 'Guest',
+        ].map((v) => ({ value: v, label: v })) },
+        { key: 'UserPrimaryLocationId', label: 'Primary Location', type: 'select', optionsKey: 'locations' },
+      ],
+    },
+    {
+      title: 'Access Management',
+      fields: [
+        { key: 'UserActive', label: 'Active', type: 'checkbox' },
+        { key: 'UserDeleted', label: 'Deleted', type: 'checkbox' },
+        { key: 'UserExport', label: 'Exports', type: 'checkbox' },
+        { key: 'UserSaving', label: 'Save / Edit', type: 'checkbox' },
+        { key: 'UserNotifications', label: 'Notifications', type: 'checkbox' },
+      ],
+    },
+  ],
+};
+
+// ── Timesheet (TimeSheetsIndividual.aspx) ────────────────────────────────────
+
+const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
+  .map((v) => ({ value: v, label: v }));
+const YEARS = Array.from({ length: 10 }, (_, i) => String(2019 + i))
+  .map((v) => ({ value: v, label: v }));
+
+const timesheet: RecordFormConfig = {
+  title: 'Timesheet',
+  listPath: '/payroll/timesheets',
+  slug: 'timesheet',
+  idKey: 'TimesheetID',
+  titleKey: 'TimesheetStatus',
+  heroSlide: 2,
+  createDefaults: {
+    TimesheetStatus: 'Open',
+    TimesheetSalaryPercent: 100,
+    TimeSheetCurrencyRate: 1500,
+  },
+  sections: [
+    {
+      title: 'Timesheet',
+      fields: [
+        { key: 'TimesheetMonth', label: 'Month', type: 'select', options: MONTHS },
+        { key: 'TimesheetYr', label: 'Year', type: 'select', options: YEARS },
+        { key: 'TimesheetStartDate', label: 'Start Date', type: 'date' },
+        { key: 'TimesheetEndDate', label: 'End Date', type: 'date' },
+        { key: 'TimesheetStatus', label: 'Status', type: 'select', options: [
+          { value: 'Open', label: 'Open' },
+          { value: 'Closed', label: 'Closed' },
+          { value: 'ClosedNoPayment', label: 'Closed — No Payment' },
+        ] },
+        { key: 'TimesheetSalaryPercent', label: 'Salary %', type: 'number' },
+        { key: 'TimeSheetCurrencyRate', label: 'USD to LBP Rate', type: 'number' },
+        { key: 'TimesheetRemarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+  ],
+};
+
+// ── Coach attendance (CoachsAttendancesIndividual.aspx) ──────────────────────
+
+const ABSENT_TIMES = ['', '0-15', '15-30', '30-45', '1', '2', '3', '4', 'Day', '2Day', '3Day', '1Month']
+  .map((v) => ({ value: v, label: v === '' ? 'On Time' : v }));
+const DEDUCTS = ['', '1Hr', '2Hrs', '3Hrs', '4Hrs', '1Day', '2Day', '3Day', '1Month']
+  .map((v) => ({ value: v, label: v === '' ? 'No Deduction' : v }));
+
+const coachAttendanceForm: RecordFormConfig = {
+  title: 'Coach Attendance',
+  listPath: '/payroll/coach-attendance',
+  slug: 'coach-attendance',
+  idKey: 'Coaches_Attendance_ID',
+  titleKey: 'CoachFullName',
+  lookups: '/api/portal/payroll/attendance-lookups',
+  heroSlide: 3,
+  createDefaults: {
+    Coaches_Attendance_ReasonID: 2,
+    Coaches_Attendance_Absent: true,
+  },
+  sections: [
+    {
+      title: 'Attendance',
+      fields: [
+        { key: 'Coaches_Attendance_CoachID', label: 'Coach', type: 'select', optionsKey: 'coaches' },
+        { key: 'Coaches_Attendance_Date', label: 'Date', type: 'date' },
+        { key: 'Coaches_Attendance_ReasonID', label: 'Reason', type: 'select', optionsKey: 'reasons' },
+        { key: 'Coaches_Attendance_Absent', label: 'Absent', type: 'checkbox' },
+        { key: 'Coaches_Attendance_Late', label: 'Late', type: 'checkbox' },
+        { key: 'Coaches_Attendance_EarlyLeave', label: 'Early Leave', type: 'checkbox' },
+        { key: 'Coaches_Attendance_AbsentTime', label: 'Time Missed', type: 'select', options: ABSENT_TIMES },
+        { key: 'Coaches_Attendance_AbsentDeduct', label: 'Deduction', type: 'select', options: DEDUCTS },
+        { key: 'Coaches_Attendance_AbsentDeductReason', label: 'Deduction Reason', type: 'select', options: [
+          { value: '', label: 'No Reason' }, { value: 'ByProswim', label: 'By ProSwim' }, { value: 'ByCoach', label: 'By Coach' },
+        ] },
+        { key: 'Coaches_Attendance_Approved', label: 'Approved', type: 'checkbox' },
+        { key: 'Coaches_Attendance_Approvedby', label: 'Approved By', type: 'text' },
+        { key: 'Coaches_Attendance_ApprovedManager', label: 'Manager Approved (SiteMaster only)', type: 'checkbox' },
+        { key: 'Coaches_Attendance_Remarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+  ],
+};
+
 export const SemesterForm = () => <RecordFormPage config={semester} />;
 export const CoachForm = () => <RecordFormPage config={coach} />;
 export const ClassForm = () => <RecordFormPage config={klass} />;
 export const StudentForm = () => <RecordFormPage config={student} />;
+export const ExpenseForm = () => <RecordFormPage config={expense} />;
+export const PackTypeForm = () => <RecordFormPage config={packType} />;
+export const UserForm = () => <RecordFormPage config={portalUser} />;
+export const TimesheetForm = () => <RecordFormPage config={timesheet} />;
+export const CoachAttendanceForm = () => <RecordFormPage config={coachAttendanceForm} />;

@@ -57,8 +57,8 @@ const FULL_NAV: NavEntry[] = [
       { to: '/payments-due', label: 'Due Payments', icon: CreditCard },
       { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
       { to: '/session-changes/approve', label: 'Approve Changes', icon: ClipboardCheck },
-      { to: '/payment-delivery', label: 'Payment Delivery', icon: Truck, soon: true },
-      { to: '/expenses', label: 'Expenses', icon: Receipt, soon: true },
+      { to: '/payment-delivery', label: 'Payment Delivery', icon: Truck },
+      { to: '/expenses', label: 'Expenses', icon: Receipt },
     ],
   },
   {
@@ -68,7 +68,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/pr-schedule', label: 'Schedule', icon: CalendarDays },
       { to: '/privates', label: 'Packages', icon: GraduationCap },
       { to: '/pr-payments', label: 'Payments', icon: CreditCard },
-      { to: '/pr-payment-delivery', label: 'Payment Delivery', icon: Truck, soon: true },
+      { to: '/pr-payment-delivery', label: 'Payment Delivery', icon: Truck },
     ],
   },
   {
@@ -94,7 +94,7 @@ const FULL_NAV: NavEntry[] = [
     label: 'Communication',
     icon: MessageCircle,
     children: [
-      { to: '/bulk-whatsapp', label: 'Bulk WhatsApp', icon: MessageCircle, soon: true },
+      { to: '/bulk-whatsapp', label: 'Bulk WhatsApp', icon: MessageCircle },
     ],
   },
   {
@@ -118,21 +118,21 @@ const FULL_NAV: NavEntry[] = [
     label: 'Setup Private',
     icon: GraduationCap,
     children: [
-      { to: '/pack-types', label: 'Pack Types', icon: Layers, soon: true },
+      { to: '/pack-types', label: 'Pack Types', icon: Layers },
     ],
   },
   {
     label: 'Payroll',
     icon: Wallet,
     children: [
-      { to: '/payroll/timesheets', label: 'Timesheets', icon: Clock, soon: true },
-      { to: '/payroll/addons', label: 'Add-ons', icon: Wallet, soon: true },
-      { to: '/payroll/coach-attendance', label: 'Coach Attendance', icon: ClipboardCheck, soon: true },
+      { to: '/payroll/timesheets', label: 'Timesheets', icon: Clock },
+      { to: '/payroll/addons', label: 'Add-ons', icon: Wallet },
+      { to: '/payroll/coach-attendance', label: 'Coach Attendance', icon: ClipboardCheck },
     ],
   },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare, soon: true },
-  { to: '/settings', label: 'Settings', icon: Settings, soon: true },
-  { to: '/users', label: 'Users', icon: Shield, soon: true },
+  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/users', label: 'Users', icon: Shield },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
