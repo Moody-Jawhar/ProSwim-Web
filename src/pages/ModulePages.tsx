@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import { ModuleListPage, type ModuleConfig } from '../components/ModuleListPage';
+import { getStoredUser } from '../api/portalApi';
 
 // Configured list pages for the migrated legacy modules. Each maps 1:1 to a
 // legacy XxxList.aspx page and its stored procedure (see PortalModulesController).
@@ -61,6 +63,21 @@ const registrations: ModuleConfig = {
     { key: 'SessionsAttended', label: 'S-Attended', extra: true },
     { key: 'SessionsMissed', label: 'S-Missed', extra: true },
   ],
+  // The student name opens the full registration form (like the legacy popup);
+  // guests are blocked from the record endpoint, so they get plain text.
+  renderCell: (row, col) => {
+    if (col.key !== 'StudentFullName') return undefined;
+    if ((getStoredUser()?.userType || '').toLowerCase() === 'guest') return undefined;
+    return (
+      <Link
+        to={`/registrations/${row.RegistrationID}`}
+        onClick={(e) => e.stopPropagation()}
+        className="font-semibold text-[#1e5c97] hover:underline"
+      >
+        {String(row.StudentFullName ?? '')}
+      </Link>
+    );
+  },
 };
 
 // ── Group payments ───────────────────────────────────────────────────────────

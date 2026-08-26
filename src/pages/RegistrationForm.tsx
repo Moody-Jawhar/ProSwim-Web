@@ -1,6 +1,15 @@
+// Group registration form — full port of RegistrationsIndividual.aspx:
+// student/semester/level, classes 1–7, registration date, cost, paid-before,
+// discount and variation (amount or %, with the legacy net formula
+// Net = Cost + Variation − Discount − PaidBefore), stop panel with date /
+// money-on-hold / reason, kit, remarks, Save / Save-and-Pay / Delete.
+
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, Save, ArrowLeft, Search, X } from 'lucide-react';
+import { Link, useNavigate, useParams } from 'react-router-dom';
+import {
+  Loader2, AlertCircle, Save, ArrowLeft, Search, X, Calculator,
+  CreditCard, Trash2, User,
+} from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 
@@ -14,18 +23,29 @@ const inputCls =
 
 const s = (v: unknown) => (v == null ? '' : String(v));
 const n = (v: unknown) => (v == null || v === '' ? 0 : Number(v));
+const toDateInput = (v: unknown): string => {
+  if (!v) return '';
+  const d = new Date(String(v));
+  if (isNaN(d.getTime()) || d.getFullYear() < 1901) return '';
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
+type AmountMode = 'Amnt' | '%';
 
 export function RegistrationForm() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const user = getStoredUser();
   const canSave = user?.canSave !== false;
+  const isSiteMaster = (user?.userType || '').toLowerCase() === 'sitemaster';
   const isNew = !id || id === 'new';
 
   const [semesters, setSemesters] = useState<Option[]>([]);
   const [levels, setLevels] = useState<Option[]>([]);
   const [classes, setClasses] = useState<Picker[]>([]);
   const [locations, setLocations] = useState<Option[]>([]);
+  const [discountTypes, setDiscountTypes] = useState<Option[]>([]);
+  const [variationTypes, setVariationTypes] = useState<Option[]>([]);
 
   // form state
   const [studentId, setStudentId] = useState(0);
@@ -35,11 +55,23 @@ export function RegistrationForm() {
   const [levelId, setLevelId] = useState(0);
   const [times, setTimes] = useState(1);
   const [classIds, setClassIds] = useState<number[]>([0, 0, 0, 0, 0, 0, 0]);
+  const [regDate, setRegDate] = useState(() => new Date().toISOString().slice(0, 10));
   const [cost, setCost] = useState(0);
-  const [discount, setDiscount] = useState(0);
+  const [paidBefore, setPaidBefore] = useState(0);
+  const [discountEntry, setDiscountEntry] = useState(0);
+  const [discountMode, setDiscountMode] = useState<AmountMode>('Amnt');
+  const [discountTypeId, setDiscountTypeId] = useState(0);
+  const [discountNote, setDiscountNote] = useState('');
+  const [variationEntry, setVariationEntry] = useState(0);
+  const [variationMode, setVariationMode] = useState<AmountMode>('Amnt');
+  const [variationTypeId, setVariationTypeId] = useState(0);
+  const [variationNote, setVariationNote] = useState('');
   const [netToPay, setNetToPay] = useState(0);
   const [remarks, setRemarks] = useState('');
   const [stopped, setStopped] = useState(false);
+  const [stopDate, setStopDate] = useState('');
+  const [stopReason, setStopReason] = useState('');
+  const [moneyOnHold, setMoneyOnHold] = useState(0);
   const [kit, setKit] = useState(false);
 
   // student search
@@ -65,6 +97,9 @@ export function RegistrationForm() {
       '/api/portal/students/lookups'
     )
       .then((lk) => setLocations(lk.locations.map((l) => ({ value: l.locationId, label: l.locationNickName ?? `#${l.locationId}` }))))
+      .catch(() => {});
+    apiRequest<{ discountTypes: Option[]; variationTypes: Option[] }>('/api/portal/edit/registration-lookups')
+      .then((lk) => { setDiscountTypes(lk.discountTypes ?? []); setVariationTypes(lk.variationTypes ?? []); })
       .catch(() => {});
   }, []);
 
@@ -100,11 +135,21 @@ export function RegistrationForm() {
         setLevelId(n(r.RegistrationLevelID));
         setTimes(n(r.RegistrationNumberOfTimes) || 1);
         setClassIds(CLASS_SLOTS.map((i) => n(r[`RegistrationClassId${i}`])));
+        setRegDate(toDateInput(r.RegistrationDate) || new Date().toISOString().slice(0, 10));
         setCost(n(r.RegistrationCost));
-        setDiscount(n(r.RegistrationDiscount));
+        setPaidBefore(n(r.RegistrationPaidPrevSemester));
+        setDiscountEntry(n(r.RegistrationDiscount)); // stored as amount
+        setDiscountTypeId(n(r.RegistrationDiscountTYpeID));
+        setDiscountNote(s(r.RegistrationDiscountNote));
+        setVariationEntry(n(r.RegistrationVariation));
+        setVariationTypeId(n(r.RegistrationVariationTYpeID));
+        setVariationNote(s(r.RegistrationVariationNote));
         setNetToPay(n(r.RegistrationNetToPay));
         setRemarks(s(r.RegistrationRemarks));
         setStopped(r.RegistrationStudentStopped === true);
+        setStopDate(toDateInput(r.RegistrationStudentStoppedDate));
+        setStopReason(s(r.RegistrationStudentStoppedReason));
+        setMoneyOnHold(n(r.RegistrationStudentStoppedMoneyOnHold));
         setKit(r.RegistrationKit === true);
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load registration.'))
@@ -145,7 +190,15 @@ export function RegistrationForm() {
     setResults([]);
   }
 
-  async function save() {
+  // Legacy CalculateNetToPay: % entries convert against Cost, rounded to int.
+  const discountAmount = discountMode === '%' ? Math.round((discountEntry * cost) / 100) : Math.round(discountEntry);
+  const variationAmount = variationMode === '%' ? Math.round((variationEntry * cost) / 100) : Math.round(variationEntry);
+
+  function recalcNet() {
+    setNetToPay(cost + variationAmount - discountAmount - paidBefore);
+  }
+
+  async function save(andPay = false) {
     if (!studentId) { setError('Choose a student first.'); return; }
     if (!semesterId) { setError('Choose a semester.'); return; }
     setSaving(true);
@@ -155,14 +208,23 @@ export function RegistrationForm() {
       RegistrationSemesterId: semesterId,
       RegistrationLevelID: levelId,
       RegistrationNumberOfTimes: times,
-      RegistrationDate: new Date().toISOString().slice(0, 10),
+      RegistrationDate: regDate,
       RegistrationCost: cost,
-      RegistrationDiscount: discount,
+      RegistrationPaidPrevSemester: paidBefore,
+      RegistrationDiscount: discountAmount,
+      RegistrationDiscountTYpeID: discountTypeId,
+      RegistrationDiscountNote: discountNote,
+      RegistrationVariation: variationAmount,
+      RegistrationVariationTYpeID: variationTypeId,
+      RegistrationVariationNote: variationNote,
       RegistrationNetToPay: netToPay,
       RegistrationRemarks: remarks,
       RegistrationStudentStopped: stopped,
+      RegistrationStudentStoppedReason: stopReason,
+      RegistrationStudentStoppedMoneyOnHold: moneyOnHold,
       RegistrationKit: kit,
     };
+    if (stopDate) payload.RegistrationStudentStoppedDate = stopDate;
     CLASS_SLOTS.forEach((slot, idx) => { payload[`RegistrationClassId${slot}`] = classIds[idx]; });
 
     try {
@@ -171,10 +233,21 @@ export function RegistrationForm() {
       } else {
         await apiRequest(`/api/portal/edit/registration/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       }
-      navigate('/registrations');
+      navigate(andPay ? '/payments/new' : '/registrations');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Save failed.');
       setSaving(false);
+    }
+  }
+
+  async function deletePermanently() {
+    if (!window.confirm(`Permanently delete this registration for ${studentLabel}? This cannot be undone.`)) return;
+    if (!window.confirm('Are you absolutely sure? All linked data may be affected.')) return;
+    try {
+      await apiRequest(`/api/portal/edit/registration/${id}`, { method: 'DELETE' });
+      navigate('/registrations');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Delete failed.');
     }
   }
 
@@ -195,9 +268,22 @@ export function RegistrationForm() {
         slide={1}
       />
 
-      <button onClick={() => navigate('/registrations')} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e5c97] mb-4">
-        <ArrowLeft className="size-4" /> Back to registrations
-      </button>
+      <div className="flex items-center gap-4 mb-4">
+        <button onClick={() => navigate('/registrations')} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e5c97]">
+          <ArrowLeft className="size-4" /> Back to registrations
+        </button>
+        <div className="flex-1" />
+        {!isNew && studentId > 0 && (
+          <Link to={`/students/${studentId}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e5c97] hover:underline">
+            <User className="size-4" /> Student profile
+          </Link>
+        )}
+        {!isNew && canSave && (
+          <Link to="/payments/new" className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-700 hover:underline">
+            <CreditCard className="size-4" /> Add payment
+          </Link>
+        )}
+      </div>
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-4">
@@ -282,8 +368,18 @@ export function RegistrationForm() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Times per week</label>
-              <input type="number" min={1} max={7} value={times} onChange={(e) => setTimes(Number(e.target.value))} className={inputCls} />
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Registration date</label>
+              <input type="date" value={regDate} onChange={(e) => setRegDate(e.target.value)} className={inputCls} />
+            </div>
+
+            <div className="flex items-end gap-4">
+              <div className="flex-1">
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Times per week</label>
+                <input type="number" min={1} max={7} value={times} onChange={(e) => setTimes(Number(e.target.value))} className={inputCls} />
+              </div>
+              <label className="flex items-center gap-2 text-sm text-slate-700 select-none pb-2">
+                <input type="checkbox" checked={kit} onChange={(e) => setKit(e.target.checked)} className="accent-[#1e5c97]" /> Swimming kit
+              </label>
             </div>
           </div>
         </div>
@@ -296,7 +392,7 @@ export function RegistrationForm() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {CLASS_SLOTS.map((slot, idx) => (
               <div key={slot}>
-                <label className="block text-xs font-semibold text-slate-500 mb-1">Class {slot}</label>
+                <label className="block text-xs font-semibold text-slate-500 mb-1">Class {slot}{slot === 1 ? ' *' : ''}</label>
                 <select
                   value={classIds[idx]}
                   onChange={(e) => setSlot(idx, Number(e.target.value))}
@@ -311,31 +407,124 @@ export function RegistrationForm() {
           </div>
         </div>
 
-        {/* Money */}
+        {/* Money — legacy formula: Net = Cost + Variation − Discount − PaidBefore */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Pricing</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Cost</label>
               <input type="number" value={cost} onChange={(e) => setCost(Number(e.target.value))} className={inputCls} />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Discount</label>
-              <input type="number" value={discount} onChange={(e) => setDiscount(Number(e.target.value))} className={inputCls} />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Net to pay</label>
-              <input type="number" value={netToPay} onChange={(e) => setNetToPay(Number(e.target.value))} className={inputCls} />
+              <label className="block text-xs font-semibold text-slate-500 mb-1">Paid before</label>
+              <input type="number" value={paidBefore} onChange={(e) => setPaidBefore(Number(e.target.value))} className={inputCls} />
             </div>
           </div>
-          <div className="flex gap-6 mt-4">
-            <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
-              <input type="checkbox" checked={kit} onChange={(e) => setKit(e.target.checked)} className="accent-[#1e5c97]" /> Kit included
-            </label>
-            <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
-              <input type="checkbox" checked={stopped} onChange={(e) => setStopped(e.target.checked)} className="accent-[#1e5c97]" /> Stopped
-            </label>
+
+          {/* Discount block (green, like the legacy form) */}
+          <div className="rounded-xl bg-emerald-50/70 border border-emerald-100 p-3 mb-3">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-emerald-800 mb-1">Discount</label>
+                <div className="flex gap-1.5">
+                  <input type="number" value={discountEntry} onChange={(e) => setDiscountEntry(Number(e.target.value))} className={inputCls} />
+                  <select value={discountMode} onChange={(e) => setDiscountMode(e.target.value as AmountMode)}
+                    className="rounded-lg border border-slate-200 px-1.5 text-sm">
+                    <option value="Amnt">Am</option>
+                    <option value="%">%</option>
+                  </select>
+                  <button onClick={recalcNet} title="Recalculate net"
+                    className="rounded-lg bg-[#1e5c97] text-white px-2.5 text-sm font-semibold flex items-center gap-1">
+                    <Calculator className="size-3.5" /> Calc
+                  </button>
+                </div>
+                {discountMode === '%' && (
+                  <p className="text-[11px] text-emerald-700 mt-1">= {discountAmount.toLocaleString()} off</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-emerald-800 mb-1">Discount type</label>
+                <select value={discountTypeId} onChange={(e) => setDiscountTypeId(Number(e.target.value))} className={inputCls}>
+                  <option value={0}>Not selected</option>
+                  {discountTypes.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-emerald-800 mb-1">Discount note</label>
+                <input value={discountNote} onChange={(e) => setDiscountNote(e.target.value)} className={inputCls} />
+              </div>
+            </div>
           </div>
+
+          {/* Variation block (cyan, like the legacy form) */}
+          <div className="rounded-xl bg-cyan-50/70 border border-cyan-100 p-3 mb-4">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-xs font-semibold text-cyan-800 mb-1">Variation amount</label>
+                <div className="flex gap-1.5">
+                  <input type="number" value={variationEntry} onChange={(e) => setVariationEntry(Number(e.target.value))} className={inputCls} />
+                  <select value={variationMode} onChange={(e) => setVariationMode(e.target.value as AmountMode)}
+                    className="rounded-lg border border-slate-200 px-1.5 text-sm">
+                    <option value="Amnt">Am</option>
+                    <option value="%">%</option>
+                  </select>
+                  <button onClick={recalcNet} title="Recalculate net"
+                    className="rounded-lg bg-[#1e5c97] text-white px-2.5 text-sm font-semibold flex items-center gap-1">
+                    <Calculator className="size-3.5" /> Calc
+                  </button>
+                </div>
+                {variationMode === '%' && (
+                  <p className="text-[11px] text-cyan-700 mt-1">= {variationAmount.toLocaleString()} added</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-cyan-800 mb-1">Variation type</label>
+                <select value={variationTypeId} onChange={(e) => setVariationTypeId(Number(e.target.value))} className={inputCls}>
+                  <option value={0}>Not selected</option>
+                  {variationTypes.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
+                </select>
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-cyan-800 mb-1">Variation note</label>
+                <input value={variationNote} onChange={(e) => setVariationNote(e.target.value)} className={inputCls} />
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-end gap-4">
+            <div className="max-w-48">
+              <label className="block text-xs font-bold text-slate-700 mb-1">Net to pay</label>
+              <input type="number" value={netToPay} onChange={(e) => setNetToPay(Number(e.target.value))}
+                className={`${inputCls} font-bold`} />
+            </div>
+            <p className="text-xs text-slate-400 pb-2.5">
+              Net = Cost + Variation − Discount − Paid before (press Calc to apply)
+            </p>
+          </div>
+        </div>
+
+        {/* Stop panel (pink, like the legacy form) */}
+        <div className={`rounded-2xl border p-5 ${stopped ? 'bg-red-50/60 border-red-100' : 'bg-white border-slate-100 shadow-sm'}`}>
+          <label className="flex items-center gap-2 text-sm font-bold text-slate-800 select-none mb-3">
+            <input type="checkbox" checked={stopped} onChange={(e) => setStopped(e.target.checked)} className="accent-red-500" />
+            Student stopped
+          </label>
+          {stopped && (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-xs font-semibold text-red-700 mb-1">Stop date</label>
+                <input type="date" value={stopDate} onChange={(e) => setStopDate(e.target.value)} className={inputCls} />
+              </div>
+              <div>
+                <label className="block text-xs font-semibold text-red-700 mb-1">Money on hold</label>
+                <input type="number" value={moneyOnHold} onChange={(e) => setMoneyOnHold(Number(e.target.value))} className={inputCls} />
+              </div>
+              <div className="md:col-span-3">
+                <label className="block text-xs font-semibold text-red-700 mb-1">Stop reason</label>
+                <textarea value={stopReason} onChange={(e) => setStopReason(e.target.value)} rows={2} className={inputCls} />
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Remarks */}
@@ -346,14 +535,29 @@ export function RegistrationForm() {
       </div>
 
       {canSave && (
-        <div className="mt-6 flex justify-end">
+        <div className="mt-6 flex flex-wrap justify-end gap-2">
+          {!isNew && isSiteMaster && (
+            <button
+              onClick={deletePermanently}
+              className="flex items-center gap-2 rounded-xl border border-red-200 bg-red-600 text-white text-sm font-semibold px-5 py-2.5 hover:bg-red-700 mr-auto"
+            >
+              <Trash2 className="size-4" /> Delete Permanently
+            </button>
+          )}
           <button
-            onClick={save}
+            onClick={() => save(false)}
             disabled={saving}
             className="btn-grad flex items-center gap-2 rounded-xl text-sm font-semibold px-6 py-2.5"
           >
             {saving ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
             {isNew ? 'Create registration' : 'Save changes'}
+          </button>
+          <button
+            onClick={() => save(true)}
+            disabled={saving}
+            className="flex items-center gap-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-semibold px-6 py-2.5 disabled:opacity-50"
+          >
+            <CreditCard className="size-4" /> Save and Pay
           </button>
         </div>
       )}
