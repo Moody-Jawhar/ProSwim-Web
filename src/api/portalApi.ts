@@ -71,8 +71,11 @@ async function apiRequest<T>(
   if (res.status === 401 && requiresAuth) {
     clearAuth();
     // Hard redirect: any 401 on an authenticated call means the session is gone.
-    if (!window.location.pathname.startsWith("/login")) {
-      window.location.href = "/login";
+    // Honor vite's base path (/V27_WEB/ in prod, / in dev) so we don't jump to
+    // the server root — BASE_URL always ends with a slash.
+    const loginPath = `${import.meta.env.BASE_URL}login`;
+    if (window.location.pathname !== loginPath) {
+      window.location.href = loginPath;
     }
     throw new ApiError("Session expired.", 401);
   }

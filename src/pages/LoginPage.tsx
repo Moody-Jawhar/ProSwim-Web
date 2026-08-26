@@ -108,14 +108,14 @@ export function LoginPage() {
       className="min-h-screen flex items-center justify-center px-4"
       style={{
         backgroundImage:
-          'linear-gradient(120deg, rgba(36,44,67,0.88) 0%, rgba(30,92,151,0.72) 60%, rgba(30,92,151,0.5) 100%), url(/heroes/slide1.jpg)',
+          `linear-gradient(120deg, rgba(36,44,67,0.88) 0%, rgba(30,92,151,0.72) 60%, rgba(30,92,151,0.5) 100%), url(${import.meta.env.BASE_URL}heroes/slide1.jpg)`,
         backgroundSize: 'cover',
         backgroundPosition: 'center',
       }}
     >
       <div className="hero-in w-full max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-8">
         <div className="flex flex-col items-center mb-6">
-          <img src="/ProSwimLogo.png" alt="ProSwim" className="h-12 w-auto mb-3" />
+          <img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="ProSwim" className="h-12 w-auto mb-3" />
           <h1 className="text-2xl font-bold text-slate-900">
             {challengeId ? 'Verify it’s you' : 'Management Portal'}
           </h1>
@@ -200,7 +200,7 @@ export function LoginPage() {
                 onChange={(e) => setRemember(e.target.checked)}
                 className="accent-[#1e5c97]"
               />
-              Trust this device for 20 days
+              Trust this device for 30 days
             </label>
             <button
               type="submit"

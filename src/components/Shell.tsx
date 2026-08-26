@@ -302,7 +302,7 @@ export function Shell() {
         <button onClick={() => setDrawerOpen(true)} title="Open menu" className="p-1 -ml-1">
           <Menu className="size-6" />
         </button>
-        <img src="/ProSwimLogo.png" alt="ProSwim" className="h-6 w-auto bg-white rounded px-1.5 py-0.5" />
+        <img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="ProSwim" className="h-6 w-auto bg-white rounded px-1.5 py-0.5" />
         <span className="text-[10px] tracking-widest uppercase text-white/60">Portal</span>
       </header>
 
@@ -340,7 +340,7 @@ export function Shell() {
           ) : (
             <>
               <div className="bg-white rounded-lg px-3 py-2 w-full flex justify-center">
-                <img src="/ProSwimLogo.png" alt="ProSwim" className="h-7 w-auto" />
+                <img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="ProSwim" className="h-7 w-auto" />
               </div>
               <p className="text-[10px] text-white/50 mt-1.5 tracking-widest uppercase whitespace-nowrap">Management Portal</p>
             </>
