@@ -99,17 +99,17 @@ export function FinanceOverview() {
 
           {/* 13-month bars: revenue (blue) vs expenses (red) */}
           <div className="bg-white/70 rounded-xl border border-slate-100 p-3.5 mb-4">
-            <div className="flex items-end gap-1.5 h-28">
+            <div className="flex items-stretch gap-1.5" style={{ height: 130 }}>
               {data.months.map((m) => (
-                <div key={m.month} className="flex-1 flex flex-col items-center gap-0.5"
+                <div key={m.month} className="flex-1 h-full flex flex-col items-center gap-0.5"
                   title={`${m.month} — revenue ${fmtMoney(m.revenue[cur], cur)} · expenses ${fmtMoney(m.expenses[cur], cur)} · profit ${fmtMoney(m.profit[cur], cur)}`}>
-                  <div className="w-full flex items-end gap-px h-full">
+                  <div className="w-full flex-1 flex items-end gap-px">
                     <div className="flex-1 rounded-t bg-[#1e5c97]"
-                      style={{ height: `${Math.max(2, (m.revenue[cur] / chartMax) * 100)}%`, opacity: 0.85 }} />
+                      style={{ height: `${Math.max(3, (m.revenue[cur] / chartMax) * 100)}%`, opacity: 0.85 }} />
                     <div className="flex-1 rounded-t bg-red-400"
-                      style={{ height: `${Math.max(2, (m.expenses[cur] / chartMax) * 100)}%`, opacity: 0.8 }} />
+                      style={{ height: `${Math.max(3, (m.expenses[cur] / chartMax) * 100)}%`, opacity: 0.8 }} />
                   </div>
-                  <span className="text-[8px] text-slate-400">{m.month.slice(5)}</span>
+                  <span className="text-[8px] text-slate-400 shrink-0">{m.month.slice(5)}</span>
                 </div>
               ))}
             </div>

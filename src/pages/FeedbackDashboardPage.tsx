@@ -156,16 +156,18 @@ export function FeedbackDashboardPage() {
             </div>
             <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5">
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-2">Responses per month</p>
-              <div className="flex items-end gap-1 h-14">
+              <div className="flex items-stretch gap-1" style={{ height: 56 }}>
                 {(summary.monthly ?? []).slice(-12).map((m, i) => (
-                  <div key={i} className="flex-1 flex flex-col items-center gap-0.5" title={`${str(m.Month)}: ${num(m.Responses)} responses · avg ${num(m.Avg).toFixed(2)}`}>
-                    <div className="w-full rounded-t"
-                      style={{
-                        height: `${Math.max(8, (num(m.Responses) / maxMonthly) * 100)}%`,
-                        background: scoreColor(num(m.Avg)),
-                        opacity: 0.85,
-                      }} />
-                    <span className="text-[8px] text-slate-400">{str(m.Month).slice(5)}</span>
+                  <div key={i} className="flex-1 h-full flex flex-col items-center gap-0.5" title={`${str(m.Month)}: ${num(m.Responses)} responses · avg ${num(m.Avg).toFixed(2)}`}>
+                    <div className="w-full flex-1 flex items-end">
+                      <div className="w-full rounded-t"
+                        style={{
+                          height: `${Math.max(8, (num(m.Responses) / maxMonthly) * 100)}%`,
+                          background: scoreColor(num(m.Avg)),
+                          opacity: 0.85,
+                        }} />
+                    </div>
+                    <span className="text-[8px] text-slate-400 shrink-0">{str(m.Month).slice(5)}</span>
                   </div>
                 ))}
                 {(summary.monthly ?? []).length === 0 && <p className="text-sm text-slate-400">No data yet</p>}
