@@ -8,6 +8,7 @@ import {
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { AiRiskRadar } from '../components/AiRiskRadar';
+import { FinanceOverview } from '../components/FinanceOverview';
 
 interface Stats {
   date: string;
@@ -128,6 +129,9 @@ export function DashboardPage() {
                 : 'none recorded yet this month'}
             />
           </div>
+
+          {/* Finance analytics — SiteMaster only (the endpoint enforces it too) */}
+          {userType === 'sitemaster' && <FinanceOverview />}
 
           {/* Quick actions — the daily operations, one tap away */}
           <div className="mb-6">
