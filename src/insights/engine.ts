@@ -410,10 +410,12 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
   const rows = await apiRequest<Row[]>('/api/portal/modules/registrations?active=true&stopped=false');
 
   // Group registrations by student (id when the proc exposes one, else name).
+  const studentIdOf = (r: Row) =>
+    r['StudentID'] ?? r['StudentId'] ?? r['RegistrationStudentId'] ?? r['RegistrationStudentID'] ?? null;
   const byStudent = new Map<string, Row[]>();
   for (const r of rows) {
-    const id = r['StudentID'] ?? r['StudentId'];
-    const key = id != null ? `#${id}` : str(r, 'StudentFullName').trim().toLowerCase();
+    const id = studentIdOf(r);
+    const key = id != null && Number(id) > 0 ? `#${id}` : str(r, 'StudentFullName').trim().toLowerCase();
     if (!key || key === '#0') continue;
     const list = byStudent.get(key);
     if (list) list.push(r); else byStudent.set(key, [r]);
@@ -494,9 +496,9 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
     if (reasons.length === 0) reasons.push('multiple weak signals across registrations');
 
     const first = regRows[0];
-    const id = first['StudentID'] ?? first['StudentId'];
+    const id = studentIdOf(first);
     entries.push({
-      studentId: id != null ? Number(id) : null,
+      studentId: id != null && Number(id) > 0 ? Number(id) : null,
       name: str(first, 'StudentFullName'),
       phone: str(first, 'PhoneNumber1'),
       semester: recent?.semester ?? str(first, 'SemesterName'),
@@ -505,5 +507,30 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
   }
 
   entries.sort((a, b) => b.topScore - a.topScore);
-  return { entries: entries.slice(0, RADAR_CAP), scanned, flagged };
+  const top = entries.slice(0, RADAR_CAP);
+
+  // The registrations proc doesn't expose a student id — resolve the flagged
+  // names against the students roster so each row links straight to the
+  // student's page instead of a name search that may not match.
+  await Promise.all(top.filter((e) => e.studentId == null).map(async (e) => {
+    // The proc may not match a full "First Middle Last" string — try the full
+    // name, then first + last word, then the first word alone, and take the
+    // row whose full name matches exactly.
+    const words = e.name.trim().split(/\s+/);
+    const attempts = [e.name.trim()];
+    if (words.length > 2) attempts.push(`${words[0]} ${words[words.length - 1]}`);
+    if (words.length > 1) attempts.push(words[0]);
+    for (const q of attempts) {
+      try {
+        const matches = await apiRequest<{ studentId: number; studentFullName: string | null }[]>(
+          `/api/portal/students?searchFor=${encodeURIComponent(q)}`);
+        const exact = matches.filter(
+          (m) => (m.studentFullName ?? '').trim().toLowerCase() === e.name.trim().toLowerCase());
+        const hit = exact.length >= 1 ? exact[0] : matches.length === 1 ? matches[0] : null;
+        if (hit) { e.studentId = hit.studentId; break; }
+      } catch { /* try the next form */ }
+    }
+  }));
+
+  return { entries: top, scanned, flagged };
 }
