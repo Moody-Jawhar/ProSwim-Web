@@ -20,7 +20,8 @@ const money = (v: unknown) => (v == null ? '—' : Number(v).toLocaleString());
 const dmy = (v: unknown) => {
   if (!v) return '—';
   const d = new Date(String(v));
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+  if (isNaN(d.getTime())) return '—';
+  return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 };
 
 interface Variant {
@@ -164,10 +165,10 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-          <table className="tbl w-full text-sm">
+          <table className="tbl w-full text-[15px] whitespace-nowrap [&_td]:py-3 [&_td]:px-4 [&_th]:py-3 [&_th]:px-4">
             <thead>
               <tr>
-                <th />
+                <th className="!px-2" />
                 <th className="text-left">Location</th>
                 {variant.hasSemester && <th className="text-left">Semester</th>}
                 <th className="text-left">S/N</th>
@@ -189,15 +190,15 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
                 return (
                   <>
                     <tr key={id} onClick={() => toggleDetail(id)} className="cursor-pointer hover:bg-slate-50">
-                      <td className="w-6">{openId === id ? <ChevronDown className="size-4 text-slate-400" /> : <ChevronRight className="size-4 text-slate-400" />}</td>
-                      <td>{str(r, 'LocationNickName')}</td>
-                      {variant.hasSemester && <td>{str(r, 'SemesterName')}</td>}
+                      <td className="w-6 !px-2">{openId === id ? <ChevronDown className="size-4 text-slate-400" /> : <ChevronRight className="size-4 text-slate-400" />}</td>
+                      <td>{str(r, 'LocationNickName') || '—'}</td>
+                      {variant.hasSemester && <td>{str(r, 'SemesterName') || '—'}</td>}
                       <td className="font-semibold">{str(r, variant.serialKey)}</td>
-                      {variant.hasSemester && <td className="text-right text-emerald-700">{money(r['PaymentDeliveryTotalPayments'])}</td>}
-                      {variant.hasSemester && <td className="text-right text-red-600">{money(r['PaymentDeliveryTotalExpenses'])}</td>}
-                      <td className="text-right font-bold">{money(r[variant.amountKey])}</td>
+                      {variant.hasSemester && <td className="text-right text-emerald-700 tabular-nums">{money(r['PaymentDeliveryTotalPayments'])}</td>}
+                      {variant.hasSemester && <td className="text-right text-red-600 tabular-nums">{money(r['PaymentDeliveryTotalExpenses'])}</td>}
+                      <td className="text-right font-bold tabular-nums">{money(r[variant.amountKey])}</td>
                       <td>{dmy(r[variant.recDateKey])}</td>
-                      <td className="text-center">{closed ? 'Yes' : ''}</td>
+                      <td className="text-center">{closed ? <span className="text-emerald-700 font-bold">Yes</span> : ''}</td>
                       {isSiteMaster && (
                         <td onClick={(e) => e.stopPropagation()}>
                           <button onClick={() => setClosed(id, !closed)}
