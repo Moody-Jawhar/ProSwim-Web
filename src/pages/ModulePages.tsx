@@ -7,6 +7,13 @@ import { getStoredUser } from '../api/portalApi';
 
 const LOOKUPS = '/api/portal/modules/lookups';
 
+// Local-time "today" for date-filter defaults (toISOString would slip a day
+// around midnight in UTC+ timezones).
+const today = () => {
+  const d = new Date();
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+};
+
 const PACKAGE_STATUSES = ['Active', 'Closed', 'ClosedNeedPayment', 'MovedtoGroup', 'Freeze', 'Cancelled', 'Transfer']
   .map((v) => ({ value: v, label: v }));
 
@@ -327,7 +334,8 @@ const sessions: ModuleConfig = {
     { param: 'semesterId', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
     { param: 'day', label: 'Day', type: 'select', options: WEEK_DAYS, width: 'max-w-24' },
-    { param: 'date', label: 'Date', type: 'date' },
+    // Opens on today's sessions — clear or change the date to browse others.
+    { param: 'date', label: 'Date', type: 'date', initial: today() },
   ],
   columns: [
     { key: 'ClassName', label: 'Class' },
