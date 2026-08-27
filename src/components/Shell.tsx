@@ -53,6 +53,8 @@ const FULL_NAV: NavEntry[] = [
       { to: '/schedule', label: 'Schedule', icon: CalendarDays },
       { to: '/registrations', label: 'Registrations', icon: BookOpen },
       { to: '/sessions', label: 'Sessions', icon: ClipboardCheck },
+      { to: '/attendance-summary', label: 'Attendance Summary', icon: ClipboardCheck },
+      { to: '/attendance-details', label: 'Attendance Details', icon: ClipboardCheck },
       { to: '/payments', label: 'Payments', icon: CreditCard },
       { to: '/payments-due', label: 'Due Payments', icon: CreditCard },
       { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },

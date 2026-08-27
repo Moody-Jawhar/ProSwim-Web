@@ -40,6 +40,7 @@ import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
 import { SettingsAdminPage } from './pages/SettingsAdminPage';
 import { PayrollSheetPage } from './pages/PayrollSheetPage';
 import { AddonFormPage } from './pages/AddonFormPage';
+import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/AttendanceReports';
 import { getStoredToken } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -77,6 +78,8 @@ export default function App() {
           <Route path="/registrations/new" element={<RegistrationForm />} />
           <Route path="/registrations/:id" element={<RegistrationForm />} />
           <Route path="/sessions" element={<SessionsPage />} />
+          <Route path="/attendance-summary" element={<AttendanceSummaryPage />} />
+          <Route path="/attendance-details" element={<AttendanceDetailsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
           <Route path="/payments/new" element={<PaymentForm />} />
           <Route path="/payments/:id" element={<PaymentForm />} />
