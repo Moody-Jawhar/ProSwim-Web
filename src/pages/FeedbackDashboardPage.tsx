@@ -31,9 +31,11 @@ export function FeedbackDashboardPage() {
   const isSiteMaster = (user?.userType || '').toLowerCase() === 'sitemaster';
 
   const [refType, setRefType] = useState('');
+  const [coach, setCoach] = useState('');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [summary, setSummary] = useState<Summary | null>(null);
+  const [coaches, setCoaches] = useState<Row[]>([]);
   const [responses, setResponses] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -44,17 +46,23 @@ export function FeedbackDashboardPage() {
     setError('');
     const q = new URLSearchParams();
     if (refType) q.set('refType', refType);
+    if (coach) q.set('coach', coach);
     if (dateFrom) q.set('dateFrom', dateFrom);
     if (dateTo) q.set('dateTo', dateTo);
+    const qc = new URLSearchParams(); // coach board ignores the coach filter itself
+    if (refType) qc.set('refType', refType);
+    if (dateFrom) qc.set('dateFrom', dateFrom);
+    if (dateTo) qc.set('dateTo', dateTo);
     Promise.all([
       apiRequest<Summary>(`/api/portal/feedback/summary?${q}`),
       apiRequest<Row[]>(`/api/portal/feedback/responses?${q}`),
+      apiRequest<Row[]>(`/api/portal/feedback/coaches?${qc}`),
     ])
-      .then(([sm, rs]) => { setSummary(sm); setResponses(rs); })
+      .then(([sm, rs, cs]) => { setSummary(sm); setResponses(rs); setCoaches(cs); })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load feedback.'))
       .finally(() => setLoading(false));
   }
-  useEffect(load, [refType]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [refType, coach]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ratingQs = useMemo(
     () => (summary?.perQuestion ?? []).filter((q) => str(q.QuestionType) === 'rating'),
@@ -74,6 +82,12 @@ export function FeedbackDashboardPage() {
           <option value="">Group + Private</option>
           <option value="Group">Group only</option>
           <option value="Private">Private only</option>
+        </select>
+        <select value={coach} onChange={(e) => setCoach(e.target.value)} className={`${inputCls} max-w-48`}>
+          <option value="">All coaches</option>
+          {coaches.map((c) => (
+            <option key={str(c.CoachName)} value={str(c.CoachName)}>{str(c.CoachName)}</option>
+          ))}
         </select>
         <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={inputCls} />
         <span className="text-slate-400 text-sm">to</span>
@@ -145,6 +159,38 @@ export function FeedbackDashboardPage() {
             </div>
           </div>
 
+          {/* Coach ratings */}
+          {coaches.length > 0 && (
+            <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 mb-6">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Coach ratings</p>
+              <div className="space-y-3">
+                {coaches.map((c) => {
+                  const avg = c.Avg != null ? Number(c.Avg) : null;
+                  const isActive = coach === str(c.CoachName);
+                  return (
+                    <button key={str(c.CoachName)}
+                      onClick={() => setCoach(isActive ? '' : str(c.CoachName))}
+                      title={isActive ? 'Clear coach filter' : 'Filter by this coach'}
+                      className={`w-full text-left rounded-xl p-2 -m-2 transition-colors ${isActive ? 'bg-[#e8f0f8]' : 'hover:bg-slate-50'}`}>
+                      <div className="flex items-baseline justify-between gap-3 mb-1">
+                        <p className="text-sm font-bold text-slate-800">{str(c.CoachName)}</p>
+                        <p className="text-sm font-extrabold tabular-nums shrink-0"
+                          style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
+                          {avg != null ? avg.toFixed(2) : '—'}
+                          <span className="text-xs font-normal text-slate-400"> ({num(c.Responses)} response{num(c.Responses) === 1 ? '' : 's'})</span>
+                        </p>
+                      </div>
+                      <div className="h-2.5 rounded-full bg-slate-100 overflow-hidden">
+                        <div className="h-full rounded-full"
+                          style={{ width: `${avg != null ? (avg / 5) * 100 : 0}%`, background: avg != null ? scoreColor(avg) : '#E2E8F0' }} />
+                      </div>
+                    </button>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {/* Per-question bars */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 mb-6">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Scores by question</p>
@@ -196,6 +242,7 @@ export function FeedbackDashboardPage() {
                   <th className="text-left">Date</th>
                   <th className="text-left">Student</th>
                   <th className="text-left">Type</th>
+                  <th className="text-left">Coach</th>
                   <th className="text-left">Course</th>
                   <th className="text-right">Score</th>
                   <th className="text-left">Suggestions</th>
@@ -203,7 +250,7 @@ export function FeedbackDashboardPage() {
               </thead>
               <tbody>
                 {responses.length === 0 && (
-                  <tr><td colSpan={6} className="text-center text-slate-400 py-6">No feedback submitted yet — surveys appear in the mobile app on every registration and package card.</td></tr>
+                  <tr><td colSpan={7} className="text-center text-slate-400 py-6">No feedback submitted yet — surveys appear in the mobile app on every registration and package card.</td></tr>
                 )}
                 {responses.map((r) => {
                   const avg = r.Avg != null ? Number(r.Avg) : null;
@@ -216,6 +263,7 @@ export function FeedbackDashboardPage() {
                           str(r.RefType) === 'Private' ? 'bg-purple-50 text-purple-700' : 'bg-[#e8f0f8] text-[#1e5c97]'
                         }`}>{str(r.RefType)}</span>
                       </td>
+                      <td>{str(r.CoachName) || '—'}</td>
                       <td className="max-w-52 truncate" title={str(r.RefLabel)}>{str(r.RefLabel) || '—'}</td>
                       <td className="text-right font-extrabold tabular-nums" style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
                         {avg != null ? avg.toFixed(2) : '—'}
