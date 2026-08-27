@@ -132,7 +132,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/payroll/coach-attendance', label: 'Coach Attendance', icon: ClipboardCheck },
     ],
   },
-  { to: '/feedback', label: 'Feedback', icon: MessageSquare, soon: true },
+  { to: '/feedback', label: 'Feedback', icon: MessageSquare },
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/users', label: 'Users', icon: Shield },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },

@@ -41,6 +41,7 @@ import { SettingsAdminPage } from './pages/SettingsAdminPage';
 import { PayrollSheetPage } from './pages/PayrollSheetPage';
 import { AddonFormPage } from './pages/AddonFormPage';
 import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/AttendanceReports';
+import { FeedbackDashboardPage } from './pages/FeedbackDashboardPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { getStoredToken } from './api/portalApi';
 
@@ -107,6 +108,7 @@ export default function App() {
           <Route path="/change-requests" element={<ChangeRequestsPage />} />
           <Route path="/announcements" element={<AnnouncementsPage />} />
           <Route path="/notifications-list" element={<NotificationsListPage />} />
+          <Route path="/feedback" element={<FeedbackDashboardPage />} />
           <Route path="/expenses" element={<ExpensesListPage />} />
           <Route path="/expenses/:id" element={<ExpenseForm />} />
           <Route path="/payment-delivery" element={<PaymentDeliveriesPage />} />
