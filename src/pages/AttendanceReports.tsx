@@ -314,7 +314,7 @@ export function AttendanceSummaryPage() {
         </div>
       )}
 
-      {stats && <p className="text-sm font-bold text-[#1e5c97] mb-3">{stats}</p>}
+      {stats && <p className="text-base font-bold text-[#1e5c97] mb-3">{stats}</p>}
 
       {!rows && !loading && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-8 text-center">
@@ -325,7 +325,7 @@ export function AttendanceSummaryPage() {
 
       {rows && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-          <table className="tbl w-full text-sm whitespace-nowrap">
+          <table className="tbl w-full text-base whitespace-nowrap [&_td]:py-3 [&_th]:py-3 [&_td]:px-3 [&_th]:px-3">
             <thead>
               <tr>
                 <SortHeader label="Student Name" k="StudentFullName" grid={grid} />
@@ -357,14 +357,14 @@ export function AttendanceSummaryPage() {
                   <td className="max-w-48 truncate" title={str(r, 'RegistrationStudentStoppedReason')}>{str(r, 'RegistrationStudentStoppedReason')}</td>
                   <td>
                     <Link to={`/students?searchFor=${encodeURIComponent(str(r, 'StudentFullName'))}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline">
-                      <User className="size-3.5" /> Profile
+                      className="inline-flex items-center gap-1 text-sm font-bold text-[#1e5c97] hover:underline">
+                      <User className="size-4" /> Profile
                     </Link>
                   </td>
                   <td>
                     <Link to={`/attendance-details?search=${encodeURIComponent(str(r, 'StudentFullName'))}`}
-                      className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline">
-                      <ClipboardCheck className="size-3.5" /> Attendance
+                      className="inline-flex items-center gap-1 text-sm font-bold text-[#1e5c97] hover:underline">
+                      <ClipboardCheck className="size-4" /> Attendance
                     </Link>
                   </td>
                 </tr>
@@ -453,9 +453,10 @@ export function AttendanceDetailsPage() {
       .catch(() => setClasses([]));
   }, [semesterSel, coachId, day]);
 
-  function load() {
+  function load(searchOverride?: string) {
     setLoading(true);
     setError('');
+    const effectiveSearch = searchOverride ?? search;
     const q = new URLSearchParams();
     if (semesterSel.size > 0) q.set('semesterIds', [...semesterSel].join(','));
     if (locationId) q.set('locationIds', String(locationId));
@@ -465,7 +466,7 @@ export function AttendanceDetailsPage() {
     if (status) q.set('status', status);
     if (dateFrom) q.set('dateFrom', dateFrom);
     if (dateTo) q.set('dateTo', dateTo);
-    if (search.trim()) q.set('searchFor', search.trim());
+    if (effectiveSearch.trim()) q.set('searchFor', effectiveSearch.trim());
     apiRequest<Row[]>(`/api/portal/reports/attendance-details?${q}`)
       .then((data) => { setRows(data); grid.setPage(0); })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load the report.'))
@@ -546,7 +547,7 @@ export function AttendanceDetailsPage() {
           <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDay(''); }} className={inputCls} />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load()} placeholder="Search student…" className={`${inputCls} w-44`} />
-          <button onClick={load} disabled={loading}
+          <button onClick={() => load()} disabled={loading}
             className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-5 py-1.5 disabled:opacity-50">
             {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />} Search
           </button>
@@ -566,13 +567,28 @@ export function AttendanceDetailsPage() {
         </div>
       )}
 
-      <p className="text-sm font-bold text-[#1e5c97] mb-3">{stats}</p>
+      {search.trim() !== '' && (
+        <div className="flex items-center gap-2 mb-3">
+          <span className="inline-flex items-center gap-2 rounded-full bg-[#e8f0f8] border border-[#1e5c97]/20 text-[#1e5c97] text-sm font-bold px-4 py-1.5">
+            <User className="size-4" /> Showing: {search}
+            <button
+              onClick={() => { setSearch(''); load(''); }}
+              title="Clear and show all students"
+              className="hover:text-red-600"
+            >
+              ×
+            </button>
+          </span>
+        </div>
+      )}
+
+      <p className="text-base font-bold text-[#1e5c97] mb-3">{stats}</p>
 
       {loading ? (
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-          <table className="tbl w-full text-sm whitespace-nowrap">
+          <table className="tbl w-full text-base whitespace-nowrap [&_td]:py-3 [&_th]:py-3 [&_td]:px-3 [&_th]:px-3">
             <thead>
               <tr>
                 <SortHeader label="Name" k="StudentFullName" grid={grid} />
