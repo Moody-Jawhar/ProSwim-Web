@@ -434,6 +434,7 @@ export function StudentDetailPage() {
           studentId={id!}
           studentFullName={String(row.StudentFullName ?? '')}
           startingDate={row.StudentStartingDate ? String(row.StudentStartingDate) : null}
+          phone={`${String(row.StudentPhoneNumberCode1 ?? '')}${String(row.StudentPhoneNumber1 ?? '')}`}
         />
       )}
 

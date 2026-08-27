@@ -534,3 +534,50 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
 
   return { entries: top, scanned, flagged };
 }
+
+// ── AI outreach drafts ───────────────────────────────────────────────────────
+// Message suggestions for contacting the family, worded from the model's
+// strongest signal. Staff can edit before sending.
+
+export interface OutreachDraft { title: string; message: string }
+
+export function draftOutreach(overview: StudentOverview, studentName: string): OutreachDraft {
+  const first = studentName.trim().split(/\s+/)[0] || 'your swimmer';
+  const { scores, signals } = overview;
+  const pct = Math.round(signals.attOverall * 100);
+
+  if (scores.churnRisk >= 0.6 || (signals.enoughData && scores.attendanceRisk >= 0.6)) {
+    return {
+      title: `We miss ${first} at ProSwim!`,
+      message:
+        `Hello! We've noticed ${first} has been missing sessions at ProSwim lately and we wanted to check in — `
+        + `is everything okay? Regular practice is what keeps the progress going, and the coach would love to see `
+        + `${first} back in the water. If scheduling is the issue, tell us and we'll find a slot that works. 🏊`,
+    };
+  }
+  if (scores.paymentRisk >= 0.55 && Object.keys(signals.dueByCurrency).length > 0) {
+    const dues = Object.entries(signals.dueByCurrency)
+      .map(([cur, amt]) => `${amt.toLocaleString()} ${cur}`).join(' + ');
+    return {
+      title: 'A friendly payment reminder',
+      message:
+        `Hello! A gentle reminder from ProSwim: there is an outstanding balance of ${dues} on ${first}'s course. `
+        + `You can settle it at the reception on your next visit, or reply here if anything needs clarifying. Thank you!`,
+    };
+  }
+  if (signals.openPackage && scores.renewalDue >= 0.6) {
+    return {
+      title: `${first}'s package is almost done`,
+      message:
+        `Hello! ${first}'s private package has only ${signals.openPackage.left} session(s) left. `
+        + `Renewing early keeps the same time slot and coach reserved — shall we prepare the renewal?`,
+    };
+  }
+  return {
+    title: `Great progress from ${first}!`,
+    message:
+      `Hello! Just a quick note from ProSwim — ${first} is doing great`
+      + (signals.enoughData ? ` with ${pct}% attendance this period` : '')
+      + `. Keep it up, we're proud of the progress! 🏊`,
+  };
+}
