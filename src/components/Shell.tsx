@@ -53,12 +53,10 @@ const FULL_NAV: NavEntry[] = [
       { to: '/schedule', label: 'Schedule', icon: CalendarDays },
       { to: '/registrations', label: 'Registrations', icon: BookOpen },
       { to: '/sessions', label: 'Sessions', icon: ClipboardCheck },
-      { to: '/attendance-summary', label: 'Attendance Summary', icon: ClipboardCheck },
-      { to: '/attendance-details', label: 'Attendance Details', icon: ClipboardCheck },
+      // Attendance Details stays routable via the Summary's per-student links.
+      { to: '/attendance-summary', label: 'Attendance', icon: ClipboardCheck },
       { to: '/payments', label: 'Payments', icon: CreditCard },
       { to: '/payments-due', label: 'Due Payments', icon: CreditCard },
-      { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
-      { to: '/session-changes/approve', label: 'Approve Changes', icon: ClipboardCheck },
       { to: '/payment-delivery', label: 'Payment Delivery', icon: Truck },
       { to: '/expenses', label: 'Expenses', icon: Receipt },
     ],
@@ -88,6 +86,8 @@ const FULL_NAV: NavEntry[] = [
     icon: Smartphone,
     children: [
       { to: '/change-requests', label: 'Requests', icon: Inbox, badge: 'requests' },
+      { to: '/session-changes/approve', label: 'Approve Changes', icon: ClipboardCheck },
+      { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
       { to: '/news', label: 'News', icon: Newspaper },
       { to: '/announcements', label: 'Notifications', icon: Megaphone },
     ],
