@@ -413,11 +413,14 @@ export function AttendanceDetailsPage() {
   const [dateTo, setDateTo] = useState(params.get('dateTo') ?? `${new Date().getFullYear() + 1}-01-01`);
   const [search, setSearch] = useState(params.get('search') ?? '');
 
-  const [rows, setRows] = useState<Row[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [rows, setRows] = useState<Row[] | null>(null); // null = not searched yet
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const grid = useGrid(rows, 100);
+  const grid = useGrid(rows ?? [], 100);
   const firstLoad = useRef(true);
+  // Deep links (a student's Attendance button, report shortcuts) auto-load;
+  // opening the page plain from the menu waits for Search, like the summary.
+  const deepLink = !!params.get('search') || params.has('allSemesters') || !!params.get('dateFrom');
 
   useEffect(() => {
     apiRequest<{ locations: Option[] }>('/api/portal/modules/lookups')
@@ -473,15 +476,17 @@ export function AttendanceDetailsPage() {
       .finally(() => setLoading(false));
   }
 
-  // The details page auto-loads (legacy behaviour) once the semester default resolves.
+  // Deep-linked visits auto-load once the semester default resolves; a plain
+  // open from the menu shows the filters and waits for Search.
   useEffect(() => {
-    if (!firstLoad.current) return;
+    if (!firstLoad.current || !deepLink) return;
     if (semesters.length === 0 && locationId) return; // wait for the cascade
     firstLoad.current = false;
     load();
   }, [semesterSel]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const stats = useMemo(() => {
+    if (!rows) return null;
     const attended = rows.filter((r) => r.AttendanceStudentAttended === true).length;
     const missed = rows.filter((r) => r.AttendanceStudentAttended === false).length;
     const makeups = rows.filter((r) => str(r, 'AttendanceStatus').toLowerCase() === 'makeup').length;
@@ -551,7 +556,7 @@ export function AttendanceDetailsPage() {
             className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-5 py-1.5 disabled:opacity-50">
             {loading ? <Loader2 className="size-4 animate-spin" /> : <Search className="size-4" />} Search
           </button>
-          {rows.length > 0 && (
+          {rows && rows.length > 0 && (
             <button onClick={() => exportCsv(grid.sorted, CSV_COLS, 'AttendanceDetails')}
               className="flex items-center gap-1.5 rounded-lg border border-slate-200 text-slate-600 text-sm font-semibold px-4 py-1.5 hover:border-[#1e5c97]/40">
               <Download className="size-4" /> Export
@@ -582,10 +587,15 @@ export function AttendanceDetailsPage() {
         </div>
       )}
 
-      <p className="text-base font-bold text-[#1e5c97] mb-3">{stats}</p>
+      {stats && <p className="text-base font-bold text-[#1e5c97] mb-3">{stats}</p>}
 
       {loading ? (
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
+      ) : !rows ? (
+        <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-8 text-center">
+          <ClipboardCheck className="size-8 text-slate-300 mx-auto mb-2" />
+          <p className="text-sm text-slate-500">Choose your filters and press Search to run the report.</p>
+        </div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
           <table className="tbl w-full text-base whitespace-nowrap [&_td]:py-3 [&_th]:py-3 [&_td]:px-3 [&_th]:px-3">
