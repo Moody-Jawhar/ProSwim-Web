@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import {
-  ArrowLeft, Loader2, AlertCircle, Trophy, Medal, Timer, TrendingUp,
+  Loader2, AlertCircle, Trophy, Medal, Timer, TrendingUp,
   FileText, Star, CalendarDays, Plus, Trash2, Pencil, X, ExternalLink,
 } from 'lucide-react';
+import { SmartBack } from '../components/SmartBack';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 
 type Row = Record<string, unknown>;
@@ -183,9 +184,7 @@ export function CompPortfolioPage() {
   return (
     <div className="p-8 max-w-5xl">
       <div className="flex items-center justify-between mb-4">
-        <Link to={`/students/${id}`} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e5c97]">
-          <ArrowLeft className="size-4" /> Back to student
-        </Link>
+        <SmartBack label="Back to student" fallback={`/students/${id}`} />
         <Link to="/competitions" className="text-sm font-semibold text-[#1e5c97] hover:underline">
           Manage competitions →
         </Link>

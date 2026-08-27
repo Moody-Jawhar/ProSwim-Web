@@ -6,12 +6,13 @@
 // sessions show highlighted and read-only, exactly like legacy.
 
 import { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import {
-  Loader2, AlertCircle, Save, ArrowLeft, Check, X, Users, RefreshCw, CheckCircle2,
+  Loader2, AlertCircle, Save, Check, X, Users, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { SmartBack } from '../components/SmartBack';
 
 type Row = Record<string, unknown>;
 
@@ -142,9 +143,7 @@ export function TakeAttendancePage() {
 
   return (
     <div className="p-6 md:p-8 max-w-3xl">
-      <Link to="/sessions" className="inline-flex items-center gap-1 text-sm text-[#1e5c97] hover:underline mb-2">
-        <ArrowLeft className="size-4" /> Sessions
-      </Link>
+      <SmartBack label="Sessions" fallback="/sessions" />
       <PageHero
         title={className ? `${className}` : 'Take Attendance'}
         subtitle={sessionDate ? `Session of ${sessionDate}` : 'Mark who attended'}

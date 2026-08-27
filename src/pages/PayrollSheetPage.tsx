@@ -4,10 +4,11 @@
 // loans, toggle Paid / NoWork, and re-run the HR recalculation.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, RefreshCw, Save, ArrowLeft } from 'lucide-react';
+import { useParams } from 'react-router-dom';
+import { Loader2, AlertCircle, RefreshCw, Save } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { SmartBack } from '../components/SmartBack';
 
 type Row = Record<string, unknown>;
 
@@ -134,9 +135,7 @@ export function PayrollSheetPage() {
 
   return (
     <div className="p-6 md:p-8">
-      <Link to="/payroll/timesheets" className="inline-flex items-center gap-1 text-sm text-[#1e5c97] hover:underline mb-2">
-        <ArrowLeft className="size-4" /> Timesheets
-      </Link>
+      <SmartBack label="Timesheets" fallback="/payroll/timesheets" />
       <PageHero title={`Payroll — ${title}`} subtitle={`${rows.length} coach(es)`} slide={2} />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">

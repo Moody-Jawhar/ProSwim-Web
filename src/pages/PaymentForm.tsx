@@ -1,8 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { Loader2, AlertCircle, Save, ArrowLeft, Search, X } from 'lucide-react';
+import { Loader2, AlertCircle, Save, Search, X } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { SmartBack } from '../components/SmartBack';
 
 type Row = Record<string, unknown>;
 type Option = { value: number; label: string };
@@ -225,9 +226,7 @@ export function PaymentForm() {
         slide={1}
       />
 
-      <button onClick={() => navigate('/payments')} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e5c97] mb-4">
-        <ArrowLeft className="size-4" /> Back to payments
-      </button>
+      <SmartBack label="Back" fallback="/payments" />
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-4">

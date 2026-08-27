@@ -4,10 +4,10 @@
 
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, Save, ArrowLeft, Trash2, DivideCircle } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Loader2, AlertCircle, Save, Trash2, DivideCircle } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { SmartBack } from '../components/SmartBack';
 
 type Row = Record<string, unknown>;
 type Option = { value: number | string; label: string };
@@ -144,9 +144,7 @@ export function AddonFormPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-3xl">
-      <Link to="/payroll/addons" className="inline-flex items-center gap-1 text-sm text-[#1e5c97] hover:underline mb-2">
-        <ArrowLeft className="size-4" /> Add-ons
-      </Link>
+      <SmartBack label="Add-ons" fallback="/payroll/addons" />
       <PageHero title={isNew ? 'New Add-on' : 'Edit Add-on'} subtitle="Bonus, long loan or penalty for a coach" slide={3} />
 
       {error && (

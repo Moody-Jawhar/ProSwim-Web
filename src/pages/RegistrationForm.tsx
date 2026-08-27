@@ -7,11 +7,12 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
-  Loader2, AlertCircle, Save, ArrowLeft, Search, X, Calculator,
+  Loader2, AlertCircle, Save, Search, X, Calculator,
   CreditCard, Trash2, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { SmartBack } from '../components/SmartBack';
 
 type Row = Record<string, unknown>;
 type Option = { value: number; label: string };
@@ -269,9 +270,7 @@ export function RegistrationForm() {
       />
 
       <div className="flex items-center gap-4 mb-4">
-        <button onClick={() => navigate('/registrations')} className="inline-flex items-center gap-1.5 text-sm text-slate-500 hover:text-[#1e5c97]">
-          <ArrowLeft className="size-4" /> Back to registrations
-        </button>
+        <SmartBack label="Back" fallback="/registrations" />
         <div className="flex-1" />
         {!isNew && studentId > 0 && (
           <Link to={`/students/${studentId}`} className="inline-flex items-center gap-1.5 text-sm font-semibold text-[#1e5c97] hover:underline">
