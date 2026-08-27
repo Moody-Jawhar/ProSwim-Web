@@ -60,8 +60,8 @@ export function LocationsAdminPage() {
   }
 
   return (
-    <div>
-      <PageHero
+    <div className="p-6 md:p-8">
+<PageHero
         title="Locations"
         subtitle="Pool locations — their photos show in the mobile app"
       />

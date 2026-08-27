@@ -43,7 +43,7 @@ export function CompSwimmersPage() {
     str(r, 'StudentFullName').toLowerCase().includes(search.trim().toLowerCase()));
 
   return (
-    <div>
+    <div className="p-6 md:p-8">
       <PageHero
         title="Competitive Swimmers"
         subtitle="The competitive team — tap a swimmer to open their portfolio"
