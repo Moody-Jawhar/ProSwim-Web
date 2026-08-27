@@ -32,6 +32,8 @@ export function FeedbackDashboardPage() {
 
   const [refType, setRefType] = useState('');
   const [coach, setCoach] = useState('');
+  const [location, setLocation] = useState('');
+  const [locations, setLocations] = useState<{ value: number; label: string }[]>([]);
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
   const [summary, setSummary] = useState<Summary | null>(null);
@@ -41,16 +43,24 @@ export function FeedbackDashboardPage() {
   const [error, setError] = useState('');
   const [editing, setEditing] = useState(false);
 
+  useEffect(() => {
+    apiRequest<{ locations: { value: number; label: string }[] }>('/api/portal/modules/lookups')
+      .then((lk) => setLocations(lk.locations ?? []))
+      .catch(() => {});
+  }, []);
+
   function load() {
     setLoading(true);
     setError('');
     const q = new URLSearchParams();
     if (refType) q.set('refType', refType);
     if (coach) q.set('coach', coach);
+    if (location) q.set('location', location);
     if (dateFrom) q.set('dateFrom', dateFrom);
     if (dateTo) q.set('dateTo', dateTo);
     const qc = new URLSearchParams(); // coach board ignores the coach filter itself
     if (refType) qc.set('refType', refType);
+    if (location) qc.set('location', location);
     if (dateFrom) qc.set('dateFrom', dateFrom);
     if (dateTo) qc.set('dateTo', dateTo);
     Promise.all([
@@ -62,7 +72,7 @@ export function FeedbackDashboardPage() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load feedback.'))
       .finally(() => setLoading(false));
   }
-  useEffect(load, [refType, coach]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(load, [refType, coach, location]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const ratingQs = useMemo(
     () => (summary?.perQuestion ?? []).filter((q) => str(q.QuestionType) === 'rating'),
@@ -82,6 +92,10 @@ export function FeedbackDashboardPage() {
           <option value="">Group + Private</option>
           <option value="Group">Group only</option>
           <option value="Private">Private only</option>
+        </select>
+        <select value={location} onChange={(e) => setLocation(e.target.value)} className={`${inputCls} max-w-40`}>
+          <option value="">All locations</option>
+          {locations.map((l) => <option key={l.value} value={l.label}>{l.label}</option>)}
         </select>
         <select value={coach} onChange={(e) => setCoach(e.target.value)} className={`${inputCls} max-w-48`}>
           <option value="">All coaches</option>
@@ -242,6 +256,7 @@ export function FeedbackDashboardPage() {
                   <th className="text-left">Date</th>
                   <th className="text-left">Student</th>
                   <th className="text-left">Type</th>
+                  <th className="text-left">Location</th>
                   <th className="text-left">Coach</th>
                   <th className="text-left">Course</th>
                   <th className="text-right">Score</th>
@@ -250,7 +265,7 @@ export function FeedbackDashboardPage() {
               </thead>
               <tbody>
                 {responses.length === 0 && (
-                  <tr><td colSpan={7} className="text-center text-slate-400 py-6">No feedback submitted yet — surveys appear in the mobile app on every registration and package card.</td></tr>
+                  <tr><td colSpan={8} className="text-center text-slate-400 py-6">No feedback submitted yet — surveys appear in the mobile app on every registration and package card.</td></tr>
                 )}
                 {responses.map((r) => {
                   const avg = r.Avg != null ? Number(r.Avg) : null;
@@ -263,6 +278,7 @@ export function FeedbackDashboardPage() {
                           str(r.RefType) === 'Private' ? 'bg-purple-50 text-purple-700' : 'bg-[#e8f0f8] text-[#1e5c97]'
                         }`}>{str(r.RefType)}</span>
                       </td>
+                      <td>{str(r.LocationName) || '—'}</td>
                       <td>{str(r.CoachName) || '—'}</td>
                       <td className="max-w-52 truncate" title={str(r.RefLabel)}>{str(r.RefLabel) || '—'}</td>
                       <td className="text-right font-extrabold tabular-nums" style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
