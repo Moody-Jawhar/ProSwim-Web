@@ -159,7 +159,7 @@ function NotifyDialog({ studentId, studentName, draft, onClose }: {
   const [title, setTitle] = useState(draft.title);
   const [body, setBody] = useState(draft.message);
   const [sending, setSending] = useState(false);
-  const [sent, setSent] = useState(false);
+  const [result, setResult] = useState<{ recipients: number; pushed: number; pushWarning?: string | null } | null>(null);
   const [error, setError] = useState('');
 
   async function send() {
@@ -167,13 +167,19 @@ function NotifyDialog({ studentId, studentName, draft, onClose }: {
     setSending(true);
     setError('');
     try {
-      await apiRequest('/api/portal/notify/announce', {
-        method: 'POST',
-        body: JSON.stringify({ studentId, title: title.trim(), body: body.trim(), urgent: false, allowAll: false }),
-      });
-      setSent(true);
+      const res = await apiRequest<{ recipients: number; pushed: number; pushWarning?: string | null }>(
+        '/api/portal/notify/announce', {
+          method: 'POST',
+          body: JSON.stringify({ studentId, title: title.trim(), body: body.trim(), urgent: false, allowAll: false }),
+        });
+      setResult(res);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not send the notification.');
+      const msg = e instanceof Error ? e.message : 'Could not send the notification.';
+      // The targets proc only returns swimmers reachable in the app — explain
+      // the common case instead of parroting the raw server text.
+      setError(msg.toLowerCase().includes('no recipients')
+        ? 'This student has no ProSwim app account to notify — they may never have signed in on a phone. Use WhatsApp instead.'
+        : msg);
     } finally {
       setSending(false);
     }
@@ -190,10 +196,21 @@ function NotifyDialog({ studentId, studentName, draft, onClose }: {
         </div>
         <p className="text-xs text-slate-500 mb-3">To {studentName} — drafted by the AI from their signals, edit freely.</p>
 
-        {sent ? (
-          <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl p-4">
-            <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
-            <p className="text-sm text-emerald-700">Notification sent to {studentName}'s app.</p>
+        {result ? (
+          <div className="space-y-2">
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl p-4">
+              <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
+              <p className="text-sm text-emerald-700">
+                Delivered to {studentName}'s in-app inbox
+                {result.pushed > 0 ? ' and pushed to their phone.' : '.'}
+              </p>
+            </div>
+            {result.pushWarning && (
+              <div className="flex items-start gap-2 bg-amber-50 border border-amber-100 rounded-xl p-3">
+                <AlertTriangle className="size-4 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700">{result.pushWarning}</p>
+              </div>
+            )}
           </div>
         ) : (
           <>
