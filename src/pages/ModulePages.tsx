@@ -337,7 +337,22 @@ const sessions: ModuleConfig = {
     { key: 'Attended', label: 'Attended' },
     { key: 'Makeuped', label: 'Makeup' },
     { key: 'SessionRemarks', label: 'Remarks' },
+    { key: '_take', label: '' },
   ],
+  // One tap from the session row into the marking page.
+  renderCell: (row, col) => {
+    if (col.key !== '_take') return undefined;
+    if ((getStoredUser()?.userType || '').toLowerCase() === 'guest') return undefined;
+    return (
+      <Link
+        to={`/sessions/${row.SessionId}/attendance`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline whitespace-nowrap"
+      >
+        Take Attendance
+      </Link>
+    );
+  },
 };
 
 // ── Exported pages ───────────────────────────────────────────────────────────
