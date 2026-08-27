@@ -2,7 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import {
   Loader2, AlertCircle, CalendarDays, BookOpen,
-  CreditCard, GraduationCap, UserPlus, UserRound,
+  CreditCard, GraduationCap, UserPlus, Users, ClipboardCheck,
+  MessageCircle, Truck, Receipt, Inbox, Megaphone, Star,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
@@ -128,6 +129,28 @@ export function DashboardPage() {
             />
           </div>
 
+          {/* Quick actions — the daily operations, one tap away */}
+          <div className="mb-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick actions</p>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              <QuickAction to="/students/new" label="Add Student" accent="from-sky-400 to-[#1e5c97]" icon={<UserPlus className="size-5" />} d="rise-1" />
+              <QuickAction to="/registrations/new" label="New Registration" accent="from-teal-400 to-emerald-600" icon={<BookOpen className="size-5" />} d="rise-1" />
+              <QuickAction to="/payments/new" label="Add Payment" accent="from-emerald-400 to-green-600" icon={<CreditCard className="size-5" />} d="rise-1" />
+              <QuickAction to="/sessions" label="Take Attendance" accent="from-cyan-400 to-sky-600" icon={<ClipboardCheck className="size-5" />} d="rise-1" />
+              <QuickAction to="/students" label="Students" accent="from-blue-400 to-indigo-600" icon={<Users className="size-5" />} d="rise-1" />
+              <QuickAction to="/schedule" label="Group Schedule" accent="from-indigo-400 to-indigo-700" icon={<CalendarDays className="size-5" />} d="rise-2" />
+              <QuickAction to="/pr-schedule" label="Private Schedule" accent="from-fuchsia-400 to-purple-700" icon={<GraduationCap className="size-5" />} d="rise-2" />
+              <QuickAction to="/payments-due" label="Due Payments" accent="from-amber-400 to-orange-500" icon={<CreditCard className="size-5" />} d="rise-2" />
+              <QuickAction to="/attendance-summary" label="Attendance Report" accent="from-sky-400 to-cyan-600" icon={<ClipboardCheck className="size-5" />} d="rise-2" />
+              <QuickAction to="/bulk-whatsapp" label="Bulk WhatsApp" accent="from-green-400 to-emerald-700" icon={<MessageCircle className="size-5" />} d="rise-2" />
+              <QuickAction to="/payment-delivery" label="Payment Delivery" accent="from-rose-400 to-pink-600" icon={<Truck className="size-5" />} d="rise-3" />
+              <QuickAction to="/expenses/new" label="New Expense" accent="from-orange-400 to-red-500" icon={<Receipt className="size-5" />} d="rise-3" />
+              <QuickAction to="/change-requests" label="App Requests" accent="from-violet-400 to-purple-600" icon={<Inbox className="size-5" />} d="rise-3" />
+              <QuickAction to="/announcements" label="Send Notification" accent="from-pink-400 to-rose-600" icon={<Megaphone className="size-5" />} d="rise-3" />
+              <QuickAction to="/feedback" label="Feedback" accent="from-yellow-400 to-amber-600" icon={<Star className="size-5" />} d="rise-3" />
+            </div>
+          </div>
+
           {/* Private packages attention */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <Link
@@ -161,18 +184,6 @@ export function DashboardPage() {
             <AiRiskRadar />
           </div>
 
-          {/* Quick actions */}
-          <div className="mt-8">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick actions</p>
-            <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-3">
-              <QuickAction to="/students/new" label="Add Student" accent="from-sky-400 to-[#1e5c97]" icon={<UserPlus className="size-5" />} d="rise-1" />
-              <QuickAction to="/registrations/new" label="New Registration" accent="from-teal-400 to-emerald-600" icon={<BookOpen className="size-5" />} d="rise-1" />
-              <QuickAction to="/schedule" label="Group Schedule" accent="from-indigo-400 to-indigo-700" icon={<CalendarDays className="size-5" />} d="rise-2" />
-              <QuickAction to="/pr-schedule" label="Private Schedule" accent="from-fuchsia-400 to-purple-700" icon={<GraduationCap className="size-5" />} d="rise-2" />
-              <QuickAction to="/payments-due" label="Due Payments" accent="from-amber-400 to-orange-500" icon={<CreditCard className="size-5" />} d="rise-3" />
-              <QuickAction to="/coaches" label="Coaches" accent="from-rose-400 to-pink-600" icon={<UserRound className="size-5" />} d="rise-3" />
-            </div>
-          </div>
         </>
       )}
     </div>
