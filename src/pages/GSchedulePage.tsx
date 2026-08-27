@@ -84,17 +84,27 @@ export function GSchedulePage() {
       return next;
     });
 
-  async function editRemark(studentId: number, current: string) {
-    const remark = window.prompt('Remark for this student (empty clears it):', current);
-    if (remark === null) return;
+  // Remark editor dialog — one for students, one for classes (tbl_Remarks types).
+  const [remarkModal, setRemarkModal] = useState<{
+    type: 'Student' | 'Class'; id: number; name: string; value: string;
+  } | null>(null);
+  const [remarkSaving, setRemarkSaving] = useState(false);
+
+  async function saveRemark(value: string) {
+    if (!remarkModal) return;
+    setRemarkSaving(true);
     try {
       await apiRequest('/api/portal/schedule/remark', {
         method: 'POST',
-        body: JSON.stringify({ remarkType: 'Student', remarkTypeId: studentId, remark }),
+        body: JSON.stringify({ remarkType: remarkModal.type, remarkTypeId: remarkModal.id, remark: value }),
       });
+      setRemarkModal(null);
       load(semesterId, search);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save the remark.');
+      setRemarkModal(null);
+    } finally {
+      setRemarkSaving(false);
     }
   }
 
@@ -287,7 +297,21 @@ export function GSchedulePage() {
                             <div className={`flex items-center gap-1 flex-wrap ${closed ? 'line-through text-slate-400' : ''}`}>
                               {level && <span className="text-[#1e5c97] font-bold text-[12px]">{level}</span>}
                               <span className="font-bold">[{students.length}]</span>
-                              {classRemark && (
+                              {hasClass && userType !== 'guest' && (
+                                <button type="button"
+                                  onClick={() => setRemarkModal({
+                                    type: 'Class',
+                                    id: n(rows.find((r) => n(r.ClassId) > 0)?.ClassId),
+                                    name: `${coach} · ${s(ts.ClassDay)} ${s(ts.ClassTime)}`,
+                                    value: classRemark,
+                                  })}
+                                  title={classRemark ? `Class remark: ${classRemark}` : 'Add class remark'}>
+                                  {classRemark
+                                    ? <StickyNote className="size-3.5 text-amber-600" />
+                                    : <MessageSquarePlus className="size-3.5 text-slate-400 hover:text-amber-600" />}
+                                </button>
+                              )}
+                              {!hasClass && classRemark && (
                                 <span title={classRemark}><StickyNote className="size-3.5 text-amber-600" /></span>
                               )}
                               {students.length === 6 && <AlertTriangle className="size-3.5 text-amber-500" />}
@@ -339,7 +363,8 @@ export function GSchedulePage() {
                                     </span>
                                   )}
                                   {/* Remark: view + edit (empty state shows an add icon) */}
-                                  <button type="button" onClick={() => editRemark(n(r.studentid), s(r.StudentRemark))}
+                                  <button type="button"
+                                    onClick={() => setRemarkModal({ type: 'Student', id: n(r.studentid), name: s(r.StudentName), value: s(r.StudentRemark) })}
                                     title={s(r.StudentRemark) || 'Add remark'}>
                                     {s(r.StudentRemark)
                                       ? <StickyNote className="size-3 text-amber-600" />
@@ -358,6 +383,16 @@ export function GSchedulePage() {
             </tbody>
           </table>
         </div>
+      )}
+
+      {/* Remark editor */}
+      {remarkModal && (
+        <RemarkDialog
+          modal={remarkModal}
+          saving={remarkSaving}
+          onSave={saveRemark}
+          onClose={() => setRemarkModal(null)}
+        />
       )}
 
       {/* Legend — same pattern as the Private Schedule */}
@@ -387,5 +422,48 @@ function LegendSwatch({ color, label }: { color: string; label: string }) {
       <span className="inline-block w-4 h-3 rounded-sm border border-slate-300" style={{ backgroundColor: color }} />
       {label}
     </span>
+  );
+}
+
+function RemarkDialog({ modal, saving, onSave, onClose }: {
+  modal: { type: 'Student' | 'Class'; id: number; name: string; value: string };
+  saving: boolean;
+  onSave: (value: string) => void;
+  onClose: () => void;
+}) {
+  const [value, setValue] = useState(modal.value);
+  return (
+    <div className="fixed inset-0 z-50 bg-slate-900/50 flex items-center justify-center p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+        <p className="text-sm font-bold text-slate-800 flex items-center gap-2 mb-1">
+          <StickyNote className="size-4 text-amber-600" />
+          {modal.type === 'Class' ? 'Class remark' : 'Student remark'}
+        </p>
+        <p className="text-xs text-slate-500 mb-3 truncate">{modal.name}</p>
+        <textarea
+          autoFocus
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          rows={3}
+          placeholder="Write the remark… leave empty to clear it."
+          className="w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 mb-3"
+        />
+        <div className="flex justify-end gap-2">
+          <button onClick={onClose} className="rounded-lg border border-slate-200 text-sm font-semibold px-4 py-2">
+            Cancel
+          </button>
+          {modal.value && (
+            <button onClick={() => onSave('')} disabled={saving}
+              className="rounded-lg border border-red-200 text-red-600 text-sm font-semibold px-4 py-2 hover:bg-red-50 disabled:opacity-50">
+              Clear remark
+            </button>
+          )}
+          <button onClick={() => onSave(value)} disabled={saving}
+            className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-5 py-2 disabled:opacity-50">
+            {saving ? <Loader2 className="size-4 animate-spin" /> : null} Save
+          </button>
+        </div>
+      </div>
+    </div>
   );
 }
