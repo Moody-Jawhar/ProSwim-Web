@@ -1,4 +1,4 @@
-// Group registration form — full port of RegistrationsIndividual.aspx:
+// Group registration form, full port of RegistrationsIndividual.aspx:
 // student/semester/level, classes 1–7, registration date, cost, paid-before,
 // discount and variation (amount or %, with the legacy net formula
 // Net = Cost + Variation − Discount − PaidBefore), stop panel with date /
@@ -292,7 +292,7 @@ export function RegistrationForm() {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 
@@ -353,7 +353,7 @@ export function RegistrationForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Semester</label>
               <select value={semesterId} onChange={(e) => setSemesterId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {semesters.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -361,7 +361,7 @@ export function RegistrationForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Level</label>
               <select value={levelId} onChange={(e) => setLevelId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {levels.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -386,7 +386,7 @@ export function RegistrationForm() {
         {/* Classes */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
-            Classes {semesterId ? '' : '— pick a semester first'}
+            Classes {semesterId ? '' : 'pick a semester first'}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {CLASS_SLOTS.map((slot, idx) => (
@@ -398,7 +398,7 @@ export function RegistrationForm() {
                   disabled={!semesterId}
                   className={`${inputCls} disabled:bg-slate-50`}
                 >
-                  <option value={0}>—</option>
+                  <option value={0}>-</option>
                   {classOptions.map((c) => <option key={c.id} value={c.id}>{c.label}</option>)}
                 </select>
               </div>
@@ -406,7 +406,7 @@ export function RegistrationForm() {
           </div>
         </div>
 
-        {/* Money — legacy formula: Net = Cost + Variation − Discount − PaidBefore */}
+        {/* Money, legacy formula: Net = Cost + Variation − Discount − PaidBefore */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">Pricing</p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">

@@ -1,5 +1,5 @@
 // Per-student AI overview for the portal, computed on-device by our own
-// neural network (src/insights/nn.ts) — no external AI service involved.
+// neural network (src/insights/nn.ts), no external AI service involved.
 //
 // The portal sees aggregate history (per-registration attendance, dues,
 // package consumption), so the model here uses a portal-specific feature set
@@ -84,11 +84,11 @@ function getModel(): NeuralNet {
         return cachedNet;
       }
     }
-  } catch { /* corrupt cache — retrain */ }
+  } catch { /* corrupt cache, retrain */ }
   cachedNet = trainModel();
   try {
     if (typeof localStorage !== 'undefined') localStorage.setItem(CACHE_KEY, JSON.stringify(cachedNet.toJSON()));
-  } catch { /* storage unavailable — in-memory model still works */ }
+  } catch { /* storage unavailable, in-memory model still works */ }
   return cachedNet;
 }
 
@@ -306,7 +306,7 @@ export function generateInsights(s: StudentSignals, scores: Record<OutputName, n
     } else if (s.attRecent >= 0.85) {
       out.push(ins('attGreat', 'positive', 1 - scores.attendanceRisk,
         'Strong attendance',
-        `${pct(s.attRecent)}% attendance in ${s.recentSemester || 'the latest semester'} — a reliable, committed swimmer.`));
+        `${pct(s.attRecent)}% attendance in ${s.recentSemester || 'the latest semester'}, a reliable, committed swimmer.`));
     }
   }
 
@@ -323,7 +323,7 @@ export function generateInsights(s: StudentSignals, scores: Record<OutputName, n
     out.push(ins('churn', scores.churnRisk >= 0.8 ? 'alert' : 'warn', scores.churnRisk,
       'At risk of leaving',
       `The model flags a churn risk of ${pct(scores.churnRisk)}%`
-      + (reasons.length ? ` — ${reasons.join(', ')}.` : '.')
+      + (reasons.length ? `: ${reasons.join(', ')}.` : '.')
       + ' A re-engagement call or a fresh registration offer could keep this swimmer.'));
   }
 
@@ -337,7 +337,7 @@ export function generateInsights(s: StudentSignals, scores: Record<OutputName, n
     out.push(ins('renewal', 'info', scores.renewalDue,
       'Package nearly used up',
       `${s.openPackage.name || 'The open private package'} has ${s.openPackage.left} of ${s.openPackage.total}`
-      + ' sessions left — a good moment to propose a renewal before the slot is released.'));
+      + ' sessions left, a good moment to propose a renewal before the slot is released.'));
   }
 
   if (out.length === 0) {
@@ -440,7 +440,7 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
     })).sort((a, b) => b.order - a.order);
 
     // Year gate: the radar is about current students. Anyone whose newest
-    // registration is over ~13 months old belongs to a past year — skip.
+    // registration is over ~13 months old belongs to a past year, skip.
     if (regs.length === 0 || isStale(regs[0], 400)) continue;
     scanned++;
 
@@ -509,11 +509,11 @@ export async function buildRiskRadar(): Promise<RiskRadar> {
   entries.sort((a, b) => b.topScore - a.topScore);
   const top = entries.slice(0, RADAR_CAP);
 
-  // The registrations proc doesn't expose a student id — resolve the flagged
+  // The registrations proc doesn't expose a student id, resolve the flagged
   // names against the students roster so each row links straight to the
   // student's page instead of a name search that may not match.
   await Promise.all(top.filter((e) => e.studentId == null).map(async (e) => {
-    // The proc may not match a full "First Middle Last" string — try the full
+    // The proc may not match a full "First Middle Last" string, try the full
     // name, then first + last word, then the first word alone, and take the
     // row whose full name matches exactly.
     const words = e.name.trim().split(/\s+/);
@@ -550,7 +550,7 @@ export function draftOutreach(overview: StudentOverview, studentName: string): O
     return {
       title: `We miss ${first} at ProSwim!`,
       message:
-        `Hello! We've noticed ${first} has been missing sessions at ProSwim lately and we wanted to check in — `
+        `Hello! We've noticed ${first} has been missing sessions at ProSwim lately and we wanted to check in, `
         + `is everything okay? Regular practice is what keeps the progress going, and the coach would love to see `
         + `${first} back in the water. If scheduling is the issue, tell us and we'll find a slot that works. 🏊`,
     };
@@ -570,13 +570,13 @@ export function draftOutreach(overview: StudentOverview, studentName: string): O
       title: `${first}'s package is almost done`,
       message:
         `Hello! ${first}'s private package has only ${signals.openPackage.left} session(s) left. `
-        + `Renewing early keeps the same time slot and coach reserved — shall we prepare the renewal?`,
+        + `Renewing early keeps the same time slot and coach reserved, shall we prepare the renewal?`,
     };
   }
   return {
     title: `Great progress from ${first}!`,
     message:
-      `Hello! Just a quick note from ProSwim — ${first} is doing great`
+      `Hello! Just a quick note from ProSwim: ${first} is doing great`
       + (signals.enoughData ? ` with ${pct}% attendance this period` : '')
       + `. Keep it up, we're proud of the progress! 🏊`,
   };

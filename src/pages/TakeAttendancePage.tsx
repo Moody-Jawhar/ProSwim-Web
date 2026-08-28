@@ -1,4 +1,4 @@
-// Take Attendance — the simple marking flow the legacy
+// Take Attendance, the simple marking flow the legacy
 // ClassesSessionsAttendanceList.aspx wrapped in thirty controls:
 // tap a student to flip Present/Absent, add a remark where needed, Save.
 // Status defaults to Normal; the dropdown appears per row for the exceptions
@@ -73,7 +73,7 @@ export function TakeAttendancePage() {
   }
 
   const sid = Number(sessionId);
-  // Make-up visitors belong to another session — shown, never edited or saved (legacy rule).
+  // Make-up visitors belong to another session, shown, never edited or saved (legacy rule).
   const isVisitor = (r: Row) => num(r, 'AttendanceSessionID') !== 0 && num(r, 'AttendanceSessionID') !== sid;
 
   const header = rows[0];
@@ -119,7 +119,7 @@ export function TakeAttendancePage() {
         return m && !m.attended && m.status.toLowerCase() === 'normal' && m.remarks.trim() === '';
       });
       if (missing.length > 0) {
-        setError(`Remarks are required for absent students in this class — missing for: ${missing.map((r) => str(r, 'StudentFullName')).join(', ')}`);
+        setError(`Remarks are required for absent students in this class, missing for: ${missing.map((r) => str(r, 'StudentFullName')).join(', ')}`);
         return;
       }
     }
@@ -197,7 +197,7 @@ export function TakeAttendancePage() {
             )}
           </div>
 
-          {/* Roster — tap the row to flip Present/Absent */}
+          {/* Roster, tap the row to flip Present/Absent */}
           <div className="space-y-2 mb-24">
             {rows.map((r) => {
               const id = num(r, 'AttendanceId');

@@ -258,7 +258,7 @@ export function PrivatePackageForm() {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 
@@ -324,14 +324,14 @@ export function PrivatePackageForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Location</label>
               <select value={locationId} onChange={(e) => setLocationId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {locations.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Package type</label>
               <select value={packageName} onChange={(e) => setPackageName(e.target.value)} className={inputCls}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {types.map((t) => <option key={t.name} value={t.name}>{t.info}</option>)}
                 {packageName && !types.some((t) => t.name === packageName) && (
                   <option value={packageName}>{packageName}</option>
@@ -341,14 +341,14 @@ export function PrivatePackageForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Coach</label>
               <select value={coachId} onChange={(e) => setCoachId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {coaches.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Level</label>
               <select value={level} onChange={(e) => setLevel(e.target.value)} className={inputCls}>
-                <option value="">—</option>
+                <option value="">-</option>
                 {levels.map((l) => <option key={l} value={l}>{l}</option>)}
                 {level && !levels.includes(level) && <option value={level}>{level}</option>}
               </select>
@@ -367,7 +367,7 @@ export function PrivatePackageForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Follow-up</label>
               <select value={followUp} onChange={(e) => setFollowUp(e.target.value)} className={inputCls}>
-                {FOLLOW_UPS.map((f) => <option key={f} value={f}>{f || '—'}</option>)}
+                {FOLLOW_UPS.map((f) => <option key={f} value={f}>{f || '-'}</option>)}
               </select>
             </div>
           </div>
@@ -376,7 +376,7 @@ export function PrivatePackageForm() {
         {/* Pricing */}
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-4">
-            Sessions & Pricing {selectedType && !isCustom ? '— auto-filled from the package type' : ''}
+            Sessions & Pricing {selectedType && !isCustom ? 'auto-filled from the package type' : ''}
           </p>
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
             <div>

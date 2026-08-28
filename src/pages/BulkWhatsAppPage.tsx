@@ -1,4 +1,4 @@
-// Bulk WhatsApp — port of StudentsListCommunicate.aspx. Filter the audience,
+// Bulk WhatsApp, port of StudentsListCommunicate.aspx. Filter the audience,
 // review the recipient list, compose with #placeholders#, and queue. Delivery
 // drains in the background through the same UltraMsg gateway and tbl_Bulks
 // queue the legacy tool uses (25 messages per batch, throttled).
@@ -18,11 +18,11 @@ const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 
 const PKG_CRITERIA: Option[] = [
   { value: 'ActPck', label: 'Active package' },
-  { value: 'NoActPck_Closed30', label: 'No active — closed ≤30 days' },
-  { value: 'NoActPck_Closed90', label: 'No active — closed ≤90 days' },
-  { value: 'NoActPck_Closed180', label: 'No active — closed ≤180 days' },
-  { value: 'NoActPck_Closed365', label: 'No active — closed ≤1 year' },
-  { value: 'NoActPck_Closed1825', label: 'No active — closed ≤5 years' },
+  { value: 'NoActPck_Closed30', label: 'No active, closed ≤30 days' },
+  { value: 'NoActPck_Closed90', label: 'No active, closed ≤90 days' },
+  { value: 'NoActPck_Closed180', label: 'No active, closed ≤180 days' },
+  { value: 'NoActPck_Closed365', label: 'No active, closed ≤1 year' },
+  { value: 'NoActPck_Closed1825', label: 'No active, closed ≤5 years' },
 ];
 
 const BIRTHDAYS: Option[] = [
@@ -309,7 +309,7 @@ export function BulkWhatsAppPage() {
             <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl p-3 mt-3">
               <CheckCircle2 className="size-4 text-emerald-600 shrink-0" />
               <p className="text-sm text-emerald-700">
-                {sent.queued} message(s) queued — sending starts automatically in batches of 25.
+                {sent.queued} message(s) queued, sending starts automatically in batches of 25.
               </p>
             </div>
           )}

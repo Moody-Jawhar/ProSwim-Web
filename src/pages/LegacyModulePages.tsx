@@ -167,7 +167,7 @@ const coachAttendance: ModuleConfig = {
   ],
 };
 
-// ── Portal users (UsersList.aspx) — passwords never leave the server ─────────
+// ── Portal users (UsersList.aspx), passwords never leave the server ─────────
 
 function ResetPasswordButton({ userId, name }: { userId: number; name: string }) {
   const [busy, setBusy] = useState(false);
@@ -177,7 +177,7 @@ function ResetPasswordButton({ userId, name }: { userId: number; name: string })
     setBusy(true);
     try {
       const r = await apiRequest<{ newPassword: string }>(`/api/portal/admin/users/${userId}/reset-password`, { method: 'POST' });
-      window.alert(`New temporary password for ${name}:\n\n${r.newPassword}\n\nShare it now — it is not shown again.`);
+      window.alert(`New temporary password for ${name}:\n\n${r.newPassword}\n\nShare it now, it is not shown again.`);
     } catch (err) {
       window.alert(err instanceof Error ? err.message : 'Could not reset the password.');
     } finally {

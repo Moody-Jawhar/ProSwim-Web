@@ -1,4 +1,4 @@
-// Attendance reports — 1:1 ports of RptAttendanceSummary.aspx and
+// Attendance reports, 1:1 ports of RptAttendanceSummary.aspx and
 // RptAttendanceDetails.aspx in the portal UI.
 //
 // Faithful legacy behaviours kept on purpose:
@@ -31,7 +31,7 @@ const DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const STATUSES = ['', 'Normal', 'Makeup', 'Late'];
 
 const dmy = (v: unknown) => {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(String(v));
   return isNaN(d.getTime()) ? String(v) : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 };
@@ -227,7 +227,7 @@ export function AttendanceSummaryPage() {
       .finally(() => setLoading(false));
   }
 
-  // Header stats — legacy format with integer-truncated percentages.
+  // Header stats, legacy format with integer-truncated percentages.
   const stats = useMemo(() => {
     if (!rows) return null;
     const sum = (k: string) => rows.reduce((s2, r) => s2 + num(r, k), 0);
@@ -379,7 +379,7 @@ export function AttendanceSummaryPage() {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Attendance Details (RptAttendanceDetails.aspx) — per-session drill-down
+// Attendance Details (RptAttendanceDetails.aspx), per-session drill-down
 // ─────────────────────────────────────────────────────────────────────────────
 
 // Legacy rolling default: Jan–Mar → 01/10 of last year; Apr → 01/01; May+ →

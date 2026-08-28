@@ -1,4 +1,4 @@
-// System settings — port of Settings.aspx + SettingsTxt.aspx. The five
+// System settings, port of Settings.aspx + SettingsTxt.aspx. The five
 // whitelisted keys (welcome text, rules, WhatsApp templates) edited in place.
 // SiteMaster only, enforced server-side too.
 
@@ -83,7 +83,7 @@ export function SettingsAdminPage() {
 
           {current?.html && (
             <p className="text-xs text-slate-400 mb-2 flex items-center gap-1.5">
-              <SettingsIcon className="size-3.5" /> This field holds HTML shown in the apps — edit carefully.
+              <SettingsIcon className="size-3.5" /> This field holds HTML shown in the apps, edit carefully.
             </p>
           )}
           <textarea value={value} onChange={(e) => { setValue(e.target.value); setSaved(false); }}

@@ -16,9 +16,9 @@ function ageOf(dob: string): number | null {
 }
 
 function fmtDate(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 function initialsOf(name: string): string {
@@ -26,7 +26,7 @@ function initialsOf(name: string): string {
 }
 
 // Competitive Team roster: every swimmer flagged as Competitive Team, with
-// portfolio counts. Clicking a swimmer opens their portfolio directly —
+// portfolio counts. Clicking a swimmer opens their portfolio directly.
 // that's where staff record results, awards, documents and evaluations.
 export function CompSwimmersPage() {
   const navigate = useNavigate();
@@ -46,7 +46,7 @@ export function CompSwimmersPage() {
     <div className="p-6 md:p-8">
       <PageHero
         title="Competitive Swimmers"
-        subtitle="The competitive team — tap a swimmer to open their portfolio"
+        subtitle="The competitive team, tap a swimmer to open their portfolio"
       />
 
       {error && (
@@ -80,7 +80,7 @@ export function CompSwimmersPage() {
               </div>
               <p className="text-sm text-slate-400">
                 {rows.length === 0
-                  ? 'No competitive swimmers yet — flag a student as "Competitive Team" on their profile.'
+                  ? 'No competitive swimmers yet, flag a student as "Competitive Team" on their profile.'
                   : 'No swimmers match your search.'}
               </p>
             </div>
@@ -118,7 +118,7 @@ export function CompSwimmersPage() {
                     </div>
                     <p className="text-xs text-slate-500 mt-0.5 truncate">
                       {[age !== null ? `Age ${age}` : null, str(r, 'StudentGender') || null,
-                        str(r, 'LocationNickName') || null].filter(Boolean).join(' • ') || '—'}
+                        str(r, 'LocationNickName') || null].filter(Boolean).join(' • ') || '-'}
                     </p>
                     <div className="flex items-center gap-3 mt-1.5 text-xs text-slate-500">
                       <span className="flex items-center gap-1">

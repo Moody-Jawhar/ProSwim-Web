@@ -84,7 +84,7 @@ export function GSchedulePage() {
       return next;
     });
 
-  // Remark editor dialog — one for students, one for classes (tbl_Remarks types).
+  // Remark editor dialog, one for students, one for classes (tbl_Remarks types).
   const [remarkModal, setRemarkModal] = useState<{
     type: 'Student' | 'Class'; id: number; name: string; value: string;
   } | null>(null);
@@ -245,7 +245,7 @@ export function GSchedulePage() {
           <p className="text-sm font-medium text-slate-500">No schedule to show</p>
           <p className="text-xs text-slate-400 mt-1">
             {semesters.length === 0
-              ? 'No semesters found for this location — pick a different location.'
+              ? 'No semesters found for this location, pick a different location.'
               : 'Pick a semester with classes, or clear the search filter.'}
           </p>
         </div>
@@ -253,7 +253,7 @@ export function GSchedulePage() {
         <div className="overflow-x-auto rounded-2xl border border-slate-200 shadow-sm">
           <table className="w-full text-xs border-collapse" style={{ minWidth: `${110 + coachNames.length * 200}px` }}>
             <thead>
-              {/* Coach band — same chrome as the Private Schedule coach rows */}
+              {/* Coach band, same chrome as the Private Schedule coach rows */}
               <tr>
                 <th className="sticky left-0 z-10 bg-[#aabacf] p-1.5 text-center font-semibold w-[90px] min-w-[90px] text-slate-800">
                   Time
@@ -341,7 +341,7 @@ export function GSchedulePage() {
                                   {n(r.DuePercent) > 0 && (
                                     <Link
                                       to={`/payments/new?studentId=${n(r.studentid)}&semesterId=${semesterId}&studentName=${encodeURIComponent(s(r.StudentName))}`}
-                                      title={`Add payment${r.DueAmount != null ? ` — due ${s(r.DueAmount)}` : ''}`}
+                                      title={`Add payment${r.DueAmount != null ? `, due ${s(r.DueAmount)}` : ''}`}
                                       className="text-red-600 font-semibold hover:underline"
                                     >
                                       Due {n(r.DuePercent)}%
@@ -395,7 +395,7 @@ export function GSchedulePage() {
         />
       )}
 
-      {/* Legend — same pattern as the Private Schedule */}
+      {/* Legend, same pattern as the Private Schedule */}
       <div className="mt-4 flex flex-wrap gap-3 text-[11px] text-slate-500">
         <LegendSwatch color="#ffffff" label="Empty" />
         <LegendSwatch color="#e5eeff" label="2 students" />

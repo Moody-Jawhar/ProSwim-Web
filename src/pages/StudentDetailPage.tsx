@@ -91,7 +91,7 @@ const SECTIONS: Array<{ title: string; fields: FieldDef[] }> = [
     ],
   },
   {
-    // Formerly "Swimmer Types" — one swimmer can be enrolled in several
+    // Formerly "Swimmer Types", one swimmer can be enrolled in several
     // programs, so the flags read as program enrollment, and the cards above
     // the form show each active program's schedule/package/attendance.
     title: 'Programs Enrolled In',
@@ -262,7 +262,7 @@ export function StudentDetailPage() {
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
             <select value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls}>
-              <option value="">—</option>
+              <option value="">-</option>
               <option value="Male">Male</option>
               <option value="Female">Female</option>
             </select>
@@ -273,7 +273,7 @@ export function StudentDetailPage() {
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
             <select value={Number(v ?? 0)} onChange={(e) => set(fd.key, Number(e.target.value))} className={inputCls}>
-              <option value={0}>—</option>
+              <option value={0}>-</option>
               {lookups?.bloodTypes.map((b) => (
                 <option key={b.bloodTypeId} value={b.bloodTypeId}>{b.bloodTypeName}</option>
               ))}
@@ -285,7 +285,7 @@ export function StudentDetailPage() {
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
             <select value={Number(v ?? 0)} onChange={(e) => set(fd.key, Number(e.target.value))} className={inputCls}>
-              <option value={0}>—</option>
+              <option value={0}>-</option>
               {lookups?.locations.map((l) => (
                 <option key={l.locationId} value={l.locationId}>{l.locationNickName}</option>
               ))}
@@ -297,7 +297,7 @@ export function StudentDetailPage() {
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
             <select value={Number(v ?? 0)} onChange={(e) => set(fd.key, Number(e.target.value))} className={inputCls}>
-              <option value={0}>—</option>
+              <option value={0}>-</option>
               {lookups?.coaches.map((c) => (
                 <option key={c.coachId} value={c.coachId}>
                   {c.coachFullName}{c.locationNickName ? ` (${c.locationNickName})` : ''}
@@ -328,16 +328,16 @@ export function StudentDetailPage() {
       );
     }
     let text: string;
-    if (v == null || v === '') text = '—';
+    if (v == null || v === '') text = '-';
     else if (fd.type === 'date') {
       const d = new Date(String(v));
-      text = isNaN(d.getTime()) ? '—' : d.toLocaleDateString();
+      text = isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
     } else if (fd.type === 'bloodType') {
-      text = lookups?.bloodTypes.find((b) => b.bloodTypeId === Number(v))?.bloodTypeName ?? '—';
+      text = lookups?.bloodTypes.find((b) => b.bloodTypeId === Number(v))?.bloodTypeName ?? '-';
     } else if (fd.type === 'location') {
-      text = lookups?.locations.find((l) => l.locationId === Number(v))?.locationNickName ?? '—';
+      text = lookups?.locations.find((l) => l.locationId === Number(v))?.locationNickName ?? '-';
     } else if (fd.type === 'coach') {
-      text = lookups?.coaches.find((c) => c.coachId === Number(v))?.coachFullName ?? '—';
+      text = lookups?.coaches.find((c) => c.coachId === Number(v))?.coachFullName ?? '-';
     } else {
       text = String(v);
     }
@@ -405,7 +405,7 @@ export function StudentDetailPage() {
         <div>
           <h1 className="text-2xl font-bold text-slate-900">{String(row.StudentFullName ?? '')}</h1>
           <p className="text-sm text-slate-500 mt-0.5">
-            #{String(row.StudentId)} · {String(row.locationNickName ?? '—')} · {String(row.StudentLatestLevelName ?? '—')}
+            #{String(row.StudentId)} · {String(row.locationNickName ?? '-')} · {String(row.StudentLatestLevelName ?? '-')}
           </p>
         </div>
       </div>
@@ -423,7 +423,7 @@ export function StudentDetailPage() {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 
@@ -561,7 +561,7 @@ function MedicalBanner({ row }: { row: StudentRow }) {
       <div className="flex items-start gap-3">
         <HeartPulse className="size-5 text-red-600 shrink-0 mt-0.5" />
         <div className="min-w-0">
-          <p className="text-xs font-bold uppercase tracking-widest text-red-600 mb-1">Medical — check before sessions</p>
+          <p className="text-xs font-bold uppercase tracking-widest text-red-600 mb-1">Medical, check before sessions</p>
           {allergies && (
             <p className="text-sm text-red-800">
               <span className="font-bold">Allergies:</span> {allergies}
@@ -575,7 +575,7 @@ function MedicalBanner({ row }: { row: StudentRow }) {
           {(ecName || ecPhone) && (
             <p className="text-sm text-red-700 mt-1.5 flex items-center gap-1.5">
               <PhoneCall className="size-3.5 shrink-0" />
-              Emergency contact: {ecName || '—'}{ecRelation ? ` (${ecRelation})` : ''}{ecPhone ? ` — ${ecPhone}` : ''}
+              Emergency contact: {ecName || '-'}{ecRelation ? ` (${ecRelation})` : ''}{ecPhone ? `: ${ecPhone}` : ''}
             </p>
           )}
         </div>
@@ -655,7 +655,7 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 border-t-4 border-t-[#1e5c97]">
             <p className="text-sm font-bold text-[#1e5c97] mb-3">Group Training</p>
             {registrations.length === 0 && (
-              <p className="text-sm text-slate-400">Enrolled — no registrations recorded yet.</p>
+              <p className="text-sm text-slate-400">Enrolled, no registrations recorded yet.</p>
             )}
             <div className="space-y-3">
               {registrations.map((reg) => {
@@ -669,7 +669,7 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
                 return (
                   <div key={regId} className="text-sm border-b border-slate-50 last:border-0 pb-2 last:pb-0">
                     <div className="flex items-center justify-between gap-2">
-                      <span className="font-semibold text-slate-800">{str(reg, 'SemesterName') || '—'}</span>
+                      <span className="font-semibold text-slate-800">{str(reg, 'SemesterName') || '-'}</span>
                       {stopped
                         ? <span className="text-[11px] font-bold text-red-600 bg-red-50 rounded-full px-2 py-0.5">Stopped</span>
                         : total > 0 && (
@@ -693,7 +693,7 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
           <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 border-t-4 border-t-indigo-500">
             <p className="text-sm font-bold text-indigo-600 mb-3">Private Training</p>
             {packages.length === 0 && (
-              <p className="text-sm text-slate-400">Enrolled — no packages recorded yet.</p>
+              <p className="text-sm text-slate-400">Enrolled, no packages recorded yet.</p>
             )}
             <div className="space-y-3">
               {packages.map((p) => {
@@ -714,7 +714,7 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
                     </div>
                     <p className="text-slate-500 mt-0.5">
                       {[str(p, 'CoachFullName'), str(p, 'LocationNickName'), str(p, 'PackageStatus')]
-                        .filter(Boolean).join(' · ') || '—'}
+                        .filter(Boolean).join(' · ') || '-'}
                     </p>
                   </div>
                 );
@@ -726,7 +726,7 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
         {flagCards.map((f) => (
           <div key={f.label} className={`rounded-2xl border shadow-soft p-5 border-t-4 ${f.cls}`}>
             <p className="text-sm font-bold">{f.label}</p>
-            <p className="text-sm opacity-70 mt-1">Enrolled — sessions are tracked under this student's schedule.</p>
+            <p className="text-sm opacity-70 mt-1">Enrolled, sessions are tracked under this student's schedule.</p>
           </div>
         ))}
       </div>
@@ -735,9 +735,9 @@ function ProgramsEnrolled({ studentId }: { studentId: string }) {
 }
 
 // ─── Family links (manual siblings) ──────────────────────────────────────────
-// Families are staff-made links only — no automatic phone grouping. Links are
+// Families are staff-made links only, no automatic phone grouping. Links are
 // DIRECTIONAL: linking a sibling from this page makes THIS swimmer the main
-// account — the family signs in with the main's credentials and switches.
+// account, the family signs in with the main's credentials and switches.
 function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boolean }) {
   const [links, setLinks] = useState<Row[] | null>(null);
   const [error, setError] = useState('');
@@ -827,7 +827,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5 mb-4">
       <div className="flex items-center justify-between mb-3">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
-          <Users className="size-4" /> Family — Siblings
+          <Users className="size-4" /> Family. Siblings
         </p>
         {canSave && !adding && (
           <button
@@ -853,7 +853,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
               </Link>
             </span>
           ))}
-          {' '}— the family signs in with that swimmer's login.
+          {' '}the family signs in with that swimmer's login.
         </p>
       )}
 
@@ -891,7 +891,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
                   <span className="text-xs text-slate-400">
                     #{num(r, 'studentId')}
                     {str(r, 'studentDateOfBirth') ? ` · b. ${new Date(str(r, 'studentDateOfBirth')).getFullYear()}` : ''}
-                    {' · '}{str(r, 'locationNickName') || '—'}
+                    {' · '}{str(r, 'locationNickName') || '-'}
                   </span>
                 </button>
               ))}
@@ -903,7 +903,7 @@ function FamilyLinks({ studentId, canSave }: { studentId: string; canSave: boole
       {links === null && !error && <Loader2 className="size-5 animate-spin text-[#1e5c97]" />}
       {links !== null && links.length === 0 && (
         <p className="text-sm text-slate-400">
-          No linked siblings — link one to make this swimmer the family's main
+          No linked siblings, link one to make this swimmer the family's main
           account (the login the whole family uses).
         </p>
       )}

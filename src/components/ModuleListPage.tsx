@@ -51,7 +51,7 @@ export interface ModuleConfig {
 const PAGE_SIZE = 50;
 
 // Location filters open scoped to the signed-in user's own location rather than
-// to "all locations". Still editable — an explicit `initial` in the config wins.
+// to "all locations". Still editable, an explicit `initial` in the config wins.
 const LOCATION_PARAMS = new Set(['locationId', 'locationIds']);
 const SEMESTER_PARAMS = new Set(['semesterId', 'semesterIds']);
 
@@ -61,7 +61,7 @@ function semesterId(r: Row): number {
 }
 
 function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
-  if (v == null || v === '') return '—';
+  if (v == null || v === '') return '-';
   switch (format) {
     case 'date': {
       const d = new Date(String(v));

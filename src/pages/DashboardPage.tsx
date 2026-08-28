@@ -22,7 +22,7 @@ interface Stats {
   privatePackagesAttention: Record<string, number>;
 }
 
-// Order matters — the card lists them in this sequence. Two proc criteria map
+// Order matters, the card lists them in this sequence. Two proc criteria map
 // to payment attention, so they get distinct labels rather than duplicating.
 const ATTENTION_LABELS: Record<string, string> = {
   NeedPayment: 'Need payment',
@@ -35,7 +35,7 @@ const ATTENTION_ORDER = ['NeedPayment', 'AttendanceMoreThanPayment2', 'NeedFollo
 
 function money(map: Record<string, number>): string {
   const parts = Object.entries(map).map(([cur, amt]) => `${amt.toLocaleString()} ${cur}`);
-  return parts.length ? parts.join(' · ') : '—';
+  return parts.length ? parts.join(' · ') : '-';
 }
 
 export function DashboardPage() {
@@ -130,10 +130,10 @@ export function DashboardPage() {
             />
           </div>
 
-          {/* Finance analytics — SiteMaster only (the endpoint enforces it too) */}
+          {/* Finance analytics. SiteMaster only (the endpoint enforces it too) */}
           {userType === 'sitemaster' && <FinanceOverview />}
 
-          {/* Quick actions — the daily operations, one tap away */}
+          {/* Quick actions, the daily operations, one tap away */}
           <div className="mb-6">
             <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Quick actions</p>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">

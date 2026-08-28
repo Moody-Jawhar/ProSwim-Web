@@ -1,4 +1,4 @@
-// Notifications list — the push broadcasts sent to the mobile app (last 90
+// Notifications list, the push broadcasts sent to the mobile app (last 90
 // days, grouped), mirroring the legacy NotificationsList.aspx. Read-only;
 // composing and removing live on the Mobile App → Notifications page.
 
@@ -29,7 +29,7 @@ export function NotificationsListPage() {
     <div className="p-6 md:p-8">
       <PageHero
         title="Notifications"
-        subtitle="Push notifications sent to the mobile app — last 90 days"
+        subtitle="Push notifications sent to the mobile app, last 90 days"
         slide={2}
         right={canSend ? (
           <Link
@@ -75,7 +75,7 @@ export function NotificationsListPage() {
                     ? new Date(String(r.SentDate)).toLocaleString(undefined, {
                         day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
                       })
-                    : '—';
+                    : '-';
                   return (
                     <div key={i} className="py-3 flex items-start gap-3">
                       <span className={`shrink-0 text-[11px] font-bold rounded-full px-2 py-0.5 mt-0.5 ${

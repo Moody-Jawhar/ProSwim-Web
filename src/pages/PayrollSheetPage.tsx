@@ -1,4 +1,4 @@
-// Payroll sheet — port of TimeSheetPayroll.aspx. All money math happens in the
+// Payroll sheet, port of TimeSheetPayroll.aspx. All money math happens in the
 // stored procedures (rates × hours, salary %, net); this grid shows the
 // computed columns, lets the SiteMaster edit hour counts / bonus / penalty /
 // loans, toggle Paid / NoWork, and re-run the HR recalculation.
@@ -108,7 +108,7 @@ export function PayrollSheetPage() {
           body[p] = fields[p] ?? num(row, p === 'PayrollNetToPay' ? 'PayrollNetToPAy' : p);
         await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       }
-      setNotice(`${dirty.length} row(s) saved — recalculating…`);
+      setNotice(`${dirty.length} row(s) saved, recalculating…`);
       load(true); // the procs recompute the totals
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not save the changes.');
@@ -136,7 +136,7 @@ export function PayrollSheetPage() {
   return (
     <div className="p-6 md:p-8">
       <SmartBack label="Timesheets" fallback="/payroll/timesheets" />
-      <PageHero title={`Payroll — ${title}`} subtitle={`${rows.length} coach(es)`} slide={2} />
+      <PageHero title={`Payroll: ${title}`} subtitle={`${rows.length} coach(es)`} slide={2} />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
         <label className="flex items-center gap-1.5 text-sm text-slate-600 select-none">

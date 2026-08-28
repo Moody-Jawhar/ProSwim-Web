@@ -148,7 +148,7 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
               onChange={(e) => set(fd.key, numeric ? Number(e.target.value) : e.target.value)}
               className={inputCls}
             >
-              <option value={numeric ? 0 : ''}>—</option>
+              <option value={numeric ? 0 : ''}>-</option>
               {opts.map((o) => <option key={String(o.value)} value={String(o.value)}>{o.label}</option>)}
             </select>
           </div>
@@ -197,7 +197,7 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 

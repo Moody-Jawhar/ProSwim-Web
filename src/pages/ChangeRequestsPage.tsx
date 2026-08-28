@@ -11,9 +11,9 @@ const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 function fmtDate(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleString(undefined, {
+  return isNaN(d.getTime()) ? '-' : d.toLocaleString(undefined, {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
@@ -26,7 +26,7 @@ const STATUS_STYLES: Record<string, string> = {
 };
 
 // Parent-submitted phone/email changes: parents can edit everything else in
-// the app directly, but the main phone and email only change through here —
+// the app directly, but the main phone and email only change through here.
 // a staff decision, applied server-side and audit-logged (security rule).
 export function ChangeRequestsPage() {
   const user = getStoredUser();
@@ -79,7 +79,7 @@ export function ChangeRequestsPage() {
     <div className="p-8 max-w-4xl">
       <PageHero
         title="Change Requests"
-        subtitle="Phone & email changes parents requested from the app — approving applies the change and logs it"
+        subtitle="Phone & email changes parents requested from the app, approving applies the change and logs it"
         right={
           <div className="flex rounded-xl border border-slate-200 bg-white overflow-hidden text-sm font-semibold">
             {(['Pending', 'All'] as const).map((f) => (
@@ -115,7 +115,7 @@ export function ChangeRequestsPage() {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-10 text-center">
           <Inbox className="size-8 text-slate-300 mx-auto mb-2" />
           <p className="text-sm text-slate-500">
-            {filter === 'Pending' ? 'No pending requests — all caught up.' : 'No change requests yet.'}
+            {filter === 'Pending' ? 'No pending requests, all caught up.' : 'No change requests yet.'}
           </p>
         </div>
       ) : (
@@ -150,7 +150,7 @@ export function ChangeRequestsPage() {
                 </div>
 
                 <div className="flex flex-wrap items-center gap-2 mt-3 text-sm">
-                  <span className="text-slate-500 line-through decoration-slate-300">{str(r, 'OldValue') || '—'}</span>
+                  <span className="text-slate-500 line-through decoration-slate-300">{str(r, 'OldValue') || '-'}</span>
                   <MoveRight className="size-4 text-slate-300 shrink-0" />
                   <span className="font-semibold text-slate-900">{newValue}</span>
                 </div>

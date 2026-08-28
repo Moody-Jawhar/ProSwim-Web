@@ -1,4 +1,4 @@
-// Feedback dashboard — results of the 15-question mobile survey, with
+// Feedback dashboard, results of the 15-question mobile survey, with
 // per-question score bars, rating distributions, monthly trend and the
 // individual responses. SiteMaster can edit the survey questions in place.
 
@@ -141,7 +141,7 @@ export function FeedbackDashboardPage() {
               <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400 mb-1">Overall score</p>
               <div className="flex items-center gap-2">
                 <p className="text-4xl font-extrabold tabular-nums" style={{ color: overall != null ? scoreColor(overall) : '#94A3B8' }}>
-                  {overall != null ? overall.toFixed(2) : '—'}
+                  {overall != null ? overall.toFixed(2) : '-'}
                 </p>
                 <div className="flex">
                   {[1, 2, 3, 4, 5].map((v) => (
@@ -192,7 +192,7 @@ export function FeedbackDashboardPage() {
                         <p className="text-sm font-bold text-slate-800">{str(c.CoachName)}</p>
                         <p className="text-sm font-extrabold tabular-nums shrink-0"
                           style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
-                          {avg != null ? avg.toFixed(2) : '—'}
+                          {avg != null ? avg.toFixed(2) : '-'}
                           <span className="text-xs font-normal text-slate-400"> ({num(c.Responses)} response{num(c.Responses) === 1 ? '' : 's'})</span>
                         </p>
                       </div>
@@ -224,7 +224,7 @@ export function FeedbackDashboardPage() {
                         <span className="text-slate-400 font-bold">{num(q.QuestionOrder)}.</span> {str(q.QuestionText)}
                       </p>
                       <p className="text-sm font-extrabold tabular-nums shrink-0" style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
-                        {avg != null ? avg.toFixed(2) : '—'} <span className="text-xs font-normal text-slate-400">({cnt})</span>
+                        {avg != null ? avg.toFixed(2) : '-'} <span className="text-xs font-normal text-slate-400">({cnt})</span>
                       </p>
                     </div>
                     {/* Average bar */}
@@ -267,24 +267,24 @@ export function FeedbackDashboardPage() {
               </thead>
               <tbody>
                 {responses.length === 0 && (
-                  <tr><td colSpan={8} className="text-center text-slate-400 py-6">No feedback submitted yet — surveys appear in the mobile app on every registration and package card.</td></tr>
+                  <tr><td colSpan={8} className="text-center text-slate-400 py-6">No feedback submitted yet, surveys appear in the mobile app on every registration and package card.</td></tr>
                 )}
                 {responses.map((r) => {
                   const avg = r.Avg != null ? Number(r.Avg) : null;
                   return (
                     <tr key={num(r.FeedbackId)}>
-                      <td>{r.FilledDate ? new Date(str(r.FilledDate)).toLocaleDateString() : '—'}</td>
+                      <td>{r.FilledDate ? new Date(str(r.FilledDate)).toLocaleDateString() : '-'}</td>
                       <td className="font-semibold">{str(r.StudentName) || `#${num(r.StudentId)}`}</td>
                       <td>
                         <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${
                           str(r.RefType) === 'Private' ? 'bg-purple-50 text-purple-700' : 'bg-[#e8f0f8] text-[#1e5c97]'
                         }`}>{str(r.RefType)}</span>
                       </td>
-                      <td>{str(r.LocationName) || '—'}</td>
-                      <td>{str(r.CoachName) || '—'}</td>
-                      <td className="max-w-52 truncate" title={str(r.RefLabel)}>{str(r.RefLabel) || '—'}</td>
+                      <td>{str(r.LocationName) || '-'}</td>
+                      <td>{str(r.CoachName) || '-'}</td>
+                      <td className="max-w-52 truncate" title={str(r.RefLabel)}>{str(r.RefLabel) || '-'}</td>
                       <td className="text-right font-extrabold tabular-nums" style={{ color: avg != null ? scoreColor(avg) : '#94A3B8' }}>
-                        {avg != null ? avg.toFixed(2) : '—'}
+                        {avg != null ? avg.toFixed(2) : '-'}
                       </td>
                       <td className="max-w-72 whitespace-normal text-slate-600">
                         {str(r.Suggestions) && (

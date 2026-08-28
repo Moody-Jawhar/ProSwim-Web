@@ -1,4 +1,4 @@
-// Payroll addon form — port of TimeSheetsAddonsIndividual.aspx. A bonus, long
+// Payroll addon form, port of TimeSheetsAddonsIndividual.aspx. A bonus, long
 // loan or penalty for a coach, split across up to 12 monthly payments with the
 // legacy "Distribute" rounding behaviour.
 
@@ -100,7 +100,7 @@ export function AddonFormPage() {
     if (!type) { setError('Choose a type.'); return; }
     if (!coachId) { setError('Choose a coach.'); return; }
     if (payments[0].amount === 0) { setError('Set at least the first payment (use Distribute).'); return; }
-    if (paymentsSum !== total) { setError(`Payment lines add up to ${paymentsSum.toLocaleString()} but the total is ${total.toLocaleString()} — use Distribute or fix the lines.`); return; }
+    if (paymentsSum !== total) { setError(`Payment lines add up to ${paymentsSum.toLocaleString()} but the total is ${total.toLocaleString()}, use Distribute or fix the lines.`); return; }
     setSaving(true);
     setError('');
     const body: Record<string, unknown> = {
@@ -212,7 +212,7 @@ export function AddonFormPage() {
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 mb-4">
         <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">
-          Payment schedule — lines total {paymentsSum.toLocaleString()} {currency}
+          Payment schedule, lines total {paymentsSum.toLocaleString()} {currency}
           {paymentsSum !== total && <span className="text-red-600 normal-case tracking-normal"> (≠ total {total.toLocaleString()})</span>}
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-8 gap-y-2">

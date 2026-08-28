@@ -236,7 +236,7 @@ export function PaymentForm() {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 
@@ -248,14 +248,14 @@ export function PaymentForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Location</label>
               <select value={locationId} onChange={(e) => { setLocationId(Number(e.target.value)); keepSemester.current = false; }} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {locations.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Semester</label>
               <select value={semesterId} onChange={(e) => setSemesterId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {semesters.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
@@ -266,7 +266,7 @@ export function PaymentForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Title</label>
               <select value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls}>
-                {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
+                {TITLES.map((t) => <option key={t} value={t}>{t || '-'}</option>)}
               </select>
             </div>
             <div className="md:col-span-2">
@@ -324,7 +324,7 @@ export function PaymentForm() {
         <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-1">Students</p>
           <p className={`text-xs mb-4 ${linesSum === totalAmount ? 'text-slate-400' : 'text-red-500 font-semibold'}`}>
-            Split {linesSum} of {totalAmount} — the amounts must add up to the total.
+            Split {linesSum} of {totalAmount}, the amounts must add up to the total.
           </p>
           <div className="space-y-3">
             {LINE_SLOTS.map((slot) => (

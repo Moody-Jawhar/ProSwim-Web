@@ -8,13 +8,13 @@ const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 function fmtDay(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 // Staff-side manual change of a private session: search the swimmer, pick the
-// session, cancel or reschedule it — choosing whether it counts as one of the
+// session, cancel or reschedule it, choosing whether it counts as one of the
 // swimmer's 2 allowed changes (student cancellation) or not (coach
 // cancellation).
 export function SessionChangesManualPage() {
@@ -104,7 +104,7 @@ export function SessionChangesManualPage() {
         });
       setNotice(
         `Session set to “${res.state}”` +
-        (res.counted ? ' — counted as 1 of the 2 allowed changes.' : ' — not counted toward the quota.'));
+        (res.counted ? ', counted as 1 of the 2 allowed changes.' : ', not counted toward the quota.'));
       setEditFor(null); setNewDate(''); setNewTime(''); setNote('');
       if (student) pickStudent(student);
     } catch (e) {
@@ -118,7 +118,7 @@ export function SessionChangesManualPage() {
     <div className="p-8 max-w-4xl">
       <PageHero
         title="Manual Session Change"
-        subtitle="Search a swimmer, pick a private session, cancel or reschedule it — choosing whether it uses one of their 2 changes"
+        subtitle="Search a swimmer, pick a private session, cancel or reschedule it, choosing whether it uses one of their 2 changes"
       />
 
       {error && (
@@ -161,7 +161,7 @@ export function SessionChangesManualPage() {
                 <span className="text-xs text-slate-400">
                   #{num(r, 'studentId')}
                   {str(r, 'studentDateOfBirth') ? ` · b. ${new Date(str(r, 'studentDateOfBirth')).getFullYear()}` : ''}
-                  {' · '}{str(r, 'locationNickName') || '—'}
+                  {' · '}{str(r, 'locationNickName') || '-'}
                 </span>
               </button>
             ))}

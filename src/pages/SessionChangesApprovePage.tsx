@@ -9,9 +9,9 @@ const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 function fmtDate(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleString(undefined, {
+  return isNaN(d.getTime()) ? '-' : d.toLocaleString(undefined, {
     day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
   });
 }
@@ -53,7 +53,7 @@ export function SessionChangesApprovePage() {
   async function decideAbsence(id: number, approve: boolean) {
     let note: string | null = null;
     if (approve) {
-      if (!window.confirm('Approve a makeup for this absence? The session itself is never changed automatically — arrange the makeup with the coach.')) return;
+      if (!window.confirm('Approve a makeup for this absence? The session itself is never changed automatically, arrange the makeup with the coach.')) return;
     } else {
       note = window.prompt('Note for the parent (absence stays recorded, no makeup):', '');
       if (note === null) return;
@@ -64,7 +64,7 @@ export function SessionChangesApprovePage() {
     try {
       await apiRequest(`/api/portal/change-requests/absences/${id}/${approve ? 'approve' : 'reject'}`,
         { method: 'POST', body: JSON.stringify({ note }) });
-      setNotice(approve ? 'Makeup approved — arrange it with the coach.' : 'Absence recorded without a makeup.');
+      setNotice(approve ? 'Makeup approved, arrange it with the coach.' : 'Absence recorded without a makeup.');
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision failed.');
@@ -78,7 +78,7 @@ export function SessionChangesApprovePage() {
     if (approve) {
       if (!window.confirm("Approve this freeze? Sessions inside the range are marked 'Freeze Package'.")) return;
     } else {
-      note = window.prompt('Reason for declining (the parent sees this). The package continues — the spot and coach time stay reserved:', '');
+      note = window.prompt('Reason for declining (the parent sees this). The package continues, the spot and coach time stay reserved:', '');
       if (note === null) return;
     }
     setBusyId(1000000 + id);
@@ -87,7 +87,7 @@ export function SessionChangesApprovePage() {
     try {
       await apiRequest(`/api/portal/change-requests/freezes/${id}/${approve ? 'approve' : 'reject'}`,
         { method: 'POST', body: JSON.stringify({ note }) });
-      setNotice(approve ? 'Freeze approved — sessions in the range are marked Freeze Package.' : 'Freeze declined — the package continues.');
+      setNotice(approve ? 'Freeze approved, sessions in the range are marked Freeze Package.' : 'Freeze declined, the package continues.');
       load();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Decision failed.');
@@ -115,7 +115,7 @@ export function SessionChangesApprovePage() {
         ? 'Session cancelled and request approved.'
         : autoAccept
           ? 'Session cancelled and rescheduled to the agreed alternate slot.'
-          : 'Session cancelled — the alternate slot was offered to the parent in the app.');
+          : 'Session cancelled, the alternate slot was offered to the parent in the app.');
       setApproveFor(null); setAltDate(''); setAltTime(''); setAutoAccept(false); setApproveNote('');
       load();
     } catch (e) {
@@ -147,7 +147,7 @@ export function SessionChangesApprovePage() {
     <div className="p-8 max-w-4xl">
       <PageHero
         title="Approve Session Changes"
-        subtitle="Cancellations parents requested from the app — approve, offer an alternate slot, or decline"
+        subtitle="Cancellations parents requested from the app, approve, offer an alternate slot, or decline"
       />
 
       {error && (
@@ -166,7 +166,7 @@ export function SessionChangesApprovePage() {
       {absRows && absRows.length > 0 && (
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
-            <CalendarX className="size-4" /> Absence Notices — Group Sessions
+            <CalendarX className="size-4" /> Absence Notices. Group Sessions
           </p>
           <div className="space-y-3">
             {absRows.map((r) => {
@@ -213,7 +213,7 @@ export function SessionChangesApprovePage() {
       {freezeRows && freezeRows.length > 0 && (
         <div className="mb-6">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2 flex items-center gap-2">
-            <Snowflake className="size-4" /> Freeze Requests — Private Packages
+            <Snowflake className="size-4" /> Freeze Requests. Private Packages
           </p>
           <div className="space-y-3">
             {freezeRows.map((r) => {
@@ -323,7 +323,7 @@ export function SessionChangesApprovePage() {
                       <label className={`flex items-center gap-1.5 text-xs font-semibold pb-2 ${altDate ? 'text-slate-700' : 'text-slate-300'}`}>
                         <input type="checkbox" checked={autoAccept} disabled={!altDate}
                           onChange={(e) => setAutoAccept(e.target.checked)} />
-                        Auto-accept (already agreed, e.g. on WhatsApp) — reschedules immediately
+                        Auto-accept (already agreed, e.g. on WhatsApp), reschedules immediately
                       </label>
                     </div>
                     {!autoAccept && altDate && (

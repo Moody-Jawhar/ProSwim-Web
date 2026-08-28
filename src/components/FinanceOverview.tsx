@@ -32,7 +32,7 @@ export function FinanceOverview() {
       .catch(() => setFailed(true));
   }, []);
 
-  if (failed) return null; // non-SiteMaster or endpoint issue — dashboard still works
+  if (failed) return null; // non-SiteMaster or endpoint issue, dashboard still works
 
   const delta = (now: number, before: number | undefined) => {
     if (!before || before <= 0) return null;
@@ -54,7 +54,7 @@ export function FinanceOverview() {
           </span>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">AI finance analytics</p>
-            <p className="text-sm font-semibold text-slate-700">Revenue, expenses & profit — computed on-device</p>
+            <p className="text-sm font-semibold text-slate-700">Revenue, expenses & profit, computed on-device</p>
           </div>
         </div>
         <div className="flex rounded-lg border border-slate-200 overflow-hidden">
@@ -102,7 +102,7 @@ export function FinanceOverview() {
             <div className="flex items-stretch gap-1.5" style={{ height: 130 }}>
               {data.months.map((m) => (
                 <div key={m.month} className="flex-1 h-full flex flex-col items-center gap-0.5"
-                  title={`${m.month} — revenue ${fmtMoney(m.revenue[cur], cur)} · expenses ${fmtMoney(m.expenses[cur], cur)} · profit ${fmtMoney(m.profit[cur], cur)}`}>
+                  title={`${m.month}, revenue ${fmtMoney(m.revenue[cur], cur)} · expenses ${fmtMoney(m.expenses[cur], cur)} · profit ${fmtMoney(m.profit[cur], cur)}`}>
                   <div className="w-full flex-1 flex items-end gap-px">
                     <div className="flex-1 rounded-t bg-[#1e5c97]"
                       style={{ height: `${Math.max(3, (m.revenue[cur] / chartMax) * 100)}%`, opacity: 0.85 }} />
@@ -132,7 +132,7 @@ export function FinanceOverview() {
             })}
             {data.findings.length === 0 && (
               <p className="flex items-center gap-2 text-sm text-slate-400">
-                <Sparkles className="size-4" /> Not enough financial history yet — findings appear as months accumulate.
+                <Sparkles className="size-4" /> Not enough financial history yet, findings appear as months accumulate.
               </p>
             )}
           </div>

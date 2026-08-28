@@ -72,7 +72,7 @@ async function apiRequest<T>(
     clearAuth();
     // Hard redirect: any 401 on an authenticated call means the session is gone.
     // Honor vite's base path (/V27_WEB/ in prod, / in dev) so we don't jump to
-    // the server root — BASE_URL always ends with a slash.
+    // the server root. BASE_URL always ends with a slash.
     const loginPath = `${import.meta.env.BASE_URL}login`;
     if (window.location.pathname !== loginPath) {
       window.location.href = loginPath;
@@ -95,7 +95,7 @@ async function apiRequest<T>(
   return res.json() as Promise<T>;
 }
 
-/** Multipart file upload — same auth as apiRequest, but the browser sets the
+/** Multipart file upload, same auth as apiRequest, but the browser sets the
  *  Content-Type (multipart boundary) itself. */
 export async function apiUpload<T>(path: string, file: File): Promise<T> {
   const fd = new FormData();
@@ -135,7 +135,7 @@ export interface LoginResponse extends PortalUser {
   deviceToken: string | null;
 }
 
-// Trusted-device token — lets this browser skip the code for ~20 days.
+// Trusted-device token, lets this browser skip the code for ~20 days.
 export function getDeviceToken(): string | null {
   return localStorage.getItem("portalDeviceToken");
 }

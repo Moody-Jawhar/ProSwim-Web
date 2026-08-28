@@ -15,7 +15,7 @@ const inputCls =
   'w-full rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
 
 // Targeted parent announcements: location / program / individual swimmer.
-// Sending to literally everyone requires ticking an explicit confirmation —
+// Sending to literally everyone requires ticking an explicit confirmation.
 // the requirement is "not sent to everyone unnecessarily".
 export function AnnouncementsPage() {
   const user = getStoredUser();
@@ -137,7 +137,7 @@ export function AnnouncementsPage() {
     <div className="p-8 max-w-3xl">
       <PageHero
         title="Announcements"
-        subtitle="Push a message to parents' phones — targeted by location, program or swimmer"
+        subtitle="Push a message to parents' phones, targeted by location, program or swimmer"
       />
 
       {error && (
@@ -169,7 +169,7 @@ export function AnnouncementsPage() {
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Message *</label>
             <textarea className={inputCls} rows={4} value={body} onChange={(e) => setBody(e.target.value)}
-              placeholder="e.g. The Achrafieh pool is closed this Saturday for maintenance — all sessions move to Sunday." />
+              placeholder="e.g. The Achrafieh pool is closed this Saturday for maintenance, all sessions move to Sunday." />
           </div>
           <label className="flex items-center gap-2 text-sm text-slate-700 select-none">
             <input type="checkbox" checked={urgent} onChange={(e) => setUrgent(e.target.checked)} className="accent-red-600" />
@@ -232,7 +232,7 @@ export function AnnouncementsPage() {
         {untargeted && (
           <label className="flex items-center gap-2 text-sm text-amber-700 select-none mt-4 bg-amber-50 border border-amber-100 rounded-xl p-3">
             <input type="checkbox" checked={allowAll} onChange={(e) => setAllowAll(e.target.checked)} className="accent-amber-600" />
-            No targeting selected — I really do want to notify <b>every active swimmer's parent</b>.
+            No targeting selected. I really do want to notify <b>every active swimmer's parent</b>.
           </label>
         )}
 
@@ -245,7 +245,7 @@ export function AnnouncementsPage() {
             <span className="text-slate-600">
               Will reach <b className="text-[#1e5c97]">{preview.count}</b> parent(s)
               {preview.sample.length > 0 && (
-                <span className="text-slate-400"> — {preview.sample.slice(0, 5).join(', ')}{preview.count > 5 ? '…' : ''}</span>
+                <span className="text-slate-400">, {preview.sample.slice(0, 5).join(', ')}{preview.count > 5 ? '…' : ''}</span>
               )}
             </span>
           ) : (
@@ -254,7 +254,7 @@ export function AnnouncementsPage() {
         </div>
       </div>
 
-      {/* Sent announcements — with removal */}
+      {/* Sent announcements, with removal */}
       {sent && sent.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-4 mb-4">
           <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3">Sent announcements (last 90 days)</p>
@@ -262,7 +262,7 @@ export function AnnouncementsPage() {
             {sent.map((r, i) => {
               const type = String(r.Type ?? '');
               const desc = String(r.Desc ?? '');
-              const when = r.SentDate ? new Date(String(r.SentDate)).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—';
+              const when = r.SentDate ? new Date(String(r.SentDate)).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
               const key = type + desc;
               return (
                 <div key={i} className="py-2.5 flex items-start gap-3">

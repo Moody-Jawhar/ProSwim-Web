@@ -3,7 +3,7 @@
 // mini-batch gradient descent + momentum on binary cross-entropy.
 // Everything is seeded so training is deterministic on every device.
 
-/** Deterministic PRNG (mulberry32) — same seed ⇒ same weights everywhere. */
+/** Deterministic PRNG (mulberry32), same seed ⇒ same weights everywhere. */
 export function makeRng(seed: number): () => number {
   let a = seed >>> 0;
   return () => {
@@ -75,7 +75,7 @@ export class NeuralNet {
 
   /**
    * Train on (inputs, targets) pairs. Targets are per-output probabilities in
-   * [0,1] (soft labels are fine — BCE handles them). Returns final mean loss.
+   * [0,1] (soft labels are fine. BCE handles them). Returns final mean loss.
    */
   train(
     inputs: number[][], targets: number[][],

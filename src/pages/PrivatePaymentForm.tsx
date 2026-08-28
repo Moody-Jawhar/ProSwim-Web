@@ -171,7 +171,7 @@ export function PrivatePaymentForm() {
       )}
       {!canSave && (
         <div className="bg-amber-50 border border-amber-100 rounded-xl p-3 mb-4">
-          <p className="text-sm text-amber-700">Your account has view-only access — saving is disabled.</p>
+          <p className="text-sm text-amber-700">Your account has view-only access, saving is disabled.</p>
         </div>
       )}
 
@@ -183,14 +183,14 @@ export function PrivatePaymentForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Location</label>
               <select value={locationId} onChange={(e) => setLocationId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {locations.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Package</label>
               <select value={packageId} onChange={(e) => setPackageId(Number(e.target.value))} className={inputCls}>
-                <option value={0}>—</option>
+                <option value={0}>-</option>
                 {packages.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                 {packageId > 0 && !knownPackage && <option value={packageId}>Package #{packageId}</option>}
               </select>
@@ -198,7 +198,7 @@ export function PrivatePaymentForm() {
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Title</label>
               <select value={title} onChange={(e) => setTitle(e.target.value)} className={inputCls}>
-                {TITLES.map((t) => <option key={t} value={t}>{t || '—'}</option>)}
+                {TITLES.map((t) => <option key={t} value={t}>{t || '-'}</option>)}
               </select>
             </div>
             <div>

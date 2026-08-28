@@ -150,7 +150,7 @@ export function PrSchedulePage() {
 
   const [phones, setPhones] = useState<Record<number, string>>({});
 
-  // Phone numbers aren't in the schedule proc — fetched per student on tap.
+  // Phone numbers aren't in the schedule proc, fetched per student on tap.
   async function showPhone(studentId: number) {
     if (phones[studentId]) {
       setPhones((prev) => { const next = { ...prev }; delete next[studentId]; return next; });
@@ -162,9 +162,9 @@ export function PrSchedulePage() {
         [st.StudentPhoneNumberCode1, st.StudentPhoneNumber1].filter(Boolean).join(' '),
         [st.StudentPhoneNumberCode2, st.StudentPhoneNumber2].filter(Boolean).join(' '),
       ].filter((x) => x.trim().length > 0).join(' / ');
-      setPhones((prev) => ({ ...prev, [studentId]: nums || '—' }));
+      setPhones((prev) => ({ ...prev, [studentId]: nums || '-' }));
     } catch {
-      setPhones((prev) => ({ ...prev, [studentId]: '—' }));
+      setPhones((prev) => ({ ...prev, [studentId]: '-' }));
     }
   }
 

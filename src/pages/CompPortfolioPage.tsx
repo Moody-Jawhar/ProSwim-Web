@@ -23,7 +23,7 @@ const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 // ── time helpers: DB stores milliseconds ─────────────────────────────────────
 export function fmtMs(ms: number): string {
-  if (!ms || ms <= 0) return '—';
+  if (!ms || ms <= 0) return '-';
   const m = Math.floor(ms / 60000);
   const s = (ms % 60000) / 1000;
   return m > 0 ? `${m}:${s.toFixed(2).padStart(5, '0')}` : s.toFixed(2);
@@ -41,9 +41,9 @@ export function parseTime(text: string): number | null {
 }
 
 function fmtDate(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const AWARD_COLORS: Record<string, string> = {
@@ -86,7 +86,7 @@ function TimeChart({ points }: { points: { date: number; ms: number }[] }) {
             fill={p.ms === yMin ? '#16a34a' : '#1e5c97'} />
         ))}
       </svg>
-      <p className="text-[11px] text-slate-400 mt-1">Lower is better — green dot marks the personal best.</p>
+      <p className="text-[11px] text-slate-400 mt-1">Lower is better, green dot marks the personal best.</p>
     </div>
   );
 }
@@ -211,7 +211,7 @@ export function CompPortfolioPage() {
         {/* Personal bests */}
         <Section icon={<Timer className="size-4 text-[#1e5c97]" />} title="Personal Best Times">
           {data.personalBests.length === 0
-            ? <p className="text-sm text-slate-400">No timed results yet — bests appear automatically from results below.</p>
+            ? <p className="text-sm text-slate-400">No timed results yet, bests appear automatically from results below.</p>
             : (
               <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                 {data.personalBests.map((b) => (
@@ -452,8 +452,8 @@ function ResultsSection({ data, competitions, canSave, busy, mutate, del, studen
                     <td className="whitespace-nowrap">{fmtDate(str(r, 'ResultDate'))}</td>
                     <td>{str(r, 'EventName')}</td>
                     <td className="font-semibold text-[#1e5c97]">{fmtMs(num(r, 'TimeMs'))}</td>
-                    <td>{num(r, 'FinishRank') > 0 ? `#${num(r, 'FinishRank')}` : '—'}</td>
-                    <td>{str(r, 'CompetitionName') || '—'}</td>
+                    <td>{num(r, 'FinishRank') > 0 ? `#${num(r, 'FinishRank')}` : '-'}</td>
+                    <td>{str(r, 'CompetitionName') || '-'}</td>
                     <td>
                       {r.IsRecord === true && (
                         <span className="text-[10px] font-bold text-violet-700 bg-violet-50 border border-violet-200 rounded-full px-2 py-0.5">
@@ -519,7 +519,7 @@ function AwardsSection({ data, canSave, busy, mutate, del, studentId }: SectionP
         <div className="rounded-xl border border-amber-200 bg-amber-50/40 p-4 mb-4 grid grid-cols-1 md:grid-cols-4 gap-3">
           <div className="md:col-span-2">
             <label className="block text-xs font-semibold text-slate-500 mb-1">Title *</label>
-            <input className={inputCls} value={form.awardTitle} placeholder="Gold — 50m Freestyle"
+            <input className={inputCls} value={form.awardTitle} placeholder="Gold, 50m Freestyle"
               onChange={(e) => setForm({ ...form, awardTitle: e.target.value })} />
           </div>
           <div>
@@ -560,7 +560,7 @@ function AwardsSection({ data, canSave, busy, mutate, del, studentId }: SectionP
                   <div className="min-w-0">
                     <p className="text-sm font-bold truncate">{str(a, 'AwardTitle')}</p>
                     <p className="text-xs opacity-75">
-                      {[str(a, 'CompetitionName'), fmtDate(str(a, 'AwardDate')) !== '—' ? fmtDate(str(a, 'AwardDate')) : '']
+                      {[str(a, 'CompetitionName'), fmtDate(str(a, 'AwardDate')) !== '-' ? fmtDate(str(a, 'AwardDate')) : '']
                         .filter(Boolean).join(' · ') || str(a, 'AwardType')}
                     </p>
                   </div>

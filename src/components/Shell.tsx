@@ -33,7 +33,7 @@ type NavEntry = NavItem | NavGroup;
 
 const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
 
-// Grouped navigation — top-level sections expand to reveal their pages, so the
+// Grouped navigation, top-level sections expand to reveal their pages, so the
 // long flat list collapses to a handful of headers (cf. the legacy top menu's
 // dropdowns). Single links stay flat.
 const FULL_NAV: NavEntry[] = [
@@ -139,7 +139,7 @@ const FULL_NAV: NavEntry[] = [
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
-// Legacy Admin_TopMenu short-circuits for restricted personas — kept flat.
+// Legacy Admin_TopMenu short-circuits for restricted personas, kept flat.
 const GUEST_NAV: NavEntry[] = [
   { to: '/schedule', label: 'Group Schedule', icon: CalendarDays },
   { to: '/pr-schedule', label: 'Private Schedule', icon: GraduationCap },
@@ -160,7 +160,7 @@ function navForUserType(userType: string | null | undefined) {
   return FULL_NAV;
 }
 
-// The set of group labels whose children include the current path — used to
+// The set of group labels whose children include the current path, used to
 // auto-open the active group on first render.
 function groupsContaining(nav: NavEntry[], path: string): Set<string> {
   const open = new Set<string>();
@@ -176,7 +176,7 @@ export function Shell() {
   const user = getStoredUser();
   const NAV = navForUserType(user?.userType);
 
-  // Post-login cinematic intro — plays once per sign-in.
+  // Post-login cinematic intro, plays once per sign-in.
   const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('showIntro') === '1');
 
   const [collapsed, setCollapsed] = useState(
@@ -262,7 +262,7 @@ export function Shell() {
       return (
         <div
           key={item.to}
-          title={rail ? `${item.label} — coming soon` : 'Coming soon'}
+          title={rail ? `${item.label}, coming soon` : 'Coming soon'}
           className={`flex items-center py-2.5 text-sm text-white/30 cursor-not-allowed select-none ${rail ? 'justify-center px-0' : 'gap-3 px-5'}`}
         >
           <item.icon className="size-4 shrink-0" />
@@ -303,7 +303,7 @@ export function Shell() {
       {showIntro && (
         <IntroSplash onDone={() => { sessionStorage.removeItem('showIntro'); setShowIntro(false); }} />
       )}
-      {/* Mobile top bar — the only way to reach the nav under md */}
+      {/* Mobile top bar, the only way to reach the nav under md */}
       <header
         className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center gap-3 px-4 text-white shadow-md"
         style={{ background: 'linear-gradient(90deg, #202f4d 0%, #1e5c97 100%)' }}
@@ -323,14 +323,14 @@ export function Shell() {
         />
       )}
 
-      {/* Sidebar — an icon rail on desktop, an off-canvas drawer under md */}
+      {/* Sidebar, an icon rail on desktop, an off-canvas drawer under md */}
       <aside
         className={`${rail ? 'w-16' : 'w-60'} shrink-0 text-white flex flex-col transition-transform md:transition-[width] duration-200 ease-in-out overflow-hidden
           fixed inset-y-0 left-0 z-50 md:static md:z-auto md:translate-x-0
           ${drawerOpen ? 'translate-x-0' : '-translate-x-full'}`}
         style={{ background: 'linear-gradient(180deg, #202f4d 0%, #1d3a5f 55%, #1e5c97 130%)' }}
       >
-        {/* Collapse toggle (desktop) / close drawer (mobile) — pinned to the top */}
+        {/* Collapse toggle (desktop) / close drawer (mobile), pinned to the top */}
         <button
           onClick={() => (isMobile ? setDrawerOpen(false) : toggleSidebar())}
           title={isMobile ? 'Close menu' : rail ? 'Expand menu' : 'Collapse menu'}
@@ -406,7 +406,7 @@ export function Shell() {
         </div>
       </aside>
 
-      {/* Main — keyed on the route so every navigation animates in.
+      {/* Main, keyed on the route so every navigation animates in.
           pt-14 clears the fixed mobile top bar. */}
       <main className="flex-1 min-w-0 overflow-x-hidden pt-14 md:pt-0">
         <div key={location.pathname} className="page-in">

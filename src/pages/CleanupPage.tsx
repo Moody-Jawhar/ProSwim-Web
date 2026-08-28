@@ -86,7 +86,7 @@ export function CleanupPage() {
         body: JSON.stringify({ field, canonical, variants }),
       });
       setDone((d) => ({ ...d, [i]: res.studentsUpdated }));
-      setNotice(`Merged into "${canonical}" — ${res.studentsUpdated} student${res.studentsUpdated === 1 ? '' : 's'} updated.`);
+      setNotice(`Merged into "${canonical}": ${res.studentsUpdated} student${res.studentsUpdated === 1 ? '' : 's'} updated.`);
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Apply failed.');
     } finally {

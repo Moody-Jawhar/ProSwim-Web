@@ -1,6 +1,6 @@
 // Post-login welcome. Deliberately quiet: the logo settles in, a personal
 // greeting and the date fade up, a single wave line draws itself underneath,
-// and the screen breathes out into the dashboard. No glows, no confetti —
+// and the screen breathes out into the dashboard. No glows, no confetti.
 // it should feel like the room lights coming on, not a product launch.
 
 import { useEffect, useState } from 'react';

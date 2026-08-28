@@ -68,7 +68,7 @@ export function AiStudentOverview({ studentId, studentFullName, startingDate, ph
         <div>
           <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">AI overview</p>
           <p className="text-sm font-semibold text-slate-700">
-            On-device model — the student's data never leaves the portal
+            On-device model, the student's data never leaves the portal
           </p>
         </div>
       </div>
@@ -114,7 +114,7 @@ export function AiStudentOverview({ studentId, studentFullName, startingDate, ph
             })}
           </div>
 
-          {/* AI outreach — message drafted from the strongest signal */}
+          {/* AI outreach, message drafted from the strongest signal */}
           <div className="flex flex-wrap items-center gap-2">
             {phone && phone.replace(/\D/g, '').length >= 6 && (
               <a
@@ -131,7 +131,7 @@ export function AiStudentOverview({ studentId, studentFullName, startingDate, ph
             >
               <Bell className="size-4" /> Send app notification
             </button>
-            <p className="text-[11px] text-slate-400">Message pre-written by the model from this student's signals — edit before sending.</p>
+            <p className="text-[11px] text-slate-400">Message pre-written by the model from this student's signals, edit before sending.</p>
           </div>
 
           {notifyOpen && (
@@ -175,10 +175,10 @@ function NotifyDialog({ studentId, studentName, draft, onClose }: {
       setResult(res);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Could not send the notification.';
-      // The targets proc only returns swimmers reachable in the app — explain
+      // The targets proc only returns swimmers reachable in the app, explain
       // the common case instead of parroting the raw server text.
       setError(msg.toLowerCase().includes('no recipients')
-        ? 'This student has no ProSwim app account to notify — they may never have signed in on a phone. Use WhatsApp instead.'
+        ? 'This student has no ProSwim app account to notify, they may never have signed in on a phone. Use WhatsApp instead.'
         : msg);
     } finally {
       setSending(false);
@@ -194,7 +194,7 @@ function NotifyDialog({ studentId, studentName, draft, onClose }: {
           </p>
           <button onClick={onClose}><X className="size-5 text-slate-400 hover:text-slate-600" /></button>
         </div>
-        <p className="text-xs text-slate-500 mb-3">To {studentName} — drafted by the AI from their signals, edit freely.</p>
+        <p className="text-xs text-slate-500 mb-3">To {studentName}, drafted by the AI from their signals, edit freely.</p>
 
         {result ? (
           <div className="space-y-2">

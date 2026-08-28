@@ -63,7 +63,7 @@ export function LocationsAdminPage() {
     <div className="p-6 md:p-8">
 <PageHero
         title="Locations"
-        subtitle="Pool locations — their photos show in the mobile app"
+        subtitle="Pool locations, their photos show in the mobile app"
       />
 
       <input ref={fileRef} type="file" accept="image/png,image/jpeg,image/webp" className="hidden" onChange={onFile} />
@@ -115,7 +115,7 @@ export function LocationsAdminPage() {
                 </div>
                 <p className="text-xs text-slate-500 mt-0.5 flex items-center gap-1 truncate">
                   <MapPin className="size-3.5 shrink-0" />
-                  {[str(r, 'LocationCity'), str(r, 'LocationFullAddress')].filter(Boolean).join(' — ') || '—'}
+                  {[str(r, 'LocationCity'), str(r, 'LocationFullAddress')].filter(Boolean).join(', ') || '-'}
                 </p>
                 {canSave && (
                   <div className="flex gap-2 mt-3">

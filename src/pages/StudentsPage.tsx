@@ -70,7 +70,7 @@ const EXTRA_COLS: Array<{ key: SortKey; label: string }> = [
 ];
 
 function fmtCell(key: SortKey, v: unknown): string {
-  if (v == null || v === '') return '—';
+  if (v == null || v === '') return '-';
   if (typeof v === 'string' && /Date|Born/i.test(key)) {
     const d = new Date(v);
     if (!isNaN(d.getTime())) return key === 'studentDateOfBirth' ? String(d.getFullYear()) : d.toLocaleDateString();
@@ -243,7 +243,7 @@ export function StudentsPage() {
         }
       />
 
-      {/* Filter bar — mirrors legacy StudentsList.aspx controls */}
+      {/* Filter bar, mirrors legacy StudentsList.aspx controls */}
       <form onSubmit={applyFilters} className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 mb-4 flex flex-wrap items-center gap-2">
         <div className="relative">
           <Search className="size-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />

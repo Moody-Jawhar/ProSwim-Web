@@ -39,7 +39,7 @@ const registrations: ModuleConfig = {
   editBase: '/registrations',
   filters: [
     { param: 'searchFor', label: 'Search student…', type: 'text' },
-    // P_Registration_Select takes no location — the location picker scopes the
+    // P_Registration_Select takes no location, the location picker scopes the
     // semester list, and the semester scopes the rows.
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterIds', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
@@ -334,7 +334,7 @@ const sessions: ModuleConfig = {
     { param: 'semesterId', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
     { param: 'day', label: 'Day', type: 'select', options: WEEK_DAYS, width: 'max-w-24' },
-    // Opens on today's sessions — clear or change the date to browse others.
+    // Opens on today's sessions, clear or change the date to browse others.
     { param: 'date', label: 'Date', type: 'date', initial: today() },
   ],
   columns: [

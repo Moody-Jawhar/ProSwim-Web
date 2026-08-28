@@ -8,9 +8,9 @@ const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 function fmtDate(v: string): string {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '—' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
 }
 
 const inputCls =
@@ -97,7 +97,7 @@ export function CompetitionsPage() {
     <div className="p-8 max-w-4xl">
       <PageHero
         title="Competitions"
-        subtitle="Club-wide meets — upcoming ones show in every team swimmer's portfolio"
+        subtitle="Club-wide meets, upcoming ones show in every team swimmer's portfolio"
         right={canSave && editingId === null && (
           <button onClick={() => startEdit()}
             className="btn-grad flex items-center gap-2 text-sm font-semibold text-white px-4 py-2 rounded-xl">

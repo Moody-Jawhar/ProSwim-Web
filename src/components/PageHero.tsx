@@ -1,6 +1,6 @@
 // Slim page header. Title and subtitle sit on one line above a hairline rule,
 // so pages start their real content within ~34px instead of the ~108px the
-// old photo banner cost. `slide` and `compact` are accepted but unused — call
+// old photo banner cost. `slide` and `compact` are accepted but unused, call
 // sites still pass them and there is no image to pick or height to vary.
 
 export function PageHero({ title, subtitle, right }: {

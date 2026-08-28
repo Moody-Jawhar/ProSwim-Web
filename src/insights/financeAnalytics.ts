@@ -1,4 +1,4 @@
-// Finance analytics — revenue / expenses / profit series with on-device
+// Finance analytics, revenue / expenses / profit series with on-device
 // statistical analysis (month-over-month deltas, trend regression, forecast),
 // worded as findings. Currencies are never mixed: USD and LBP live side by side.
 
@@ -101,7 +101,7 @@ export async function loadFinanceOverview(): Promise<FinanceOverviewData> {
       const margin = Math.round((current.profit[c] / current.revenue[c]) * 100);
       findings.push({
         tone: margin >= 50 ? 'positive' : margin >= 20 ? 'info' : 'warn',
-        text: `${c} profit this month: ${fmtMoney(current.profit[c], c)} — a ${margin}% margin on ${fmtMoney(current.revenue[c], c)} collected.`,
+        text: `${c} profit this month: ${fmtMoney(current.profit[c], c)}, a ${margin}% margin on ${fmtMoney(current.revenue[c], c)} collected.`,
       });
     }
     // Expenses growing faster than revenue over the last 3 full months.
@@ -112,7 +112,7 @@ export async function loadFinanceOverview(): Promise<FinanceOverviewData> {
       if (expG > 0 && expG > revG && last3.some((m) => m.expenses[c] > 0)) {
         findings.push({
           tone: 'warn',
-          text: `${c} expenses have been growing faster than revenue over the last three months — worth a look at the expense log.`,
+          text: `${c} expenses have been growing faster than revenue over the last three months, worth a look at the expense log.`,
         });
       }
     }

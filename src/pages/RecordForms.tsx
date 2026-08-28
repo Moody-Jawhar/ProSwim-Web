@@ -233,7 +233,7 @@ const student: RecordFormConfig = {
 };
 
 // The blood-type lookup isn't in the generic modules lookups endpoint; the
-// student form falls back gracefully (dropdown just shows "—" until picked).
+// student form falls back gracefully (dropdown just shows "-" until picked).
 
 // ── Expense (ExpensesIndividual.aspx) ────────────────────────────────────────
 
@@ -380,7 +380,7 @@ const timesheet: RecordFormConfig = {
         { key: 'TimesheetStatus', label: 'Status', type: 'select', options: [
           { value: 'Open', label: 'Open' },
           { value: 'Closed', label: 'Closed' },
-          { value: 'ClosedNoPayment', label: 'Closed — No Payment' },
+          { value: 'ClosedNoPayment', label: 'Closed. No Payment' },
         ] },
         { key: 'TimesheetSalaryPercent', label: 'Salary %', type: 'number' },
         { key: 'TimeSheetCurrencyRate', label: 'USD to LBP Rate', type: 'number' },

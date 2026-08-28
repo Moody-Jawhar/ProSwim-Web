@@ -1,4 +1,4 @@
-// Payment deliveries — port of PaymentDeliverysList / PrivatePaymentDeliverysList
+// Payment deliveries, port of PaymentDeliverysList / PrivatePaymentDeliverysList
 // and their popup pages. One component serves both variants: list with filters,
 // an expandable detail (linked payment/expense lines), and a create flow that
 // checks off undelivered lines and recomputes totals live (far simpler in React
@@ -16,11 +16,11 @@ type Option = { value: number; label: string };
 
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
-const money = (v: unknown) => (v == null ? '—' : Number(v).toLocaleString());
+const money = (v: unknown) => (v == null ? '-' : Number(v).toLocaleString());
 const dmy = (v: unknown) => {
-  if (!v) return '—';
+  if (!v) return '-';
   const d = new Date(String(v));
-  if (isNaN(d.getTime())) return '—';
+  if (isNaN(d.getTime())) return '-';
   return `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
 };
 
@@ -191,8 +191,8 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
                   <>
                     <tr key={id} onClick={() => toggleDetail(id)} className="cursor-pointer hover:bg-slate-50">
                       <td className="w-6 !px-2">{openId === id ? <ChevronDown className="size-4 text-slate-400" /> : <ChevronRight className="size-4 text-slate-400" />}</td>
-                      <td>{str(r, 'LocationNickName') || '—'}</td>
-                      {variant.hasSemester && <td>{str(r, 'SemesterName') || '—'}</td>}
+                      <td>{str(r, 'LocationNickName') || '-'}</td>
+                      {variant.hasSemester && <td>{str(r, 'SemesterName') || '-'}</td>}
                       <td className="font-semibold">{str(r, variant.serialKey)}</td>
                       {variant.hasSemester && <td className="text-right text-emerald-700 tabular-nums">{money(r['PaymentDeliveryTotalPayments'])}</td>}
                       {variant.hasSemester && <td className="text-right text-red-600 tabular-nums">{money(r['PaymentDeliveryTotalExpenses'])}</td>}
@@ -376,7 +376,7 @@ function CreateDelivery({ variant, locations, initialLocation, onClose }: {
           {variant.hasSemester && (
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Semester</label>
-              <input value={semesterName || '—'} readOnly className={`${inputCls} w-full bg-slate-50`} />
+              <input value={semesterName || '-'} readOnly className={`${inputCls} w-full bg-slate-50`} />
             </div>
           )}
           <div>

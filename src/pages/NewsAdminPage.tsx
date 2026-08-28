@@ -17,7 +17,7 @@ interface NewsRow {
   NewsFacebookURL: string | null;
 }
 
-// Social buttons an article can carry — prefilled with ProSwim's profiles,
+// Social buttons an article can carry, prefilled with ProSwim's profiles,
 // editable per article (e.g. a specific video or post).
 const SOCIALS = [
   {
@@ -271,7 +271,7 @@ export function NewsAdminPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-2">
-                Link buttons on the article — tap to add, prefilled with the ProSwim profile
+                Link buttons on the article, tap to add, prefilled with the ProSwim profile
               </label>
               <div className="flex flex-wrap gap-2">
                 {SOCIALS.map(({ key, label, color, defaultUrl, path }) => {
@@ -361,7 +361,7 @@ export function NewsAdminPage() {
                   </div>
                   <p className="text-sm text-slate-500 mt-1 line-clamp-2 whitespace-pre-line">{r.NewsBody}</p>
                   <p className="text-xs text-slate-400 mt-1.5">
-                    {r.NewsDate ? new Date(r.NewsDate).toLocaleDateString() : '—'}
+                    {r.NewsDate ? new Date(r.NewsDate).toLocaleDateString() : '-'}
                     {r.NewsCreatedBy && <> · {r.NewsCreatedBy}</>}
                   </p>
                 </div>
@@ -462,7 +462,7 @@ function MediaDrop({ value, onChange, onError }: {
         ) : (
           <div className="py-3 text-sm text-slate-500">
             <UploadCloud className="size-6 text-[#1e5c97] mx-auto mb-1" />
-            Drop a <b>PNG</b>, <b>JPG</b> or <b>PDF</b> here — or click to browse
+            Drop a <b>PNG</b>, <b>JPG</b> or <b>PDF</b> here, or click to browse
           </div>
         )}
       </div>

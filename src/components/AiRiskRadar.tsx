@@ -69,7 +69,7 @@ export function AiRiskRadar() {
         <div className="flex items-center gap-2.5 py-2">
           <CheckCircle2 className="size-5 text-emerald-600 shrink-0" />
           <p className="text-sm text-slate-600">
-            No students flagged — attendance and payments look healthy across all active registrations.
+            No students flagged, attendance and payments look healthy across all active registrations.
           </p>
         </div>
       )}
