@@ -42,6 +42,7 @@ export function LoginPage() {
     void mfaRequired; void _c; void _s; void _e; void _r;
     if (deviceToken) storeDeviceToken(deviceToken);
     storeAuth(token!, user);
+    sessionStorage.setItem('showIntro', '1'); // cinematic splash on arrival
     navigate('/');
   }
 

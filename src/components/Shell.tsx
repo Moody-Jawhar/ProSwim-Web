@@ -9,6 +9,7 @@ import {
   Shield, Clock, MessageSquare,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
+import { IntroSplash } from './IntroSplash';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -175,6 +176,9 @@ export function Shell() {
   const user = getStoredUser();
   const NAV = navForUserType(user?.userType);
 
+  // Post-login cinematic intro — plays once per sign-in.
+  const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('showIntro') === '1');
+
   const [collapsed, setCollapsed] = useState(
     () => localStorage.getItem('sidebarCollapsed') === '1'
   );
@@ -296,6 +300,9 @@ export function Shell() {
 
   return (
     <div className="min-h-screen flex">
+      {showIntro && (
+        <IntroSplash onDone={() => { sessionStorage.removeItem('showIntro'); setShowIntro(false); }} />
+      )}
       {/* Mobile top bar — the only way to reach the nav under md */}
       <header
         className="md:hidden fixed top-0 inset-x-0 z-30 h-14 flex items-center gap-3 px-4 text-white shadow-md"
