@@ -67,7 +67,7 @@ export function DashboardPage() {
 
   return (
     <div className="p-6 md:p-8 relative">
-      <Bubbles tint="blue" />
+      <Bubbles tint="blue" overlay />
       <PageHero
         title={`Welcome${user?.fullName ? `, ${user.fullName}` : ''}`}
         subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

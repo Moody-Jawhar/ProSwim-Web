@@ -115,7 +115,7 @@ export function LoginPage() {
         backgroundPosition: 'center',
       }}
     >
-      <Bubbles tint="green" />
+      <Bubbles tint="green" overlay />
       <div className="hero-in w-full max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-8 relative">
         <div className="flex flex-col items-center mb-6">
           <img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="ProSwim" className="h-12 w-auto mb-3" />
