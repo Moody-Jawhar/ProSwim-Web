@@ -8,6 +8,16 @@ import { getStoredUser } from '../api/portalApi';
 
 const TOTAL_MS = 3400;
 
+// Soft bubbles drifting up behind the greeting. Deterministic layout so the
+// scene is identical every login.
+const BUBBLES = Array.from({ length: 14 }, (_, i) => ({
+  left: (i * 37 + 13) % 100,
+  size: 8 + ((i * 17) % 18),
+  delay: ((i * 29) % 24) / 10,
+  duration: 6 + ((i * 13) % 50) / 10,
+  opacity: 0.08 + ((i * 7) % 14) / 100,
+}));
+
 function greetingFor(hour: number): string {
   if (hour < 5) return 'Working late';
   if (hour < 12) return 'Good morning';
@@ -55,7 +65,28 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
           0% { stroke-dashoffset: 240; }
           100% { stroke-dashoffset: 0; }
         }
+        @keyframes wel-bubble {
+          0% { transform: translateY(0) scale(1); opacity: 0; }
+          10% { opacity: var(--o, 0.1); }
+          100% { transform: translateY(-105vh) scale(1.15); opacity: 0; }
+        }
       `}</style>
+
+      {/* Rising bubbles, barely there */}
+      {BUBBLES.map((b, i) => (
+        <span key={i}
+          className="absolute rounded-full pointer-events-none"
+          style={{
+            left: `${b.left}%`,
+            bottom: -30,
+            width: b.size,
+            height: b.size,
+            border: '1.5px solid rgba(30,92,151,0.35)',
+            background: 'rgba(45,125,196,0.06)',
+            ['--o' as never]: b.opacity as never,
+            animation: `wel-bubble ${b.duration}s linear ${b.delay}s infinite`,
+          }} />
+      ))}
 
       <img
         src={`${import.meta.env.BASE_URL}ProSwimLogo.png`}
