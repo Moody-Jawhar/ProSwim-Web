@@ -3,11 +3,11 @@
 // Absolutely positioned and click-through; give the parent `relative` and
 // `overflow-hidden`.
 
-const LAYOUTS = Array.from({ length: 26 }, (_, i) => ({
+const LAYOUTS = Array.from({ length: 40 }, (_, i) => ({
   left: (i * 37 + 13) % 100,
   size: 8 + ((i * 17) % 18),
-  delay: ((i * 29) % 24) / 10,
-  duration: 6 + ((i * 13) % 50) / 10,
+  delay: ((i * 29) % 30) / 10,
+  duration: 2.5 + ((i * 13) % 25) / 10,
   opacity: 0.25 + ((i * 7) % 25) / 100,
 }));
 
