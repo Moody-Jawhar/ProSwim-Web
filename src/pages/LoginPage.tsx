@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { Bubbles } from '../components/Bubbles';
 import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle, ShieldCheck, ArrowLeft } from 'lucide-react';
 import {
@@ -106,7 +107,7 @@ export function LoginPage() {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center px-4"
+      className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
       style={{
         backgroundImage:
           `linear-gradient(120deg, rgba(36,44,67,0.88) 0%, rgba(30,92,151,0.72) 60%, rgba(30,92,151,0.5) 100%), url(${import.meta.env.BASE_URL}heroes/slide1.jpg)`,
@@ -114,7 +115,8 @@ export function LoginPage() {
         backgroundPosition: 'center',
       }}
     >
-      <div className="hero-in w-full max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-8">
+      <Bubbles tint="green" />
+      <div className="hero-in w-full max-w-sm bg-white/95 backdrop-blur rounded-2xl shadow-2xl p-8 relative">
         <div className="flex flex-col items-center mb-6">
           <img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="ProSwim" className="h-12 w-auto mb-3" />
           <h1 className="text-2xl font-bold text-slate-900">

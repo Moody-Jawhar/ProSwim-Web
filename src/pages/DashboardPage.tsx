@@ -9,6 +9,7 @@ import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { AiRiskRadar } from '../components/AiRiskRadar';
 import { FinanceOverview } from '../components/FinanceOverview';
+import { Bubbles } from '../components/Bubbles';
 
 interface Stats {
   date: string;
@@ -65,7 +66,8 @@ export function DashboardPage() {
   const attentionTotal = attention.reduce((s, [, v]) => s + v, 0);
 
   return (
-    <div className="p-6 md:p-8">
+    <div className="p-6 md:p-8 relative">
+      <Bubbles tint="blue" />
       <PageHero
         title={`Welcome${user?.fullName ? `, ${user.fullName}` : ''}`}
         subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}

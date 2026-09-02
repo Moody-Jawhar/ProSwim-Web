@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
+import { Bubbles } from './Bubbles';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -243,9 +244,14 @@ export function Shell() {
     });
   }
 
+  const [signingOut, setSigningOut] = useState(false);
   function logout() {
-    clearAuth();
-    navigate('/login');
+    if (signingOut) return;
+    setSigningOut(true); // a red-bubble beat on the way out
+    setTimeout(() => {
+      clearAuth();
+      navigate('/login');
+    }, 1100);
   }
 
   const linkClass = (isActive: boolean, indent = false) =>
@@ -302,6 +308,12 @@ export function Shell() {
     <div className="min-h-screen flex">
       {showIntro && (
         <IntroSplash onDone={() => { sessionStorage.removeItem('showIntro'); setShowIntro(false); }} />
+      )}
+      {signingOut && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center" style={{ background: '#f7f9fc' }}>
+          <Bubbles tint="red" speed={3} />
+          <p className="text-xl font-semibold text-slate-700">See you soon</p>
+        </div>
       )}
       {/* Mobile top bar, the only way to reach the nav under md */}
       <header
