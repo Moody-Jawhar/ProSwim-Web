@@ -3,19 +3,19 @@
 // Absolutely positioned and click-through; give the parent `relative` and
 // `overflow-hidden`.
 
-const LAYOUTS = Array.from({ length: 14 }, (_, i) => ({
+const LAYOUTS = Array.from({ length: 26 }, (_, i) => ({
   left: (i * 37 + 13) % 100,
   size: 8 + ((i * 17) % 18),
   delay: ((i * 29) % 24) / 10,
   duration: 6 + ((i * 13) % 50) / 10,
-  opacity: 0.08 + ((i * 7) % 14) / 100,
+  opacity: 0.25 + ((i * 7) % 25) / 100,
 }));
 
 const TINTS = {
-  blue: { border: 'rgba(30,92,151,0.30)', fill: 'rgba(45,125,196,0.05)' },
-  green: { border: 'rgba(5,150,105,0.35)', fill: 'rgba(16,185,129,0.06)' },
-  red: { border: 'rgba(220,38,38,0.35)', fill: 'rgba(239,68,68,0.06)' },
-  white: { border: 'rgba(255,255,255,0.35)', fill: 'rgba(255,255,255,0.08)' },
+  blue: { border: 'rgba(30,92,151,0.55)', fill: 'rgba(45,125,196,0.12)' },
+  green: { border: 'rgba(5,150,105,0.60)', fill: 'rgba(16,185,129,0.12)' },
+  red: { border: 'rgba(220,38,38,0.60)', fill: 'rgba(239,68,68,0.12)' },
+  white: { border: 'rgba(255,255,255,0.60)', fill: 'rgba(255,255,255,0.15)' },
 } as const;
 
 export function Bubbles({ tint = 'blue', speed = 1, overlay = false }: {
