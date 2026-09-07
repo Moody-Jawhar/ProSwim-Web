@@ -27,6 +27,14 @@ export function getStoredUser(): PortalUser | null {
   try { return JSON.parse(raw) as PortalUser; } catch { return null; }
 }
 
+/** Super users (SiteMaster / SuperUser) run the whole portal and get the AI
+ *  panel + admin dashboard home; everyone else (User, Payment/Audit, Guest) is
+ *  a calendar-first account. Single source of truth for the policy. */
+export function isSuperUser(user: PortalUser | null = getStoredUser()): boolean {
+  const t = (user?.userType ?? "").toLowerCase();
+  return t === "sitemaster" || t === "superuser";
+}
+
 export function storeAuth(token: string, user: PortalUser): void {
   localStorage.setItem("portalToken", token);
   localStorage.setItem("portalUser", JSON.stringify(user));
@@ -181,6 +189,25 @@ export async function resendMfa(challengeId: string): Promise<{
 
 export async function me(): Promise<{ userId: number; userType: string }> {
   return apiRequest<{ userId: number; userType: string }>("/api/portal/auth/me");
+}
+
+// --- AI assistant (super users only) ---
+
+export interface AiOverviewResponse { overview: string | null; error: string | null; }
+
+/** Claude-generated business overview from today's live dashboard stats. */
+export async function getAiOverview(locationId = 0): Promise<AiOverviewResponse> {
+  return apiRequest<AiOverviewResponse>(`/api/portal/dashboard/ai-overview?locationId=${locationId}`);
+}
+
+export interface AiAskResponse { answer: string | null; error: string | null; }
+
+/** Ask a free-form question; Claude answers grounded in the live portal stats. */
+export async function askAi(question: string, locationId = 0): Promise<AiAskResponse> {
+  return apiRequest<AiAskResponse>("/api/portal/dashboard/ask", {
+    method: "POST",
+    body: JSON.stringify({ question, locationId }),
+  });
 }
 
 export { apiRequest };

@@ -8,9 +8,10 @@ import {
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
   Shield, Clock, MessageSquare,
 } from 'lucide-react';
-import { getStoredUser, clearAuth, apiRequest } from '../api/portalApi';
+import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
 import { Bubbles } from './Bubbles';
+import { AiPanel } from './AiPanel';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -425,6 +426,9 @@ export function Shell() {
           <Outlet />
         </div>
       </main>
+
+      {/* AI assistant — super users only */}
+      {isSuperUser(user) && <AiPanel />}
     </div>
   );
 }

@@ -43,11 +43,18 @@ import { AddonFormPage } from './pages/AddonFormPage';
 import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/AttendanceReports';
 import { FeedbackDashboardPage } from './pages/FeedbackDashboardPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
-import { getStoredToken } from './api/portalApi';
+import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!getStoredToken()) return <Navigate to="/login" replace />;
   return <>{children}</>;
+}
+
+/** Home: super users see the admin dashboard, everyone else goes to the calendar. */
+function HomeRoute() {
+  return isSuperUser(getStoredUser())
+    ? <DashboardPage />
+    : <Navigate to="/schedule" replace />;
 }
 
 export default function App() {
@@ -64,7 +71,7 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route path="/" element={<DashboardPage />} />
+          <Route path="/" element={<HomeRoute />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/new" element={<StudentForm />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
