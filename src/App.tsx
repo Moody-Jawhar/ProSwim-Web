@@ -1,4 +1,5 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect } from 'react';
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { Shell } from './components/Shell';
 import { DashboardPage } from './pages/DashboardPage';
@@ -57,11 +58,20 @@ function HomeRoute() {
     : <Navigate to="/schedule" replace />;
 }
 
+/** Reset scroll to the top on every route change — otherwise a new page keeps
+ *  the previous page's scroll position (the window is the scroll container). */
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => { window.scrollTo(0, 0); }, [pathname]);
+  return null;
+}
+
 export default function App() {
   // BASE_URL tracks vite's `base`, so routing follows the deploy path
   // (/V27_WEB/ in production, / in dev) with no second setting to keep in sync.
   return (
     <BrowserRouter basename={import.meta.env.BASE_URL}>
+      <ScrollToTop />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route
