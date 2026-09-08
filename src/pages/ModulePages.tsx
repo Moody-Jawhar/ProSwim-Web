@@ -47,6 +47,7 @@ const registrations: ModuleConfig = {
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterIds', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
+    { param: 'classId', label: 'Class', type: 'select', optionsKey: 'classes', width: 'max-w-56' },
     { param: 'calculateDate', label: 'Dues as of', type: 'date' },
     { param: 'active', label: 'Active', type: 'checkbox', initial: true },
     { param: 'stopped', label: 'Stopped', type: 'checkbox', initial: true },
@@ -352,6 +353,7 @@ const sessions: ModuleConfig = {
     { param: 'locationId', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterId', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
+    { param: 'classId', label: 'Class', type: 'select', optionsKey: 'classes', width: 'max-w-56' },
     { param: 'day', label: 'Day', type: 'select', options: WEEK_DAYS, width: 'max-w-24' },
     // Opens on today's sessions, clear or change the date to browse others.
     { param: 'date', label: 'Date', type: 'date', initial: today() },
