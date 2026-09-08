@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -101,6 +101,18 @@ const FULL_NAV: NavEntry[] = [
       { to: '/session-changes/manual', label: 'Manual Change', icon: CalendarX },
       { to: '/news', label: 'News', icon: Newspaper },
       { to: '/announcements', label: 'Notifications', icon: Megaphone },
+    ],
+  },
+  {
+    label: 'Website',
+    icon: Globe,
+    children: [
+      { to: '/web/classes', label: 'Classes', icon: Globe },
+      { to: '/web/levels', label: 'Levels', icon: Globe },
+      { to: '/web/faqs', label: 'FAQs', icon: Globe },
+      { to: '/web/presses', label: 'Press', icon: Globe },
+      { to: '/web/videos', label: 'Videos', icon: Globe },
+      { to: '/web/feedback', label: 'Feedback', icon: Globe },
     ],
   },
   {

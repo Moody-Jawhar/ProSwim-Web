@@ -56,6 +56,10 @@ import { ExtraAttendancePage } from './pages/ExtraAttendancePage';
 import { GenerateSessionsPage } from './pages/GenerateSessionsPage';
 import { ChecklistPage } from './pages/ChecklistPage';
 import { PayrollHoursPage } from './pages/PayrollHoursPage';
+import {
+  WebClassesPage, WebClassForm, WebFaqsPage, WebFaqForm, WebLevelsPage, WebLevelForm,
+  WebPressesPage, WebPressForm, WebVideosPage, WebVideoForm, WebFeedbackPage,
+} from './pages/WebCmsPages';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -164,6 +168,22 @@ export default function App() {
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />
+          <Route path="/web/classes" element={<WebClassesPage />} />
+          <Route path="/web/classes/new" element={<WebClassForm />} />
+          <Route path="/web/classes/:id" element={<WebClassForm />} />
+          <Route path="/web/faqs" element={<WebFaqsPage />} />
+          <Route path="/web/faqs/new" element={<WebFaqForm />} />
+          <Route path="/web/faqs/:id" element={<WebFaqForm />} />
+          <Route path="/web/levels" element={<WebLevelsPage />} />
+          <Route path="/web/levels/new" element={<WebLevelForm />} />
+          <Route path="/web/levels/:id" element={<WebLevelForm />} />
+          <Route path="/web/presses" element={<WebPressesPage />} />
+          <Route path="/web/presses/new" element={<WebPressForm />} />
+          <Route path="/web/presses/:id" element={<WebPressForm />} />
+          <Route path="/web/videos" element={<WebVideosPage />} />
+          <Route path="/web/videos/new" element={<WebVideoForm />} />
+          <Route path="/web/videos/:id" element={<WebVideoForm />} />
+          <Route path="/web/feedback" element={<WebFeedbackPage />} />
           <Route path="/change-log" element={<ChangeLogPage />} />
           <Route path="/reports/by-month" element={<ReportByMonthPage />} />
           <Route path="/reports/by-private" element={<ReportByPrivatePage />} />
