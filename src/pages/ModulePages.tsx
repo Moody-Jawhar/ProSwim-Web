@@ -157,7 +157,28 @@ const paymentsDue: ModuleConfig = {
     { key: 'RegistrationPaidPrevSemester', label: 'On Hold', format: 'money' },
     { key: 'DueAmount', label: 'Due', format: 'money' },
     { key: 'DuePercent', label: 'Due %' },
+    { key: '_pay', label: '' },
   ],
+  // Quick jump to a new payment, prefilled with this student + semester.
+  renderCell: (row, col) => {
+    if (col.key !== '_pay') return undefined;
+    const u = getStoredUser();
+    if ((u?.userType || '').toLowerCase() === 'guest' || u?.canSave === false) return undefined;
+    const q = new URLSearchParams({
+      studentId: String(row.Studentid ?? ''),
+      studentName: String(row.StudentFullName ?? ''),
+      semesterId: String(row.RegistrationSemesterId ?? ''),
+    });
+    return (
+      <Link
+        to={`/payments/new?${q}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 hover:underline whitespace-nowrap"
+      >
+        Add Payment
+      </Link>
+    );
+  },
 };
 
 // ── Private packages ─────────────────────────────────────────────────────────
