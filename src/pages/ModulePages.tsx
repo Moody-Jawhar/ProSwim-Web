@@ -29,6 +29,9 @@ const WEEK_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((v) => (
 const EXTRA_TYPES = ['AquaBaby', 'AquaGym', 'AquaMermaid', 'MemberShipPasses', 'MemberShip', 'Others']
   .map((v) => ({ value: v, label: v }));
 
+// Currency filter (blank = both, matching the endpoints' "USD,LBP" default).
+const CURRENCIES = [{ value: 'USD', label: 'USD' }, { value: 'LBP', label: 'LBP' }];
+
 // ── Registrations ────────────────────────────────────────────────────────────
 
 const registrations: ModuleConfig = {
@@ -44,6 +47,7 @@ const registrations: ModuleConfig = {
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', submit: false },
     { param: 'semesterIds', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
+    { param: 'calculateDate', label: 'Dues as of', type: 'date' },
     { param: 'active', label: 'Active', type: 'checkbox', initial: true },
     { param: 'stopped', label: 'Stopped', type: 'checkbox', initial: true },
     { param: 'withDiscount', label: 'With Discount', type: 'checkbox' },
@@ -131,6 +135,7 @@ const paymentsDue: ModuleConfig = {
     { param: 'onlyDue', label: 'Only With Due', type: 'checkbox' },
     { param: 'showActive', label: 'Active', type: 'checkbox', initial: true },
     { param: 'showStopped', label: 'Stopped', type: 'checkbox', initial: true },
+    { param: 'onlyCurrentSemester', label: 'Current Semester Only', type: 'checkbox' },
   ],
   columns: [
     { key: 'SemesterName', label: 'Semester' },
@@ -157,7 +162,9 @@ const privatePackages: ModuleConfig = {
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
     { param: 'status', label: 'Status', type: 'select', options: PACKAGE_STATUSES, initial: 'Active' },
     { param: 'needAttention', label: 'Attention', type: 'select', options: NEED_ATTENTION },
+    { param: 'currencies', label: 'Currency', type: 'select', options: CURRENCIES, width: 'max-w-24' },
     { param: 'sessionDay', label: 'Day', type: 'select', options: WEEK_DAYS, width: 'max-w-24' },
+    { param: 'sessionDate', label: 'On Date', type: 'date' },
     { param: 'dateFrom', label: 'From', type: 'date' },
     { param: 'dateTo', label: 'To', type: 'date' },
     { param: 'onlyDue', label: 'Only Due', type: 'checkbox' },
@@ -192,6 +199,7 @@ function privatePaymentsConfig(mode: string, title: string): ModuleConfig {
     filters: [
       { param: 'searchFor', label: 'Search…', type: 'text' },
       { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
+      { param: 'currencies', label: 'Currency', type: 'select', options: CURRENCIES, width: 'max-w-24' },
       { param: 'dateFrom', label: 'From', type: 'date' },
       { param: 'dateTo', label: 'To', type: 'date' },
     ],
@@ -224,6 +232,7 @@ function extraClassesConfig(types: string, title: string): ModuleConfig {
       { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
       ...(types ? [] : [{ param: 'types', label: 'Type', type: 'select' as const, options: EXTRA_TYPES }]),
       { param: 'status', label: 'Status', type: 'select', options: PACKAGE_STATUSES, initial: 'Active' },
+      { param: 'currencies', label: 'Currency', type: 'select', options: CURRENCIES, width: 'max-w-24' },
       { param: 'dateFrom', label: 'From', type: 'date' },
       { param: 'dateTo', label: 'To', type: 'date' },
       { param: 'onlyDue', label: 'Only Due', type: 'checkbox' },
