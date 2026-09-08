@@ -62,6 +62,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/payments-due', label: 'Due Payments', icon: CreditCard },
       { to: '/payment-delivery', label: 'Payment Delivery', icon: Truck },
       { to: '/expenses', label: 'Expenses', icon: Receipt },
+      { to: '/main-expenses', label: 'Main Expenses', icon: Receipt },
     ],
   },
   {

@@ -249,7 +249,36 @@ const locations: ModuleConfig = {
   ],
 };
 
+// ── Main expenses (MainExpensesList.aspx) ────────────────────────────────────
+
+const mainExpenses: ModuleConfig = {
+  title: 'Main Expenses',
+  subtitle: 'Company overhead (rent, maintenance, etc.)',
+  endpoint: '/api/portal/modules/main-expenses',
+  lookups: LOOKUPS,
+  idKey: 'ExpenseId',
+  editBase: '/main-expenses',
+  filters: [
+    { param: 'searchFor', label: 'Search…', type: 'text' },
+    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
+    { param: 'type', label: 'Type', type: 'select', optionsKey: 'mainExpenseTypes', width: 'max-w-56' },
+    { param: 'dateFrom', label: 'From', type: 'date' },
+    { param: 'dateTo', label: 'To', type: 'date' },
+  ],
+  columns: [
+    { key: 'locationNickName', label: 'Location' },
+    { key: 'ExpenseDate', label: 'Date', format: 'date' },
+    { key: 'ExpenseType', label: 'Type' },
+    { key: 'ExpenseAmount', label: 'Amount', format: 'money' },
+    { key: 'ExpensePaidAmount', label: 'Paid', format: 'money' },
+    { key: 'ExpensePaidCurrency', label: 'Curr' },
+    { key: 'ExpenseAutoRenew', label: 'Auto Renew', format: 'bool' },
+    { key: 'ExpenseRemarks', label: 'Remarks', extra: true },
+  ],
+};
+
 export const LocationsListPage = () => <ModuleListPage config={locations} />;
+export const MainExpensesListPage = () => <ModuleListPage config={mainExpenses} />;
 export const ExpensesListPage = () => <ModuleListPage config={expenses} />;
 export const PackTypesPage = () => <ModuleListPage config={packTypes} />;
 export const TimesheetsPage = () => <ModuleListPage config={timesheets} />;

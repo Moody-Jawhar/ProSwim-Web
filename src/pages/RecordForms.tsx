@@ -491,6 +491,34 @@ const location: RecordFormConfig = {
   ],
 };
 
+// ── Main Expense ─────────────────────────────────────────────────────────────
+
+const mainExpense: RecordFormConfig = {
+  title: 'Main Expense',
+  listPath: '/main-expenses',
+  slug: 'mainexpense',
+  idKey: 'ExpenseId',
+  titleKey: 'ExpenseType',
+  lookups: LOOKUPS,
+  createDefaults: { ExpensePaidCurrency: 'USD', ExpensePaidCurrencyRate: 1 },
+  sections: [
+    {
+      title: 'Expense',
+      fields: [
+        { key: 'ExpenseLocationId', label: 'Location', type: 'select', optionsKey: 'locations' },
+        { key: 'ExpenseType', label: 'Type', type: 'select', optionsKey: 'mainExpenseTypes' },
+        { key: 'ExpenseDate', label: 'Date', type: 'date' },
+        { key: 'ExpenseAmount', label: 'Amount', type: 'number' },
+        { key: 'ExpensePaidAmount', label: 'Paid Amount', type: 'number' },
+        { key: 'ExpensePaidCurrency', label: 'Currency', type: 'select', options: CURRENCY },
+        { key: 'ExpensePaidCurrencyRate', label: 'USD to LBP Rate', type: 'number' },
+        { key: 'ExpenseAutoRenew', label: 'Auto Renew', type: 'checkbox' },
+        { key: 'ExpenseRemarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+  ],
+};
+
 export const SemesterForm = () => <RecordFormPage config={semester} />;
 export const CoachForm = () => <RecordFormPage config={coach} />;
 export const ClassForm = () => <RecordFormPage config={klass} />;
@@ -501,3 +529,4 @@ export const UserForm = () => <RecordFormPage config={portalUser} />;
 export const TimesheetForm = () => <RecordFormPage config={timesheet} />;
 export const CoachAttendanceForm = () => <RecordFormPage config={coachAttendanceForm} />;
 export const LocationForm = () => <RecordFormPage config={location} />;
+export const MainExpenseForm = () => <RecordFormPage config={mainExpense} />;

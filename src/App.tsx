@@ -15,7 +15,7 @@ import {
 } from './pages/ModulePages';
 import {
   SemesterForm, CoachForm, ClassForm, StudentForm,
-  ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm, LocationForm,
+  ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm, LocationForm, MainExpenseForm,
 } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { PrivatePackageForm } from './pages/PrivatePackageForm';
@@ -34,7 +34,7 @@ import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { NotificationsListPage } from './pages/NotificationsListPage';
 import {
   ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
-  CoachAttendancePage, UsersAdminPage, LocationsListPage,
+  CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage,
 } from './pages/LegacyModulePages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
@@ -131,6 +131,9 @@ export default function App() {
           <Route path="/feedback" element={<FeedbackDashboardPage />} />
           <Route path="/expenses" element={<ExpensesListPage />} />
           <Route path="/expenses/:id" element={<ExpenseForm />} />
+          <Route path="/main-expenses" element={<MainExpensesListPage />} />
+          <Route path="/main-expenses/new" element={<MainExpenseForm />} />
+          <Route path="/main-expenses/:id" element={<MainExpenseForm />} />
           <Route path="/payment-delivery" element={<PaymentDeliveriesPage />} />
           <Route path="/pr-payment-delivery" element={<PrivateDeliveriesPage />} />
           <Route path="/bulk-whatsapp" element={<BulkWhatsAppPage />} />
