@@ -15,7 +15,7 @@ import {
 } from './pages/ModulePages';
 import {
   SemesterForm, CoachForm, ClassForm, StudentForm,
-  ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm,
+  ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm, LocationForm,
 } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { PrivatePackageForm } from './pages/PrivatePackageForm';
@@ -34,7 +34,7 @@ import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { NotificationsListPage } from './pages/NotificationsListPage';
 import {
   ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
-  CoachAttendancePage, UsersAdminPage,
+  CoachAttendancePage, UsersAdminPage, LocationsListPage,
 } from './pages/LegacyModulePages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
@@ -88,7 +88,10 @@ export default function App() {
           <Route path="/students/:id/portfolio" element={<CompPortfolioPage />} />
           <Route path="/competitions" element={<CompetitionsPage />} />
           <Route path="/comp-swimmers" element={<CompSwimmersPage />} />
-          <Route path="/locations" element={<LocationsAdminPage />} />
+          <Route path="/locations" element={<LocationsListPage />} />
+          <Route path="/locations/new" element={<LocationForm />} />
+          <Route path="/locations/:id" element={<LocationForm />} />
+          <Route path="/location-photos" element={<LocationsAdminPage />} />
           <Route path="/session-changes/manual" element={<SessionChangesManualPage />} />
           <Route path="/session-changes/approve" element={<SessionChangesApprovePage />} />
           <Route path="/schedule" element={<GSchedulePage />} />

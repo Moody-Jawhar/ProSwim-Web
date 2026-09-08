@@ -433,6 +433,64 @@ const coachAttendanceForm: RecordFormConfig = {
   ],
 };
 
+// ── Location ─────────────────────────────────────────────────────────────────
+
+const location: RecordFormConfig = {
+  title: 'Location',
+  listPath: '/locations',
+  slug: 'location',
+  idKey: 'LocationId',
+  titleKey: 'LocationNickName',
+  createDefaults: { LocationActive: true },
+  sections: [
+    {
+      title: 'Location',
+      fields: [
+        { key: 'LocationNickName', label: 'Nick Name', type: 'text' },
+        { key: 'LocationFullName', label: 'Full Name', type: 'text' },
+        { key: 'LocationCity', label: 'City', type: 'text' },
+        { key: 'LocationColor', label: 'Color', type: 'text' },
+        { key: 'LocationFullAddress', label: 'Full Address', type: 'textarea' },
+        { key: 'LocationRemarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+    {
+      title: 'Contact',
+      fields: [
+        { key: 'LocationContact', label: 'Contact', type: 'text' },
+        { key: 'LocationContactPhone', label: 'Contact Phone', type: 'text' },
+        { key: 'LocationPhone1', label: 'Phone 1', type: 'text' },
+        { key: 'LocationPhone2', label: 'Phone 2', type: 'text' },
+        { key: 'LocationInfoEmail', label: 'Info Email', type: 'text' },
+        { key: 'LocationFax', label: 'Fax', type: 'text' },
+        { key: 'LocationWebsiteText', label: 'Website Text', type: 'text' },
+        { key: 'LocationWebsite', label: 'Website URL', type: 'text' },
+      ],
+    },
+    {
+      title: 'WhatsApp & Map',
+      fields: [
+        { key: 'LocationWAName', label: 'WhatsApp Name', type: 'text' },
+        { key: 'LocationWAPhone', label: 'WhatsApp Phone', type: 'text' },
+        { key: 'LocationXLAT', label: 'Map Latitude', type: 'text' },
+        { key: 'LocationXLONG', label: 'Map Longitude', type: 'text' },
+        { key: 'LocationMapURL', label: 'Map URL', type: 'text' },
+        { key: 'LocationIcon', label: 'Icon', type: 'text' },
+        { key: 'LocationWABulk', label: 'Bulk WhatsApp', type: 'checkbox' },
+        { key: 'LocationWAAuto', label: 'Auto WhatsApp', type: 'checkbox' },
+      ],
+    },
+    {
+      title: 'Status',
+      fields: [
+        { key: 'LocationActive', label: 'Active', type: 'checkbox' },
+        { key: 'LocationSchool', label: 'School', type: 'checkbox' },
+        { key: 'LocationDeleted', label: 'Deleted', type: 'checkbox' },
+      ],
+    },
+  ],
+};
+
 export const SemesterForm = () => <RecordFormPage config={semester} />;
 export const CoachForm = () => <RecordFormPage config={coach} />;
 export const ClassForm = () => <RecordFormPage config={klass} />;
@@ -442,3 +500,4 @@ export const PackTypeForm = () => <RecordFormPage config={packType} />;
 export const UserForm = () => <RecordFormPage config={portalUser} />;
 export const TimesheetForm = () => <RecordFormPage config={timesheet} />;
 export const CoachAttendanceForm = () => <RecordFormPage config={coachAttendanceForm} />;
+export const LocationForm = () => <RecordFormPage config={location} />;

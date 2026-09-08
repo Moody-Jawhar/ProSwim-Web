@@ -222,6 +222,34 @@ const users: ModuleConfig = {
   },
 };
 
+// ── Locations (LocationsList.aspx) ───────────────────────────────────────────
+
+const locations: ModuleConfig = {
+  title: 'Locations',
+  subtitle: 'Branches & pools',
+  endpoint: '/api/portal/modules/locations',
+  idKey: 'LocationId',
+  editBase: '/locations',
+  filters: [
+    { param: 'searchFor', label: 'Search…', type: 'text' },
+    { param: 'school', label: 'Schools', type: 'checkbox' },
+    { param: 'deleted', label: 'Deleted', type: 'checkbox' },
+  ],
+  columns: [
+    { key: 'LocationNickName', label: 'Nick Name' },
+    { key: 'LocationFullName', label: 'Full Name' },
+    { key: 'LocationCity', label: 'City' },
+    { key: 'LocationContact', label: 'Contact' },
+    { key: 'LocationPhone1', label: 'Phone' },
+    { key: 'LocationActive', label: 'Active', format: 'bool' },
+    { key: 'LocationWebsite', label: 'Website', extra: true },
+    { key: 'LocationColor', label: 'Color', extra: true },
+    { key: 'LocationSchool', label: 'School', format: 'bool', extra: true },
+    { key: 'LocationDeleted', label: 'Deleted', format: 'bool', extra: true },
+  ],
+};
+
+export const LocationsListPage = () => <ModuleListPage config={locations} />;
 export const ExpensesListPage = () => <ModuleListPage config={expenses} />;
 export const PackTypesPage = () => <ModuleListPage config={packTypes} />;
 export const TimesheetsPage = () => <ModuleListPage config={timesheets} />;

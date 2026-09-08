@@ -108,6 +108,7 @@ const FULL_NAV: NavEntry[] = [
     children: [
       { to: '/coaches', label: 'Coaches', icon: UserRound },
       { to: '/locations', label: 'Locations', icon: MapPin },
+      { to: '/location-photos', label: 'Location Photos', icon: MapPin },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
