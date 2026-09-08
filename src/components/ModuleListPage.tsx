@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import {
   Search, Loader2, AlertCircle, ChevronLeft, ChevronRight,
   ArrowUpDown, ArrowUp, ArrowDown, Download, Plus, Pencil,
@@ -97,12 +97,24 @@ function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
 export function ModuleListPage({ config }: { config: ModuleConfig }) {
   const user = getStoredUser();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const canEdit = !!config.editBase && config.idKey && user?.userType?.toLowerCase() !== 'guest' && user?.canSave !== false;
   const [rows, setRows] = useState<Row[]>([]);
   const [lookups, setLookups] = useState<Record<string, FilterOption[]>>({});
   const [values, setValues] = useState<Record<string, string | number | boolean>>(() => {
     const v: Record<string, string | number | boolean> = {};
     for (const f of config.filters) {
+      // A matching URL query param wins, so per-row deep-links can pre-filter a
+      // list (e.g. /sessions?classId=12&date= to clear the date default).
+      // A present-but-empty param is honored too (explicitly clears a default);
+      // absent params leave behavior unchanged.
+      if (searchParams.has(f.param)) {
+        const urlVal = searchParams.get(f.param) ?? '';
+        v[f.param] = f.type === 'checkbox' ? urlVal === 'true'
+          : f.type === 'select' ? (/^\d+$/.test(urlVal) ? Number(urlVal) : urlVal || 0)
+          : urlVal;
+        continue;
+      }
       if (f.initial === undefined && LOCATION_PARAMS.has(f.param) && user?.primaryLocationId) {
         v[f.param] = user.primaryLocationId;
         continue;
@@ -136,6 +148,11 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
   const valuesRef = useRef(values);
   valuesRef.current = values;
 
+  // A semester passed in the URL should survive the first cascade run instead of
+  // being replaced by the location's current semester (so deep-links land right).
+  const urlSemester = semesterParam ? searchParams.get(semesterParam) : null;
+  const pendingUrlSemester = useRef(urlSemester && /^\d+$/.test(urlSemester) ? Number(urlSemester) : 0);
+
   const locValue = locationParam ? values[locationParam] : undefined;
   useEffect(() => {
     if (!cascades) return;
@@ -147,7 +164,11 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
           .map((s) => ({ value: semesterId(s), label: String(s.SemesterName ?? '') }))
           .filter((o) => o.value > 0);
         setSemOptions(opts);
-        const sem = r.currentSemesterId || Number(opts[0]?.value) || 0;
+        // Consume a URL semester once; afterwards follow the location's current.
+        const urlSem = pendingUrlSemester.current;
+        pendingUrlSemester.current = 0;
+        const sem = (urlSem && opts.some((o) => o.value === urlSem) ? urlSem : 0)
+          || r.currentSemesterId || Number(opts[0]?.value) || 0;
         const next = { ...valuesRef.current, [semesterParam!]: sem };
         setValues(next);
         load(next);

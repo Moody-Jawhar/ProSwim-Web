@@ -105,7 +105,7 @@ export function PayrollSheetPage() {
           'PayrollMiscHr', 'PayrollMiscHrCnt', 'PayrollBonus', 'PayrollLoansShort', 'PayrollLoansLong',
           'PayrollPenalty', 'PayrollNetToPay',
         ])
-          body[p] = fields[p] ?? num(row, p === 'PayrollNetToPay' ? 'PayrollNetToPAy' : p);
+          body[p] = fields[p] ?? num(row, p === 'PayrollNetToPay' ? 'PayrollNetToPay' : p);
         await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       }
       setNotice(`${dirty.length} row(s) saved, recalculating…`);
@@ -124,10 +124,10 @@ export function PayrollSheetPage() {
     return {
       salaryLB: sum('PayrollSalary', 'PayrollSalaryCurrency', 'LBP'),
       salaryUS: sum('PayrollSalary', 'PayrollSalaryCurrency', 'USD'),
-      netLB: sum('PayrollNetToPAy', 'PayrollSalaryCurrency', 'LBP'),
-      netUS: sum('PayrollNetToPAy', 'PayrollSalaryCurrency', 'USD'),
-      netBalLB: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'LBP' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPAy') : s), 0),
-      netBalUS: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'USD' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPAy') : s), 0),
+      netLB: sum('PayrollNetToPay', 'PayrollSalaryCurrency', 'LBP'),
+      netUS: sum('PayrollNetToPay', 'PayrollSalaryCurrency', 'USD'),
+      netBalLB: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'LBP' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPay') : s), 0),
+      netBalUS: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'USD' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPay') : s), 0),
     };
   }, [rows]);
 
@@ -147,7 +147,7 @@ export function PayrollSheetPage() {
       ['Advance', (r) => String(num(r, 'PayrollLoansShort'))],
       ['Loans', (r) => String(num(r, 'PayrollLoansLong'))],
       ['SubTotal', (r) => String(num(r, 'SubTotal'))],
-      ['Net2Pay', (r) => String(num(r, 'PayrollNetToPAy'))],
+      ['Net2Pay', (r) => String(num(r, 'PayrollNetToPay'))],
       ['Paid', (r) => (r.PayrollIndivPaid === true ? 'Yes' : 'No')],
     ];
     const header = cols.map((c) => c[0]).join(',');
@@ -252,7 +252,7 @@ export function PayrollSheetPage() {
                       </td>
                     ))}
                     <td className="text-right font-semibold">{money(num(r, 'SubTotal'))}</td>
-                    <td className="text-right font-extrabold">{salCur} {money(num(r, 'PayrollNetToPAy'))}</td>
+                    <td className="text-right font-extrabold">{salCur} {money(num(r, 'PayrollNetToPay'))}</td>
                     <td className="text-center">
                       <input type="checkbox" checked={paid} onChange={(e) => toggle(r, 'paid', e.target.checked)} className="accent-emerald-600" />
                     </td>

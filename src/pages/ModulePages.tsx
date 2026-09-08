@@ -382,7 +382,28 @@ const classes: ModuleConfig = {
     { key: 'ClassDay', label: 'Day' },
     { key: 'ClassTimeFrom', label: 'Time' },
     { key: 'ClassPeriod', label: 'Period' },
+    { key: '_sessions', label: '' },
   ],
+  // Jump to this class's sessions (all dates), scoped to its semester/location.
+  renderCell: (row, col) => {
+    if (col.key !== '_sessions') return undefined;
+    const cid = row.ClassId ?? row.ClassID;
+    const q = new URLSearchParams({
+      classId: String(cid ?? ''),
+      semesterId: String(row.ClassSemesterId ?? ''),
+      locationId: String(row.ClassLocationId ?? ''),
+      date: '',
+    });
+    return (
+      <Link
+        to={`/sessions?${q}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center text-xs font-bold text-[#1e5c97] hover:underline whitespace-nowrap"
+      >
+        Sessions
+      </Link>
+    );
+  },
 };
 
 // ── Semesters ────────────────────────────────────────────────────────────────
