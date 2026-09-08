@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare,
+  Shield, Clock, MessageSquare, BarChart3,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -23,12 +23,16 @@ interface NavItem {
   soon?: boolean;
   /** Live count rendered as a red pill next to the label. */
   badge?: 'requests' | 'notifs';
+  /** Only shown to super users (matches the API's super-user gate). */
+  superOnly?: boolean;
 }
 
 interface NavGroup {
   label: string;
   icon: Icon;
   children: NavItem[];
+  /** Only shown to super users (matches the API's super-user gate). */
+  superOnly?: boolean;
 }
 
 type NavEntry = NavItem | NavGroup;
@@ -137,10 +141,22 @@ const FULL_NAV: NavEntry[] = [
       { to: '/payroll/coach-attendance', label: 'Coach Attendance', icon: ClipboardCheck },
     ],
   },
+  {
+    label: 'Reports',
+    icon: BarChart3,
+    superOnly: true,
+    children: [
+      { to: '/reports/by-month', label: 'By Month', icon: BarChart3 },
+      { to: '/reports/by-semester', label: 'By Semester', icon: BarChart3 },
+      { to: '/reports/by-coach', label: 'By Coach', icon: BarChart3 },
+      { to: '/reports/by-private', label: 'Private Sessions', icon: BarChart3 },
+      { to: '/reports/by-attendance', label: 'Attendance', icon: BarChart3 },
+    ],
+  },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare },
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/users', label: 'Users', icon: Shield },
-  { to: '/user-activity', label: 'Activity Log', icon: Clock },
+  { to: '/user-activity', label: 'Activity Log', icon: Clock, superOnly: true },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
@@ -179,7 +195,9 @@ export function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = getStoredUser();
-  const NAV = navForUserType(user?.userType);
+  const NAV = navForUserType(user?.userType).filter(
+    (e) => !e.superOnly || isSuperUser(user)
+  );
 
   // Post-login cinematic intro, plays once per sign-in.
   const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('showIntro') === '1');

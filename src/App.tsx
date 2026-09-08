@@ -36,6 +36,10 @@ import {
   ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
   CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage, UserActivityPage,
 } from './pages/LegacyModulePages';
+import {
+  ReportByMonthPage, ReportByPrivatePage, ReportBySemesterPage,
+  ReportByCoachPage, ReportByAttendancePage,
+} from './pages/ReportsPages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
 import { SettingsAdminPage } from './pages/SettingsAdminPage';
@@ -143,6 +147,11 @@ export default function App() {
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />
+          <Route path="/reports/by-month" element={<ReportByMonthPage />} />
+          <Route path="/reports/by-private" element={<ReportByPrivatePage />} />
+          <Route path="/reports/by-semester" element={<ReportBySemesterPage />} />
+          <Route path="/reports/by-coach" element={<ReportByCoachPage />} />
+          <Route path="/reports/by-attendance" element={<ReportByAttendancePage />} />
           <Route path="/payroll/timesheets" element={<TimesheetsPage />} />
           <Route path="/payroll/timesheets/:id" element={<TimesheetForm />} />
           <Route path="/payroll/sheet/:timesheetId" element={<PayrollSheetPage />} />
