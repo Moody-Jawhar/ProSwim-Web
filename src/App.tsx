@@ -54,6 +54,7 @@ import { CoachSchedulePage } from './pages/CoachSchedulePage';
 import { PrivateAttendancePage } from './pages/PrivateAttendancePage';
 import { ExtraAttendancePage } from './pages/ExtraAttendancePage';
 import { GenerateSessionsPage } from './pages/GenerateSessionsPage';
+import { ChecklistPage } from './pages/ChecklistPage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -96,6 +97,7 @@ export default function App() {
           <Route path="/students/new" element={<StudentForm />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
           <Route path="/students/:id/portfolio" element={<CompPortfolioPage />} />
+          <Route path="/students/:id/checklist" element={<ChecklistPage />} />
           <Route path="/competitions" element={<CompetitionsPage />} />
           <Route path="/comp-swimmers" element={<CompSwimmersPage />} />
           <Route path="/locations" element={<LocationsListPage />} />

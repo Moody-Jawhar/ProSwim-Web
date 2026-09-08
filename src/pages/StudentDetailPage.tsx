@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useRef } from 'react';
-import { Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus } from 'lucide-react';
+import { Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus, ListChecks } from 'lucide-react';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
 import { AiStudentOverview } from '../components/AiStudentOverview';
 import { SmartBack } from '../components/SmartBack';
@@ -360,6 +360,14 @@ export function StudentDetailPage() {
               className="flex items-center gap-2 rounded-xl border border-amber-200 bg-amber-50 text-sm font-semibold text-amber-700 px-4 py-2 hover:bg-amber-100"
             >
               <Trophy className="size-4" /> Portfolio
+            </Link>
+          )}
+          {!editing && (
+            <Link
+              to={`/students/${id}/checklist`}
+              className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white text-sm font-semibold text-[#1e5c97] px-4 py-2 hover:bg-slate-50"
+            >
+              <ListChecks className="size-4" /> Checklist
             </Link>
           )}
           {editing ? (
