@@ -142,7 +142,29 @@ const byAttendance: ModuleConfig = {
   ],
 };
 
+// ── Payments by Coach (PaymentsRptByCoach.aspx → P_Payment_Rpt_Coaches) ──────
+const paymentsByCoach: ModuleConfig = {
+  title: 'Reports · Payments by Coach',
+  subtitle: 'Group payment totals & student counts per coach for a semester',
+  endpoint: '/api/portal/modules/reports/payments-by-coach',
+  lookups: LOOKUPS,
+  idKey: 'CoachFullname',
+  filters: [
+    { param: 'searchFor', label: 'Search…', type: 'text' },
+    // Location drives the semester list but the report only takes a semester.
+    { param: 'locationId', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-40', submit: false },
+    { param: 'semesterId', label: 'Semester', type: 'select', optionsKey: 'semesters', width: 'max-w-44' },
+  ],
+  columns: [
+    { key: 'CoachFullname', label: 'Coach' },
+    { key: 'semestername', label: 'Semester' },
+    { key: 'CountOFStds', label: 'Students' },
+    { key: 'Total', label: 'Total', format: 'money' },
+  ],
+};
+
 export const ReportByMonthPage = () => <ModuleListPage config={byMonth} />;
+export const ReportPaymentsByCoachPage = () => <ModuleListPage config={paymentsByCoach} />;
 export const ReportByPrivatePage = () => <ModuleListPage config={byPrivate} />;
 export const ReportBySemesterPage = () => <ModuleListPage config={bySemester} />;
 export const ReportByCoachPage = () => <ModuleListPage config={byCoach} />;

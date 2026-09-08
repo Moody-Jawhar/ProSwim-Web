@@ -40,7 +40,7 @@ import {
 } from './pages/LegacyModulePages';
 import {
   ReportByMonthPage, ReportByPrivatePage, ReportBySemesterPage,
-  ReportByCoachPage, ReportByAttendancePage,
+  ReportByCoachPage, ReportByAttendancePage, ReportPaymentsByCoachPage,
 } from './pages/ReportsPages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
@@ -169,6 +169,7 @@ export default function App() {
           <Route path="/reports/by-semester" element={<ReportBySemesterPage />} />
           <Route path="/reports/by-coach" element={<ReportByCoachPage />} />
           <Route path="/reports/by-attendance" element={<ReportByAttendancePage />} />
+          <Route path="/reports/payments-by-coach" element={<ReportPaymentsByCoachPage />} />
           <Route path="/payroll/timesheets" element={<TimesheetsPage />} />
           <Route path="/payroll/timesheets/:id" element={<TimesheetForm />} />
           <Route path="/payroll/sheet/:timesheetId" element={<PayrollSheetPage />} />

@@ -154,6 +154,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/reports/by-coach', label: 'By Coach', icon: BarChart3 },
       { to: '/reports/by-private', label: 'Private Sessions', icon: BarChart3 },
       { to: '/reports/by-attendance', label: 'Attendance', icon: BarChart3 },
+      { to: '/reports/payments-by-coach', label: 'Payments by Coach', icon: BarChart3 },
     ],
   },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare },
