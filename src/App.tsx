@@ -16,7 +16,7 @@ import {
 import {
   SemesterForm, CoachForm, ClassForm, StudentForm,
   ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm, LocationForm, MainExpenseForm,
-  SessionForm,
+  SessionForm, ExtraClassForm,
 } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { PrivatePackageForm } from './pages/PrivatePackageForm';
@@ -125,6 +125,8 @@ export default function App() {
           <Route path="/ex-payments" element={<ExtraPaymentsPage />} />
           <Route path="/m-payments" element={<MembershipPaymentsPage />} />
           <Route path="/extra-classes" element={<ExtraClassesPage />} />
+          <Route path="/extra-classes/new" element={<ExtraClassForm />} />
+          <Route path="/extra-classes/:id" element={<ExtraClassForm />} />
           <Route path="/members" element={<MembershipsPage />} />
           <Route path="/coaches" element={<CoachesPage />} />
           <Route path="/coaches/:id" element={<CoachForm />} />

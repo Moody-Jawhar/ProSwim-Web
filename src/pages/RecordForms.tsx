@@ -37,6 +37,7 @@ const semester: RecordFormConfig = {
         { key: 'SemesterPrimaryLocationId', label: 'Location', type: 'select', optionsKey: 'locations' },
         { key: 'SemesterStart', label: 'Start date', type: 'date' },
         { key: 'SemesterEnd', label: 'End date', type: 'date' },
+        { key: 'SemesterStop', label: 'Stop date', type: 'date' },
         { key: 'SemesterNumberOfWeeks', label: 'Number of weeks', type: 'number' },
         { key: 'SemesterStudentsPerClass', label: 'Students per class', type: 'number' },
         { key: 'SemesterDescription', label: 'Description', type: 'textarea' },
@@ -547,7 +548,52 @@ const session: RecordFormConfig = {
   ],
 };
 
+// ── Extra class / membership (ExtraClasssIndividual.aspx) ────────────────────
+
+const extraClass: RecordFormConfig = {
+  title: 'Extra Class',
+  listPath: '/extra-classes',
+  slug: 'extra-class',
+  idKey: 'ExtraClassId',
+  titleKey: 'StudentFullname',
+  lookups: '/api/portal/modules/lookups',
+  heroSlide: 1,
+  createDefaults: {
+    ExtraClassCurrency: 'LBP',
+    ExtraClassType: 'AquaBaby',
+    ExtraClassStatus: 'Active',
+    ExtraClassNumberOfSessions: 10,
+    ExtraClassValidityMonths: 3,
+    ExtraClassDeleted: false,
+  },
+  sections: [
+    {
+      title: 'Extra Class',
+      fields: [
+        { key: 'ExtraClassStudentID', label: 'Student', type: 'student', labelKey: 'StudentFullname' },
+        { key: 'ExtraClassLocationId', label: 'Location', type: 'select', optionsKey: 'locations' },
+        { key: 'ExtraClassType', label: 'Type', type: 'select', options: [
+          'AquaBaby', 'AquaGym', 'AquaMermaid', 'MemberShip', 'MemberShipPasses', 'Others',
+        ].map((v) => ({ value: v, label: v })) },
+        { key: 'ExtraClassStartDate', label: 'Start date', type: 'date' },
+        { key: 'ExtraClassNumberOfSessions', label: 'Sessions', type: 'number' },
+        { key: 'ExtraClassValidityMonths', label: 'Validity (months)', type: 'number' },
+        { key: 'ExtraClassCurrency', label: 'Currency (fixed after create)', type: 'select', options: [
+          { value: 'LBP', label: 'LBP' }, { value: 'USD', label: 'USD' },
+        ] },
+        { key: 'ExtraClassCost', label: 'Cost', type: 'number' },
+        { key: 'ExtraClassStatus', label: 'Status', type: 'select', options: [
+          'Active', 'Cancelled', 'Closed', 'ClosedNeedPayment', 'Freeze', 'MovedtoGroup',
+        ].map((v) => ({ value: v, label: v })) },
+        { key: 'ExtraClassDescription', label: 'Description', type: 'textarea' },
+        { key: 'ExtraClassDeleted', label: 'Deleted', type: 'checkbox' },
+      ],
+    },
+  ],
+};
+
 export const SessionForm = () => <RecordFormPage config={session} />;
+export const ExtraClassForm = () => <RecordFormPage config={extraClass} />;
 export const SemesterForm = () => <RecordFormPage config={semester} />;
 export const CoachForm = () => <RecordFormPage config={coach} />;
 export const ClassForm = () => <RecordFormPage config={klass} />;

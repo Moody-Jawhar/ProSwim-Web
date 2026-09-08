@@ -1,14 +1,15 @@
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, Save } from 'lucide-react';
+import { Loader2, AlertCircle, Save, Search } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from './PageHero';
 import { SmartBack } from './SmartBack';
 
 type Row = Record<string, unknown>;
 type Option = { value: string | number; label: string };
+type Picker = { id: number; label: string };
 
-export type FieldType = 'text' | 'number' | 'date' | 'checkbox' | 'textarea' | 'select';
+export type FieldType = 'text' | 'number' | 'date' | 'checkbox' | 'textarea' | 'select' | 'student';
 
 export interface FormField {
   key: string;                 // proc parameter / column name
@@ -16,7 +17,66 @@ export interface FormField {
   type: FieldType;
   options?: Option[];          // static select options
   optionsKey?: string;         // key into a lookups map
+  labelKey?: string;           // for 'student': record column holding the display name
   colSpan2?: boolean;
+}
+
+// Type-ahead student picker (reuses /api/portal/edit/student-search). Sets the
+// field to the chosen student's id; shows the name once picked/loaded.
+function StudentField({ label, value, initialLabel, onPick }: {
+  label: string; value: unknown; initialLabel: string;
+  onPick: (id: number) => void;
+}) {
+  const [q, setQ] = useState(initialLabel);
+  const [results, setResults] = useState<Picker[]>([]);
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => { setQ(initialLabel); }, [initialLabel]);
+
+  useEffect(() => {
+    if (q.trim().length < 2) { setResults([]); return; }
+    const t = setTimeout(() => {
+      apiRequest<Picker[]>(`/api/portal/edit/student-search?q=${encodeURIComponent(q.trim())}`)
+        .then((r) => { setResults(r); setOpen(true); })
+        .catch(() => {});
+    }, 250);
+    return () => clearTimeout(t);
+  }, [q]);
+
+  const inputCls =
+    'w-full rounded-lg border border-slate-200 pl-8 pr-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
+
+  return (
+    <div className="md:col-span-2 relative">
+      <label className="block text-xs font-semibold text-slate-500 mb-1">
+        {label} {value ? <span className="text-slate-400">· #{String(value)}</span> : null}
+      </label>
+      <div className="relative">
+        <Search className="size-4 text-slate-400 absolute left-2.5 top-1/2 -translate-y-1/2" />
+        <input
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          onFocus={() => results.length && setOpen(true)}
+          placeholder="Search a student by name…"
+          className={inputCls}
+        />
+      </div>
+      {open && results.length > 0 && (
+        <div className="absolute z-10 mt-1 w-full max-h-56 overflow-y-auto bg-white border border-slate-200 rounded-lg shadow-lg">
+          {results.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => { onPick(r.id); setQ(r.label); setOpen(false); }}
+              className="block w-full text-left px-3 py-2 text-sm hover:bg-slate-50"
+            >
+              {r.label}
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  );
 }
 
 export interface FormSection {
@@ -154,6 +214,16 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
           </div>
         );
       }
+      case 'student':
+        return (
+          <StudentField
+            key={fd.key}
+            label={fd.label}
+            value={v}
+            initialLabel={record ? String(record[fd.labelKey || ''] ?? '') : ''}
+            onPick={(sid) => set(fd.key, sid)}
+          />
+        );
       case 'number':
         return (
           <div key={fd.key} className={fd.colSpan2 ? 'md:col-span-2' : ''}>

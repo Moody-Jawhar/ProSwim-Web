@@ -238,6 +238,7 @@ function extraClassesConfig(types: string, title: string): ModuleConfig {
     endpoint: `/api/portal/modules/extra-classes${types ? `?types=${types}` : ''}`,
     lookups: LOOKUPS,
     idKey: 'ExtraClassId',
+    editBase: '/extra-classes',
     filters: [
       { param: 'searchFor', label: 'Search…', type: 'text' },
       { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
