@@ -6,7 +6,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, AlertCircle, Plus, X, Truck, ChevronDown, ChevronRight, Lock, Unlock,
+  Loader2, AlertCircle, Plus, X, Truck, ChevronDown, ChevronRight, Lock, Unlock, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
@@ -82,6 +82,7 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<{ header: Row; lines: Row[] } | null>(null);
+  const [semFilter, setSemFilter] = useState('');
 
   useEffect(() => {
     apiRequest<{ locations: Option[] }>('/api/portal/modules/lookups')
@@ -123,6 +124,39 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
     }
   }
 
+  // Group deliveries can be narrowed by semester (client-side, from loaded rows).
+  const semesters = useMemo(
+    () => Array.from(new Set(rows.map((r) => str(r, 'SemesterName')).filter(Boolean))).sort(),
+    [rows],
+  );
+  const displayRows = useMemo(
+    () => (variant.hasSemester && semFilter ? rows.filter((r) => str(r, 'SemesterName') === semFilter) : rows),
+    [rows, semFilter, variant.hasSemester],
+  );
+
+  function exportCsv() {
+    const cols: [string, (r: Row) => string][] = [
+      ['Location', (r) => str(r, 'LocationNickName')],
+      ...(variant.hasSemester ? [['Semester', (r: Row) => str(r, 'SemesterName')] as [string, (r: Row) => string]] : []),
+      ['S/N', (r) => str(r, variant.serialKey)],
+      ...(variant.hasSemester ? [
+        ['Payments', (r: Row) => String(num(r, 'PaymentDeliveryTotalPayments'))] as [string, (r: Row) => string],
+        ['Expenses', (r: Row) => String(num(r, 'PaymentDeliveryTotalExpenses'))] as [string, (r: Row) => string],
+      ] : []),
+      [variant.hasSemester ? 'Net' : 'Amount', (r) => String(num(r, variant.amountKey))],
+      ['Received', (r) => dmy(r[variant.recDateKey])],
+      ['Closed', (r) => (r[variant.closedKey] === true ? 'Yes' : 'No')],
+    ];
+    const header = cols.map((c) => c[0]).join(',');
+    const lines = displayRows.map((r) => cols.map((c) => `"${c[1](r).replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `${variant.base}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
+
   const inputCls = 'rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
 
   return (
@@ -138,6 +172,12 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
           <option value={0}>All locations</option>
           {locations.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
         </select>
+        {variant.hasSemester && semesters.length > 0 && (
+          <select value={semFilter} onChange={(e) => setSemFilter(e.target.value)} className={inputCls}>
+            <option value="">All semesters</option>
+            {semesters.map((s) => <option key={s} value={s}>{s}</option>)}
+          </select>
+        )}
         <label className="flex items-center gap-1.5 text-sm text-slate-600 select-none">
           <input type="checkbox" checked={showDeleted} onChange={(e) => setShowDeleted(e.target.checked)} className="accent-[#1e5c97]" />
           Deleted
@@ -145,6 +185,12 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
         <button onClick={load} className="rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-4 py-1.5">
           Search
         </button>
+        {user?.canExport && displayRows.length > 0 && (
+          <button onClick={exportCsv}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm font-semibold text-[#1e5c97] hover:bg-slate-50">
+            <Download className="size-4" /> Export
+          </button>
+        )}
         <div className="flex-1" />
         {canSave && (
           <button onClick={() => setCreating(true)}
@@ -181,10 +227,10 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
               </tr>
             </thead>
             <tbody>
-              {rows.length === 0 && (
+              {displayRows.length === 0 && (
                 <tr><td colSpan={10} className="text-center text-slate-400 py-6">No deliveries found.</td></tr>
               )}
-              {rows.map((r) => {
+              {displayRows.map((r) => {
                 const id = num(r, variant.idKey);
                 const closed = r[variant.closedKey] === true;
                 return (
