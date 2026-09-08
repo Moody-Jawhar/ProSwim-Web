@@ -35,6 +35,7 @@ export function TakeAttendancePage() {
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState('');
   const [savedAt, setSavedAt] = useState<Date | null>(null);
+  const [makeupFor, setMakeupFor] = useState<{ id: number; name: string } | null>(null);
 
   function hydrate(data: Row[]) {
     setRows(data);
@@ -247,6 +248,15 @@ export function TakeAttendancePage() {
                         {STATUSES.map((s2) => <option key={s2} value={s2}>{s2}</option>)}
                       </select>
                     )}
+                    {!visitor && canSave && (
+                      <button
+                        onClick={() => setMakeupFor({ id, name: str(r, 'StudentFullName') })}
+                        className="shrink-0 rounded-lg border border-lime-300 bg-lime-50 px-2 py-1 text-xs font-semibold text-lime-700 hover:bg-lime-100"
+                        title="Assign a make-up session"
+                      >
+                        Make-up
+                      </button>
+                    )}
                   </div>
                   {!visitor && (!m.attended || m.remarks) && (
                     <input
@@ -285,6 +295,89 @@ export function TakeAttendancePage() {
           )}
         </>
       )}
+
+      {makeupFor && (
+        <MakeupModal
+          attendanceId={makeupFor.id}
+          studentName={makeupFor.name}
+          onClose={() => setMakeupFor(null)}
+          onAssigned={() => { setMakeupFor(null); load(); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// Pick a date, list the eligible sessions that day, assign one as the make-up.
+function MakeupModal({ attendanceId, studentName, onClose, onAssigned }: {
+  attendanceId: number; studentName: string; onClose: () => void; onAssigned: () => void;
+}) {
+  const [date, setDate] = useState(() => {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  });
+  const [sessions, setSessions] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [busy, setBusy] = useState(false);
+  const [error, setError] = useState('');
+
+  useEffect(() => {
+    setLoading(true);
+    setError('');
+    apiRequest<Row[]>(`/api/portal/attendance/makeup-sessions?date=${date}&attendanceId=${attendanceId}`)
+      .then(setSessions)
+      .catch((e) => setError(e instanceof Error ? e.message : 'Could not load sessions.'))
+      .finally(() => setLoading(false));
+  }, [date, attendanceId]);
+
+  async function assign(sessionId: number) {
+    setBusy(true);
+    setError('');
+    try {
+      await apiRequest('/api/portal/attendance/makeup', {
+        method: 'POST',
+        body: JSON.stringify({ attendanceId, makeupSessionId: sessionId }),
+      });
+      onAssigned();
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not assign the make-up.');
+      setBusy(false);
+    }
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4" onClick={onClose}>
+      <div className="bg-white rounded-2xl shadow-xl w-full max-w-md p-5" onClick={(e) => e.stopPropagation()}>
+        <div className="flex items-center justify-between mb-3">
+          <h3 className="text-base font-bold text-slate-800">Make-up for {studentName}</h3>
+          <button onClick={onClose} className="text-slate-400 hover:text-slate-600"><X className="size-5" /></button>
+        </div>
+        <label className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+          Date
+          <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40" />
+        </label>
+        {error && <p className="text-sm text-red-600 mb-2">{error}</p>}
+        {loading ? (
+          <div className="flex items-center justify-center h-24"><Loader2 className="size-6 text-[#1e5c97] animate-spin" /></div>
+        ) : sessions.length === 0 ? (
+          <p className="text-sm text-slate-400 py-6 text-center">No eligible sessions on this date.</p>
+        ) : (
+          <div className="max-h-72 overflow-y-auto divide-y divide-slate-100">
+            {sessions.map((s) => (
+              <button
+                key={num(s, 'SessionId')}
+                disabled={busy}
+                onClick={() => assign(num(s, 'SessionId'))}
+                className="w-full text-left py-2.5 px-2 hover:bg-lime-50 disabled:opacity-50 rounded"
+              >
+                <span className="text-sm font-semibold text-slate-700">{str(s, 'ClassName')}</span>
+                <span className="text-xs text-slate-400"> · {str(s, 'SessionStatus')}</span>
+              </button>
+            ))}
+          </div>
+        )}
+      </div>
     </div>
   );
 }
