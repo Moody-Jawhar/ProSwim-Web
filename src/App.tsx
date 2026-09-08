@@ -34,7 +34,8 @@ import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { NotificationsListPage } from './pages/NotificationsListPage';
 import {
   ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
-  CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage, UserActivityPage,
+  CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage,
+  UserActivityPage, ChangeLogPage,
 } from './pages/LegacyModulePages';
 import {
   ReportByMonthPage, ReportByPrivatePage, ReportBySemesterPage,
@@ -147,6 +148,7 @@ export default function App() {
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />
+          <Route path="/change-log" element={<ChangeLogPage />} />
           <Route path="/reports/by-month" element={<ReportByMonthPage />} />
           <Route path="/reports/by-private" element={<ReportByPrivatePage />} />
           <Route path="/reports/by-semester" element={<ReportBySemesterPage />} />

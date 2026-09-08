@@ -312,7 +312,69 @@ const userActivity: ModuleConfig = {
   },
 };
 
+// ── System change log (NotificationsList.aspx), audit feed of record changes ─
+
+const CHANGE_TYPES = [
+  'Gr_Payment Modified', 'Pr_Payment Modified', 'Pr_Package Deleted',
+  'Pr_Package Modified', 'Pr_Pck_Status', 'Reg. Net2Pay Changed',
+  'Reg. Student BACK', 'Reg. Student Stopped',
+].map((t) => ({ value: t, label: t }));
+
+// Map a legacy TR_Link (…Individual.aspx?…ID=n) to the equivalent portal route.
+function traceLinkToRoute(link: string): string | null {
+  const id = (re: RegExp) => { const m = link.match(re); return m ? m[1] : null; };
+  const reg = id(/RegistrationID=(\d+)/i);
+  if (reg) return `/registrations/${reg}`;
+  const prPack = id(/PrivatePackageI[dD]=(\d+)/i) ?? id(/PackageID=(\d+)/i);
+  if (prPack) return `/privates/${prPack}`;
+  const prPay = id(/PrivatePaymentID=(\d+)/i);
+  if (prPay) return `/pr-payments/${prPay}`;
+  const pay = id(/PaymentID=(\d+)/i);
+  if (pay) return `/payments/${pay}`;
+  const stu = id(/StudentID=(\d+)/i);
+  if (stu) return `/students/${stu}`;
+  return null;
+}
+
+const changeLog: ModuleConfig = {
+  title: 'Change Log',
+  subtitle: 'Record changes: payments, packages, registrations (last 30 days by default)',
+  endpoint: '/api/portal/modules/change-log',
+  lookups: LOOKUPS,
+  idKey: 'TR_ID',
+  filters: [
+    { param: 'searchFor', label: 'Search…', type: 'text' },
+    { param: 'traceUser', label: 'By user', type: 'select', optionsKey: 'users', width: 'max-w-44' },
+    { param: 'type', label: 'Type', type: 'select', options: CHANGE_TYPES, width: 'max-w-52' },
+    { param: 'important', label: 'Importance', type: 'select', options: [{ value: 'NeedAttention', label: 'Need Attention' }] },
+    { param: 'dateFrom', label: 'From', type: 'date' },
+    { param: 'dateTo', label: 'To', type: 'date' },
+  ],
+  columns: [
+    { key: 'TR_Date', label: 'Date' },
+    { key: 'TR_User', label: 'User' },
+    { key: 'TR_Title', label: 'Title' },
+    { key: 'TR_Title2', label: 'Detail' },
+    { key: 'TR_Description', label: 'Description' },
+    { key: 'TR_Link', label: 'Open' },
+  ],
+  renderCell: (row, col) => {
+    if (col.key === 'TR_Date') {
+      const d = new Date(String(row.TR_Date ?? ''));
+      return isNaN(d.getTime()) ? undefined : d.toLocaleString();
+    }
+    if (col.key === 'TR_Link') {
+      const route = traceLinkToRoute(String(row.TR_Link ?? ''));
+      return route
+        ? <Link to={route} className="text-[#1e5c97] font-semibold hover:underline">Open</Link>
+        : '-';
+    }
+    return undefined;
+  },
+};
+
 export const UserActivityPage = () => <ModuleListPage config={userActivity} />;
+export const ChangeLogPage = () => <ModuleListPage config={changeLog} />;
 export const ExpensesListPage = () => <ModuleListPage config={expenses} />;
 export const PackTypesPage = () => <ModuleListPage config={packTypes} />;
 export const TimesheetsPage = () => <ModuleListPage config={timesheets} />;
