@@ -51,6 +51,7 @@ import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/Attendance
 import { FeedbackDashboardPage } from './pages/FeedbackDashboardPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { CoachSchedulePage } from './pages/CoachSchedulePage';
+import { PrivateAttendancePage } from './pages/PrivateAttendancePage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -119,6 +120,7 @@ export default function App() {
           <Route path="/privates" element={<PrivatePackagesPage />} />
           <Route path="/privates/new" element={<PrivatePackageForm />} />
           <Route path="/privates/:id" element={<PrivatePackageForm />} />
+          <Route path="/pr-attendance" element={<PrivateAttendancePage />} />
           <Route path="/pr-payments" element={<PrivatePaymentsPage />} />
           <Route path="/pr-payments/new" element={<PrivatePaymentForm />} />
           <Route path="/pr-payments/:id" element={<PrivatePaymentForm />} />

@@ -74,6 +74,7 @@ const FULL_NAV: NavEntry[] = [
     icon: GraduationCap,
     children: [
       { to: '/pr-schedule', label: 'Schedule', icon: CalendarDays },
+      { to: '/pr-attendance', label: 'Daily Attendance', icon: ClipboardCheck },
       { to: '/privates', label: 'Packages', icon: GraduationCap },
       { to: '/pr-payments', label: 'Payments', icon: CreditCard },
       { to: '/pr-payment-delivery', label: 'Payment Delivery', icon: Truck },
