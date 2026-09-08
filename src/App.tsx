@@ -55,6 +55,7 @@ import { PrivateAttendancePage } from './pages/PrivateAttendancePage';
 import { ExtraAttendancePage } from './pages/ExtraAttendancePage';
 import { GenerateSessionsPage } from './pages/GenerateSessionsPage';
 import { ChecklistPage } from './pages/ChecklistPage';
+import { PayrollHoursPage } from './pages/PayrollHoursPage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -173,6 +174,7 @@ export default function App() {
           <Route path="/payroll/timesheets" element={<TimesheetsPage />} />
           <Route path="/payroll/timesheets/:id" element={<TimesheetForm />} />
           <Route path="/payroll/sheet/:timesheetId" element={<PayrollSheetPage />} />
+          <Route path="/payroll/hours/:timesheetId" element={<PayrollHoursPage />} />
           <Route path="/payroll/addons" element={<AddonsListPage />} />
           <Route path="/payroll/addons/:id" element={<AddonFormPage />} />
           <Route path="/payroll/coach-attendance" element={<CoachAttendancePage />} />

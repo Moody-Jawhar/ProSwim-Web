@@ -4,7 +4,7 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, KeyRound, Calculator } from 'lucide-react';
+import { Loader2, KeyRound, Calculator, Clock } from 'lucide-react';
 import { ModuleListPage, type ModuleConfig } from '../components/ModuleListPage';
 import { apiRequest } from '../api/portalApi';
 
@@ -88,18 +88,32 @@ const timesheets: ModuleConfig = {
     { key: 'TimesheetStatus', label: 'Status' },
     { key: 'TimesheetRemarks', label: 'Remarks' },
     { key: '_payroll', label: '' },
+    { key: '_hours', label: '' },
   ],
   renderCell: (row, col) => {
-    if (col.key !== '_payroll') return undefined;
-    return (
-      <Link
-        to={`/payroll/sheet/${row.TimesheetID}`}
-        onClick={(e) => e.stopPropagation()}
-        className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline"
-      >
-        <Calculator className="size-3.5" /> Payroll
-      </Link>
-    );
+    if (col.key === '_payroll') {
+      return (
+        <Link
+          to={`/payroll/sheet/${row.TimesheetID}`}
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline"
+        >
+          <Calculator className="size-3.5" /> Payroll
+        </Link>
+      );
+    }
+    if (col.key === '_hours') {
+      return (
+        <Link
+          to={`/payroll/hours/${row.TimesheetID}`}
+          onClick={(e) => e.stopPropagation()}
+          className="inline-flex items-center gap-1 text-xs font-bold text-[#1e5c97] hover:underline"
+        >
+          <Clock className="size-3.5" /> Hours
+        </Link>
+      );
+    }
+    return undefined;
   },
 };
 
