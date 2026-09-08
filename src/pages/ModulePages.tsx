@@ -73,6 +73,16 @@ const registrations: ModuleConfig = {
     { key: 'SessionsTotal', label: 'S-Total', extra: true },
     { key: 'SessionsAttended', label: 'S-Attended', extra: true },
     { key: 'SessionsMissed', label: 'S-Missed', extra: true },
+    { key: 'SessionsNet', label: 'S-Net', extra: true },
+    { key: 'SessionsCancelled', label: 'S-Cancelled', extra: true },
+    { key: 'SessionsToBeAttended', label: 'S-ToAttend', extra: true },
+    { key: 'PhoneNumber2', label: 'Phone 2', extra: true },
+    { key: 'RegistrationStudentStoppedReason', label: 'Stop Reason', extra: true },
+    { key: 'RegistrationStudentStoppedDate', label: 'Stop Date', format: 'date', extra: true },
+    { key: 'RegistrationStudentStoppedMoneyOnHold', label: 'On Hold', format: 'money', extra: true },
+    { key: 'RegistrationVariation', label: 'Variation', format: 'money', extra: true },
+    { key: 'AmountUsed', label: 'Used', format: 'money', extra: true },
+    { key: 'Net2PayCalc', label: 'Net to Pay', format: 'money', extra: true },
   ],
   // The student name opens the full registration form (like the legacy popup);
   // guests are blocked from the record endpoint, so they get plain text.
