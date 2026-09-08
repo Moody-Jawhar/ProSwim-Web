@@ -215,7 +215,23 @@ const privatePackages: ModuleConfig = {
     { key: 'PackageStatus', label: 'Status' },
     { key: 'Phone', label: 'Phone', extra: true },
     { key: 'PackageRemarks', label: 'Remarks', extra: true },
+    { key: '_pay', label: '' },
   ],
+  // Quick jump to a new private payment, prefilled with this package.
+  renderCell: (row, col) => {
+    if (col.key !== '_pay') return undefined;
+    const u = getStoredUser();
+    if ((u?.userType || '').toLowerCase() === 'guest' || u?.canSave === false) return undefined;
+    return (
+      <Link
+        to={`/pr-payments/new?packageId=${row.PackageId ?? ''}`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center text-xs font-bold text-emerald-700 hover:underline whitespace-nowrap"
+      >
+        Add Payment
+      </Link>
+    );
+  },
 };
 
 // ── Private / extra / membership payments ────────────────────────────────────
