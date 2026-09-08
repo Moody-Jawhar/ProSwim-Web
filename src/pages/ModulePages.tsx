@@ -288,7 +288,20 @@ const coaches: ModuleConfig = {
     { key: 'CoachActive', label: 'Active', format: 'bool' },
     { key: 'CoachDailyHrs', label: 'Daily Hrs' },
     { key: 'CoachWeeklyHrs', label: 'Weekly Hrs' },
+    { key: '_schedule', label: '' },
   ],
+  renderCell: (row, col) => {
+    if (col.key !== '_schedule') return undefined;
+    return (
+      <Link
+        to={`/coaches/${row.CoachId}/schedule`}
+        onClick={(e) => e.stopPropagation()}
+        className="inline-flex items-center text-xs font-bold text-[#1e5c97] hover:underline whitespace-nowrap"
+      >
+        Schedule
+      </Link>
+    );
+  },
 };
 
 // ── Classes ──────────────────────────────────────────────────────────────────

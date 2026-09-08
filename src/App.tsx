@@ -50,6 +50,7 @@ import { AddonFormPage } from './pages/AddonFormPage';
 import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/AttendanceReports';
 import { FeedbackDashboardPage } from './pages/FeedbackDashboardPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
+import { CoachSchedulePage } from './pages/CoachSchedulePage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -127,6 +128,7 @@ export default function App() {
           <Route path="/members" element={<MembershipsPage />} />
           <Route path="/coaches" element={<CoachesPage />} />
           <Route path="/coaches/:id" element={<CoachForm />} />
+          <Route path="/coaches/:id/schedule" element={<CoachSchedulePage />} />
           <Route path="/classes" element={<ClassesPage />} />
           <Route path="/classes/:id" element={<ClassForm />} />
           <Route path="/semesters" element={<SemestersPage />} />
