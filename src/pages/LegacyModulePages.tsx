@@ -279,6 +279,40 @@ const mainExpenses: ModuleConfig = {
 
 export const LocationsListPage = () => <ModuleListPage config={locations} />;
 export const MainExpensesListPage = () => <ModuleListPage config={mainExpenses} />;
+
+// ── User activity log (UsersActivityList.aspx), read-only audit trail ────────
+
+const userActivity: ModuleConfig = {
+  title: 'User Activity',
+  subtitle: 'Audit log of record changes (last 30 days by default)',
+  endpoint: '/api/portal/modules/user-activity',
+  idKey: 'ActivityId',
+  filters: [
+    { param: 'searchFor', label: 'Search…', type: 'text' },
+    { param: 'type', label: 'Type', type: 'text', width: 'w-40' },
+    { param: 'dateFrom', label: 'From', type: 'date' },
+    { param: 'dateTo', label: 'To', type: 'date' },
+  ],
+  columns: [
+    { key: 'ActivityDate', label: 'Date' },
+    { key: 'UserFullName', label: 'User' },
+    { key: 'ActivityType', label: 'Type' },
+    { key: 'ActivityDesc', label: 'Description' },
+    { key: 'ActivityColumnName', label: 'Column', extra: true },
+    { key: 'ActivityValueBefore', label: 'Before', extra: true },
+    { key: 'ActivityValueAfter', label: 'After', extra: true },
+    { key: 'ActivityIPAddress', label: 'IP', extra: true },
+    { key: 'ActivityURL', label: 'URL', extra: true },
+  ],
+  // Audit rows need the time, not just the date.
+  renderCell: (row, col) => {
+    if (col.key !== 'ActivityDate') return undefined;
+    const d = new Date(String(row.ActivityDate ?? ''));
+    return isNaN(d.getTime()) ? undefined : d.toLocaleString();
+  },
+};
+
+export const UserActivityPage = () => <ModuleListPage config={userActivity} />;
 export const ExpensesListPage = () => <ModuleListPage config={expenses} />;
 export const PackTypesPage = () => <ModuleListPage config={packTypes} />;
 export const TimesheetsPage = () => <ModuleListPage config={timesheets} />;

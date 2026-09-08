@@ -34,7 +34,7 @@ import { AnnouncementsPage } from './pages/AnnouncementsPage';
 import { NotificationsListPage } from './pages/NotificationsListPage';
 import {
   ExpensesListPage, PackTypesPage, TimesheetsPage, AddonsListPage,
-  CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage,
+  CoachAttendancePage, UsersAdminPage, LocationsListPage, MainExpensesListPage, UserActivityPage,
 } from './pages/LegacyModulePages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
@@ -142,6 +142,7 @@ export default function App() {
           <Route path="/settings" element={<SettingsAdminPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
+          <Route path="/user-activity" element={<UserActivityPage />} />
           <Route path="/payroll/timesheets" element={<TimesheetsPage />} />
           <Route path="/payroll/timesheets/:id" element={<TimesheetForm />} />
           <Route path="/payroll/sheet/:timesheetId" element={<PayrollSheetPage />} />

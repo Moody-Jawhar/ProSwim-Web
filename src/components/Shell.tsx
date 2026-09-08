@@ -140,6 +140,7 @@ const FULL_NAV: NavEntry[] = [
   { to: '/feedback', label: 'Feedback', icon: MessageSquare },
   { to: '/settings', label: 'Settings', icon: Settings },
   { to: '/users', label: 'Users', icon: Shield },
+  { to: '/user-activity', label: 'Activity Log', icon: Clock },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
