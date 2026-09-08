@@ -17,6 +17,7 @@ export interface ColumnDef {
   label: string;
   format?: 'date' | 'money' | 'bool' | 'text';
   extra?: boolean;           // only visible with "More columns"
+  total?: boolean;           // sum this column into a footer totals row
 }
 
 export interface FilterOption { value: string | number; label: string }
@@ -198,6 +199,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
 
   const cols = config.columns.filter((c) => !c.extra || moreCols);
   const hasExtra = config.columns.some((c) => c.extra);
+  const hasTotals = cols.some((c) => c.total);
   const pages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
   const pageRows = sorted.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
@@ -388,6 +390,20 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
                   </tr>
                 )}
               </tbody>
+              {hasTotals && sorted.length > 0 && (
+                <tfoot>
+                  <tr className="border-t-2 border-slate-200 font-bold text-slate-700 bg-slate-50/60">
+                    {cols.map((c, idx) => (
+                      <td key={c.key + c.label} className="px-3 py-2.5">
+                        {c.total
+                          ? Number(sorted.reduce((s, r) => s + (Number(r[c.key]) || 0), 0)).toLocaleString()
+                          : idx === 0 ? 'Total' : ''}
+                      </td>
+                    ))}
+                    {canEdit && <td />}
+                  </tr>
+                </tfoot>
+              )}
             </table>
           </div>
 

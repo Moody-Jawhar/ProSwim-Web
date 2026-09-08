@@ -35,12 +35,12 @@ const byMonth: ModuleConfig = {
   ],
   columns: [
     { key: 'Title', label: 'Month' },
-    { key: 'GrpPayments', label: 'Group', format: 'money' },
-    { key: 'PrvPayments', label: 'Private', format: 'money' },
-    { key: 'TotalSalaries', label: 'Salaries', format: 'money' },
-    { key: 'TotalExpenses', label: 'Expenses', format: 'money' },
-    { key: 'TotalMainExpenses', label: 'M-Expenses', format: 'money' },
-    { key: 'TotalNet', label: 'Net', format: 'money' },
+    { key: 'GrpPayments', label: 'Group', format: 'money', total: true },
+    { key: 'PrvPayments', label: 'Private', format: 'money', total: true },
+    { key: 'TotalSalaries', label: 'Salaries', format: 'money', total: true },
+    { key: 'TotalExpenses', label: 'Expenses', format: 'money', total: true },
+    { key: 'TotalMainExpenses', label: 'M-Expenses', format: 'money', total: true },
+    { key: 'TotalNet', label: 'Net', format: 'money', total: true },
   ],
 };
 
@@ -79,16 +79,16 @@ const bySemester: ModuleConfig = {
   ],
   columns: [
     { key: 'Title', label: 'Semester' },
-    { key: 'GrpPayments', label: 'Group', format: 'money' },
-    { key: 'PrvPayments', label: 'Private', format: 'money' },
-    { key: 'TotalSalaries', label: 'Salaries', format: 'money' },
-    { key: 'TotalExpenses', label: 'Expenses', format: 'money' },
-    { key: 'TotalMainExpenses', label: 'M-Expenses', format: 'money' },
-    { key: 'TotalNet', label: 'Net', format: 'money' },
-    { key: 'GrpPaymentsDue', label: 'Due', format: 'money' },
-    { key: 'GrpRegistered', label: 'Count' },
-    { key: 'GrpActive', label: 'Active' },
-    { key: 'GrpStopped', label: 'Stopped' },
+    { key: 'GrpPayments', label: 'Group', format: 'money', total: true },
+    { key: 'PrvPayments', label: 'Private', format: 'money', total: true },
+    { key: 'TotalSalaries', label: 'Salaries', format: 'money', total: true },
+    { key: 'TotalExpenses', label: 'Expenses', format: 'money', total: true },
+    { key: 'TotalMainExpenses', label: 'M-Expenses', format: 'money', total: true },
+    { key: 'TotalNet', label: 'Net', format: 'money', total: true },
+    { key: 'GrpPaymentsDue', label: 'Due', format: 'money', total: true },
+    { key: 'GrpRegistered', label: 'Count', total: true },
+    { key: 'GrpActive', label: 'Active', total: true },
+    { key: 'GrpStopped', label: 'Stopped', total: true },
   ],
 };
 
@@ -135,10 +135,10 @@ const byAttendance: ModuleConfig = {
     { key: 'PeriodDesc', label: 'Period' },
     { key: 'PeriodFrom', label: 'From', format: 'date' },
     { key: 'PeriodTo', label: 'To', format: 'date' },
-    { key: 'CntGroup', label: 'Group' },
-    { key: 'CntPrivate', label: 'Private' },
-    { key: 'CntExtra', label: 'Extra' },
-    { key: 'CntTotal', label: 'Total' },
+    { key: 'CntGroup', label: 'Group', total: true },
+    { key: 'CntPrivate', label: 'Private', total: true },
+    { key: 'CntExtra', label: 'Extra', total: true },
+    { key: 'CntTotal', label: 'Total', total: true },
   ],
 };
 
@@ -158,8 +158,8 @@ const paymentsByCoach: ModuleConfig = {
   columns: [
     { key: 'CoachFullname', label: 'Coach' },
     { key: 'semestername', label: 'Semester' },
-    { key: 'CountOFStds', label: 'Students' },
-    { key: 'Total', label: 'Total', format: 'money' },
+    { key: 'CountOFStds', label: 'Students', total: true },
+    { key: 'Total', label: 'Total', format: 'money', total: true },
   ],
 };
 
