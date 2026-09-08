@@ -60,6 +60,17 @@ function semesterId(r: Row): number {
   return Number(r.SemesterId ?? r.SemesterID ?? 0);
 }
 
+// Resolve a row's id value tolerant of casing: proc columns come back with the
+// exact SQL casing (e.g. "ClassId"), while some configs spell the key "ClassID".
+// A case-insensitive fallback keeps the row key + Edit link working either way.
+function rowId(r: Row, key?: string): unknown {
+  if (!key) return undefined;
+  if (r[key] !== undefined) return r[key];
+  const lower = key.toLowerCase();
+  for (const k in r) if (k.toLowerCase() === lower) return r[k];
+  return undefined;
+}
+
 function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
   if (v == null || v === '') return '-';
   switch (format) {
@@ -345,7 +356,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
               <tbody>
                 {pageRows.map((r, i) => (
                   <tr
-                    key={String(r[config.idKey || ''] ?? i)}
+                    key={String(rowId(r, config.idKey) ?? i)}
                     className="border-b border-slate-50 last:border-0"
                   >
                     {cols.map((c) => {
@@ -359,7 +370,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
                     {canEdit && (
                       <td className="px-3 py-2.5 text-right">
                         <button
-                          onClick={() => navigate(`${config.editBase}/${r[config.idKey!]}`)}
+                          onClick={() => navigate(`${config.editBase}/${rowId(r, config.idKey)}`)}
                           title="Edit"
                           className="text-[#1e5c97] hover:text-[#17497a]"
                         >
