@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -60,6 +60,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/schedule', label: 'Schedule', icon: CalendarDays },
       { to: '/registrations', label: 'Registrations', icon: BookOpen },
       { to: '/sessions', label: 'Sessions', icon: ClipboardCheck },
+      { to: '/sessions/generate', label: 'Generate Sessions', icon: CalendarPlus },
       // Attendance Details stays routable via the Summary's per-student links.
       { to: '/attendance-summary', label: 'Attendance', icon: ClipboardCheck },
       { to: '/payments', label: 'Payments', icon: CreditCard },

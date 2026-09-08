@@ -53,6 +53,7 @@ import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { CoachSchedulePage } from './pages/CoachSchedulePage';
 import { PrivateAttendancePage } from './pages/PrivateAttendancePage';
 import { ExtraAttendancePage } from './pages/ExtraAttendancePage';
+import { GenerateSessionsPage } from './pages/GenerateSessionsPage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -109,6 +110,7 @@ export default function App() {
           <Route path="/registrations/new" element={<RegistrationForm />} />
           <Route path="/registrations/:id" element={<RegistrationForm />} />
           <Route path="/sessions" element={<SessionsPage />} />
+          <Route path="/sessions/generate" element={<GenerateSessionsPage />} />
           <Route path="/sessions/new" element={<SessionForm />} />
           <Route path="/sessions/:sessionId/attendance" element={<TakeAttendancePage />} />
           <Route path="/sessions/:id" element={<SessionForm />} />
