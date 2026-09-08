@@ -5,8 +5,8 @@
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, RefreshCw, Save } from 'lucide-react';
-import { apiRequest } from '../api/portalApi';
+import { Loader2, AlertCircle, RefreshCw, Save, Download } from 'lucide-react';
+import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
 
@@ -132,6 +132,33 @@ export function PayrollSheetPage() {
   }, [rows]);
 
   const cellInput = 'w-20 rounded border border-slate-200 px-1.5 py-0.5 text-xs text-right focus:outline-none focus:ring-1 focus:ring-[#1e5c97]/50';
+  const canExport = getStoredUser()?.canExport;
+
+  function exportCsv() {
+    const cols: [string, (r: Row) => string][] = [
+      ['Location', (r) => str(r, 'LocationNickName')],
+      ['Coach', (r) => str(r, 'CoachFullName')],
+      ['Currency', (r) => str(r, 'PayrollSalaryCurrency')],
+      ['Salary', (r) => String(num(r, 'PayrollSalary'))],
+      ...DISCIPLINES.map(([, total, label]) =>
+        [label, (r: Row) => String(num(r, total))] as [string, (r: Row) => string]),
+      ['Bonus', (r) => String(num(r, 'PayrollBonus'))],
+      ['Penalty', (r) => String(num(r, 'PayrollPenalty'))],
+      ['Advance', (r) => String(num(r, 'PayrollLoansShort'))],
+      ['Loans', (r) => String(num(r, 'PayrollLoansLong'))],
+      ['SubTotal', (r) => String(num(r, 'SubTotal'))],
+      ['Net2Pay', (r) => String(num(r, 'PayrollNetToPAy'))],
+      ['Paid', (r) => (r.PayrollIndivPaid === true ? 'Yes' : 'No')],
+    ];
+    const header = cols.map((c) => c[0]).join(',');
+    const lines = rows.map((r) => cols.map((c) => `"${c[1](r).replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = `payroll-${timesheetId}.csv`;
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   return (
     <div className="p-6 md:p-8">
@@ -148,6 +175,12 @@ export function PayrollSheetPage() {
           Show zero columns
         </label>
         <div className="flex-1" />
+        {canExport && rows.length > 0 && (
+          <button onClick={exportCsv}
+            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-slate-50">
+            <Download className="size-4" /> Export
+          </button>
+        )}
         <button onClick={() => load(true)} disabled={busy || loading}
           className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-[#e8f0f8] disabled:opacity-50">
           <RefreshCw className="size-4" /> Re-Calculate from HR

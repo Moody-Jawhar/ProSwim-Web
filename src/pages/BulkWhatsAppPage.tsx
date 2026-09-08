@@ -62,6 +62,7 @@ export function BulkWhatsAppPage() {
   const [checked, setChecked] = useState<Set<number>>(new Set());
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [channel, setChannel] = useState<'WA' | 'EM' | 'PUSH'>('WA');
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [filterDupPhones, setFilterDupPhones] = useState(true);
@@ -115,7 +116,8 @@ export function BulkWhatsAppPage() {
     if (message.trim().length < 15) { setError('Message must be at least 15 characters.'); return; }
     const selected = rows.filter((r) => checked.has(rowKey(r)));
     if (selected.length === 0) { setError('Select at least one recipient.'); return; }
-    if (!window.confirm(`Queue a WhatsApp message to ${selected.length} recipient(s)?`)) return;
+    const chLabel = channel === 'EM' ? 'email' : channel === 'PUSH' ? 'push notification' : 'WhatsApp';
+    if (!window.confirm(`Queue a ${chLabel} message to ${selected.length} recipient(s)?`)) return;
     setSending(true);
     setError('');
     try {
@@ -139,7 +141,12 @@ export function BulkWhatsAppPage() {
       }));
       const res = await apiRequest<{ queued: number }>('/api/portal/communicate/whatsapp', {
         method: 'POST',
-        body: JSON.stringify({ subject, body: message, filterDupPhones, filterDupEmails: false, recipients }),
+        body: JSON.stringify({
+          channel, subject, body: message,
+          filterDupPhones: channel === 'WA' ? filterDupPhones : false,
+          filterDupEmails: channel === 'EM',
+          recipients,
+        }),
       });
       setSent(res);
       refreshQueue();
@@ -271,9 +278,21 @@ export function BulkWhatsAppPage() {
       {/* ── Compose ── */}
       {rows && canSend && (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-4 mb-4">
-          <p className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-3 flex items-center gap-2">
-            <MessageCircle className="size-4" /> Compose WhatsApp
-          </p>
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 flex items-center gap-2">
+              <MessageCircle className="size-4" /> Compose {channel === 'EM' ? 'Email' : channel === 'PUSH' ? 'Push' : 'WhatsApp'}
+            </p>
+            <div className="inline-flex rounded-lg border border-slate-200 overflow-hidden text-xs font-semibold">
+              {([['WA', 'WhatsApp'], ['EM', 'Email'], ['PUSH', 'Push']] as const).map(([v, lbl]) => (
+                <button key={v} onClick={() => setChannel(v)}
+                  className={`px-3 py-1.5 ${channel === v ? 'bg-[#1e5c97] text-white' : 'bg-white text-slate-600 hover:bg-slate-50'}`}>
+                  {lbl}
+                </button>
+              ))}
+            </div>
+          </div>
+          {channel === 'EM' && <p className="text-xs text-slate-400 mb-2">Email goes to recipients with an email on file; the subject is the email subject.</p>}
+          {channel === 'PUSH' && <p className="text-xs text-slate-400 mb-2">Push goes to the student's mobile app (and their in-app inbox); the subject is the notification title.</p>}
           {templates.length > 0 && (
             <div className="flex flex-wrap gap-2 mb-3">
               {templates.map((t) => (
@@ -329,7 +348,7 @@ export function BulkWhatsAppPage() {
         </button>
         {queue && queue.queued > 0 && canSend && (
           <button
-            onClick={() => apiRequest('/api/portal/communicate/send-batch', { method: 'POST' }).then(refreshQueue)}
+            onClick={() => apiRequest(`/api/portal/communicate/send-batch?channel=${channel}`, { method: 'POST' }).then(refreshQueue)}
             className="text-emerald-700 font-semibold hover:underline">
             Send another batch
           </button>

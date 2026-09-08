@@ -4,7 +4,7 @@
 
 import { useEffect, useMemo, useState } from 'react';
 import {
-  Loader2, AlertCircle, Star, Search, MessageSquare, Pencil, Save, Plus, X,
+  Loader2, AlertCircle, Star, Search, MessageSquare, Pencil, Save, Plus, X, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
@@ -81,6 +81,27 @@ export function FeedbackDashboardPage() {
   const overall = summary?.totals?.OverallAvg != null ? Number(summary.totals.OverallAvg) : null;
   const totalResponses = num(summary?.totals?.Responses);
   const maxMonthly = Math.max(1, ...(summary?.monthly ?? []).map((m) => num(m.Responses)));
+
+  function exportResponses() {
+    const cols: [string, (r: Row) => string][] = [
+      ['Date', (r) => (r.FilledDate ? new Date(str(r.FilledDate)).toLocaleDateString() : '')],
+      ['Student', (r) => str(r.StudentName) || `#${num(r.StudentId)}`],
+      ['Type', (r) => str(r.RefType)],
+      ['Location', (r) => str(r.LocationName)],
+      ['Coach', (r) => str(r.CoachName)],
+      ['Course', (r) => str(r.RefLabel)],
+      ['Score', (r) => (r.Avg != null ? Number(r.Avg).toFixed(2) : '')],
+      ['Suggestions', (r) => str(r.Suggestions)],
+    ];
+    const header = cols.map((c) => c[0]).join(',');
+    const lines = responses.map((r) => cols.map((c) => `"${c[1](r).replace(/"/g, '""')}"`).join(','));
+    const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'feedback-responses.csv';
+    a.click();
+    URL.revokeObjectURL(a.href);
+  }
 
   return (
     <div className="p-6 md:p-8">
@@ -249,9 +270,17 @@ export function FeedbackDashboardPage() {
 
           {/* Individual responses */}
           <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-            <p className="text-xs font-bold uppercase tracking-widest text-slate-400 p-5 pb-0">
-              Responses ({responses.length.toLocaleString()})
-            </p>
+            <div className="flex items-center justify-between p-5 pb-0">
+              <p className="text-xs font-bold uppercase tracking-widest text-slate-400">
+                Responses ({responses.length.toLocaleString()})
+              </p>
+              {user?.canExport && responses.length > 0 && (
+                <button onClick={exportResponses}
+                  className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-slate-50">
+                  <Download className="size-3.5" /> Export
+                </button>
+              )}
+            </div>
             <table className="tbl w-full text-sm whitespace-nowrap [&_td]:py-2.5 [&_td]:px-4 [&_th]:py-2.5 [&_th]:px-4">
               <thead>
                 <tr>
