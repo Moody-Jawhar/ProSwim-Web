@@ -6,12 +6,13 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
 import { Bubbles } from './Bubbles';
 import { AiPanel } from './AiPanel';
+import { CommandPalette } from './CommandPalette';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -407,6 +408,20 @@ export function Shell() {
           )}
         </div>
 
+        <button
+          onClick={() => window.dispatchEvent(new Event('command-palette:open'))}
+          title="Search (Ctrl-K)"
+          className={`mx-3 mt-3 flex items-center gap-2 rounded-lg border border-white/15 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white transition-colors ${rail ? 'justify-center p-2' : 'px-3 py-2'}`}
+        >
+          <Search className="size-4 shrink-0" />
+          {!rail && (
+            <>
+              <span className="text-sm flex-1 text-left">Search…</span>
+              <kbd className="text-[10px] border border-white/20 rounded px-1 py-0.5">Ctrl K</kbd>
+            </>
+          )}
+        </button>
+
         <nav className="flex-1 py-3 overflow-y-auto overflow-x-hidden">
           {NAV.map((entry) => {
             // Flat link
@@ -467,6 +482,7 @@ export function Shell() {
 
       {/* AI assistant — super users only */}
       {isSuperUser(user) && <AiPanel />}
+      <CommandPalette />
     </div>
   );
 }
