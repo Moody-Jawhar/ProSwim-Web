@@ -23,8 +23,17 @@ import { PageHero } from '../components/PageHero';
 type Row = Record<string, unknown>;
 type Option = { value: number; label: string };
 
-const num = (r: Row, k: string) => Number(r[k] ?? 0);
-const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
+// The attendance summary/details procs return columns with inconsistent SQL
+// casing (e.g. `attendancestatus`, `MakeupInfo`, `SemesterId`); resolve reads
+// case-insensitively so a casing drift never silently blanks a column.
+function pick(r: Row, k: string): unknown {
+  if (r[k] !== undefined) return r[k];
+  const lower = k.toLowerCase();
+  for (const kk in r) if (kk.toLowerCase() === lower) return r[kk];
+  return undefined;
+}
+const num = (r: Row, k: string) => Number(pick(r, k) ?? 0);
+const str = (r: Row, k: string) => { const v = pick(r, k); return v == null ? '' : String(v); };
 const inputCls = 'rounded-lg border border-slate-200 px-2.5 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
 
 const DAYS = ['', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];

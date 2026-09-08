@@ -75,7 +75,7 @@ export function TakeAttendancePage() {
 
   const sid = Number(sessionId);
   // Make-up visitors belong to another session, shown, never edited or saved (legacy rule).
-  const isVisitor = (r: Row) => num(r, 'AttendanceSessionID') !== 0 && num(r, 'AttendanceSessionID') !== sid;
+  const isVisitor = (r: Row) => num(r, 'AttendanceSessionId') !== 0 && num(r, 'AttendanceSessionId') !== sid;
 
   const header = rows[0];
   const className = header ? str(header, 'ClassName') : '';

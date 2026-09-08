@@ -64,7 +64,7 @@ export function AddonFormPage() {
         setType(String(r.AddonType ?? ''));
         setCurrency(String(r.AddonCurrency ?? 'USD'));
         setTotal(Number(r.AddonAmount ?? 0));
-        setCount(Number(r.TotalCount ?? 1) || 1);
+        setCount(Number(r.AddonCount ?? 1) || 1);
         setRemarks(String(r.AddonRemarks ?? ''));
         if (r.AddonDate) setDate(new Date(String(r.AddonDate)).toISOString().slice(0, 10));
         setPayments(Array.from({ length: 12 }, (_, i) => ({
