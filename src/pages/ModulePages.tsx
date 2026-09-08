@@ -347,6 +347,7 @@ const sessions: ModuleConfig = {
   endpoint: '/api/portal/modules/sessions',
   lookups: LOOKUPS,
   idKey: 'SessionId',
+  editBase: '/sessions',
   filters: [
     { param: 'searchFor', label: 'Search…', type: 'text' },
     // As with registrations, P_Classes_Sessions_Select has no location param.

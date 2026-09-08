@@ -519,6 +519,35 @@ const mainExpense: RecordFormConfig = {
   ],
 };
 
+// ── Group session (ClassesSessionsIndividual.aspx) ───────────────────────────
+
+const session: RecordFormConfig = {
+  title: 'Session',
+  listPath: '/sessions',
+  slug: 'session',
+  idKey: 'SessionId',
+  titleKey: 'ClassName',
+  lookups: '/api/portal/modules/lookups',
+  heroSlide: 2,
+  createDefaults: {
+    SessionStatus: 'Active',
+  },
+  sections: [
+    {
+      title: 'Session',
+      fields: [
+        { key: 'SessionClassId', label: 'Class', type: 'select', optionsKey: 'classes' },
+        { key: 'SessionDate', label: 'Date', type: 'date' },
+        { key: 'SessionStatus', label: 'Status', type: 'select', options: [
+          'Active', 'Cancelled', 'Make-Up',
+        ].map((v) => ({ value: v, label: v })) },
+        { key: 'SessionRemarks', label: 'Remarks', type: 'textarea' },
+      ],
+    },
+  ],
+};
+
+export const SessionForm = () => <RecordFormPage config={session} />;
 export const SemesterForm = () => <RecordFormPage config={semester} />;
 export const CoachForm = () => <RecordFormPage config={coach} />;
 export const ClassForm = () => <RecordFormPage config={klass} />;

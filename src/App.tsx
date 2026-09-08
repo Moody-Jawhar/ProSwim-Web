@@ -16,6 +16,7 @@ import {
 import {
   SemesterForm, CoachForm, ClassForm, StudentForm,
   ExpenseForm, PackTypeForm, UserForm, TimesheetForm, CoachAttendanceForm, LocationForm, MainExpenseForm,
+  SessionForm,
 } from './pages/RecordForms';
 import { RegistrationForm } from './pages/RegistrationForm';
 import { PrivatePackageForm } from './pages/PrivatePackageForm';
@@ -105,7 +106,9 @@ export default function App() {
           <Route path="/registrations/new" element={<RegistrationForm />} />
           <Route path="/registrations/:id" element={<RegistrationForm />} />
           <Route path="/sessions" element={<SessionsPage />} />
+          <Route path="/sessions/new" element={<SessionForm />} />
           <Route path="/sessions/:sessionId/attendance" element={<TakeAttendancePage />} />
+          <Route path="/sessions/:id" element={<SessionForm />} />
           <Route path="/attendance-summary" element={<AttendanceSummaryPage />} />
           <Route path="/attendance-details" element={<AttendanceDetailsPage />} />
           <Route path="/payments" element={<PaymentsPage />} />
