@@ -52,6 +52,7 @@ import { FeedbackDashboardPage } from './pages/FeedbackDashboardPage';
 import { TakeAttendancePage } from './pages/TakeAttendancePage';
 import { CoachSchedulePage } from './pages/CoachSchedulePage';
 import { PrivateAttendancePage } from './pages/PrivateAttendancePage';
+import { ExtraAttendancePage } from './pages/ExtraAttendancePage';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -129,6 +130,7 @@ export default function App() {
           <Route path="/extra-classes" element={<ExtraClassesPage />} />
           <Route path="/extra-classes/new" element={<ExtraClassForm />} />
           <Route path="/extra-classes/:id" element={<ExtraClassForm />} />
+          <Route path="/extra-attendance" element={<ExtraAttendancePage />} />
           <Route path="/members" element={<MembershipsPage />} />
           <Route path="/coaches" element={<CoachesPage />} />
           <Route path="/coaches/:id" element={<CoachForm />} />

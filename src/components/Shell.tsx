@@ -85,6 +85,7 @@ const FULL_NAV: NavEntry[] = [
     icon: Layers,
     children: [
       { to: '/extra-classes', label: 'Extra Classes', icon: BookOpen },
+      { to: '/extra-attendance', label: 'Daily Attendance', icon: ClipboardCheck },
       { to: '/members', label: 'Memberships', icon: UserRound },
       { to: '/ex-payments', label: 'Extra Payments', icon: CreditCard },
       { to: '/m-payments', label: 'Membership Payments', icon: CreditCard },
