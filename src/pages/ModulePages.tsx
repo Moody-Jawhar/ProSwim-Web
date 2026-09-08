@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom';
-import { ModuleListPage, type ModuleConfig } from '../components/ModuleListPage';
+import { ModuleListPage, type ModuleConfig, type Row, type ColumnDef } from '../components/ModuleListPage';
 import { getStoredUser } from '../api/portalApi';
 
 // Configured list pages for the migrated legacy modules. Each maps 1:1 to a
@@ -263,7 +263,25 @@ function privatePaymentsConfig(mode: string, title: string): ModuleConfig {
       { key: 'PaymentMode', label: 'Mode' },
       { key: 'Serial', label: 'Delivery S/N', extra: true },
       { key: 'PayLoc', label: 'Pay Loc', extra: true },
+      ...(mode === 'private' ? [{ key: '_pay', label: '' }] : []),
     ],
+    // Private mode: quick jump to a new payment prefilled with the same package.
+    ...(mode === 'private' ? {
+      renderCell: (row: Row, col: ColumnDef) => {
+        if (col.key !== '_pay') return undefined;
+        const u = getStoredUser();
+        if ((u?.userType || '').toLowerCase() === 'guest' || u?.canSave === false) return undefined;
+        return (
+          <Link
+            to={`/pr-payments/new?packageId=${row.PrivatePackageId ?? ''}`}
+            onClick={(e) => e.stopPropagation()}
+            className="inline-flex items-center text-xs font-bold text-emerald-700 hover:underline whitespace-nowrap"
+          >
+            Add Payment
+          </Link>
+        );
+      },
+    } : {}),
   };
 }
 

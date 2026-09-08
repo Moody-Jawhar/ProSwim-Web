@@ -163,6 +163,7 @@ const coachAttendance: ModuleConfig = {
     { param: 'dateFrom', label: 'From', type: 'date' },
     { param: 'dateTo', label: 'To', type: 'date' },
     { param: 'needApproval', label: 'Need Approval', type: 'checkbox' },
+    { param: 'deleted', label: 'Deleted', type: 'checkbox' },
   ],
   columns: [
     { key: 'Coaches_Attendance_Date', label: 'Date', format: 'date' },
