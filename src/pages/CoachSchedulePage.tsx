@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, RotateCcw, ArrowLeft, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 interface DayRow {
   day: number;
@@ -60,8 +61,10 @@ export function CoachSchedulePage() {
         body: JSON.stringify({ days: rows }),
       });
       setSaved(true);
+      toast.success('Schedule saved.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the schedule.');
+      const m = e instanceof Error ? e.message : 'Could not save the schedule.';
+      setError(m); toast.error(m);
     } finally {
       setSaving(false);
     }

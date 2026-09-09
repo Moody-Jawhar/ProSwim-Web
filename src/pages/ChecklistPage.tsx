@@ -6,6 +6,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, ArrowLeft, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 interface Item {
   ChecklistItemId: number;
@@ -67,9 +68,11 @@ export function ChecklistPage() {
         body: JSON.stringify({ items: items.map((i) => ({ ChecklistItemId: i.ChecklistItemId, IsChecked: i.IsChecked })) }),
       });
       setSaved(true);
+      toast.success('Checklist saved.');
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const m = e instanceof Error ? e.message : 'Save failed.';
+      setError(m); toast.error(m);
     } finally {
       setSaving(false);
     }

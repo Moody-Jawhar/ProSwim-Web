@@ -13,6 +13,7 @@ import { IntroSplash } from './IntroSplash';
 import { Bubbles } from './Bubbles';
 import { AiPanel } from './AiPanel';
 import { CommandPalette } from './CommandPalette';
+import { ToastHost } from './Toast';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -483,6 +484,7 @@ export function Shell() {
       {/* AI assistant — super users only */}
       {isSuperUser(user) && <AiPanel />}
       <CommandPalette />
+      <ToastHost />
     </div>
   );
 }

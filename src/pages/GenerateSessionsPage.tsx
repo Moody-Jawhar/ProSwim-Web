@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, CalendarPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 type Opt = { value: number; label: string };
 interface ClassRow { ClassID: number; ClassName: string }
@@ -88,8 +89,10 @@ export function GenerateSessionsPage() {
         body: JSON.stringify({ classIds: [...checked], date, status, remarks }),
       });
       setResult(r);
+      toast.success(`${r.generated} session(s) generated${r.skipped ? `, ${r.skipped} skipped` : ''}.`);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Generation failed.');
+      const m = e instanceof Error ? e.message : 'Generation failed.';
+      setError(m); toast.error(m);
     } finally {
       setGenerating(false);
     }

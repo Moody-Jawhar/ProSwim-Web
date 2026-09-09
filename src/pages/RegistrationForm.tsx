@@ -11,6 +11,7 @@ import {
   CreditCard, Trash2, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
 
@@ -234,9 +235,11 @@ export function RegistrationForm() {
       } else {
         await apiRequest(`/api/portal/edit/registration/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       }
+      toast.success('Registration saved.');
       navigate(andPay ? '/payments/new' : '/registrations');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const msg = e instanceof Error ? e.message : 'Save failed.';
+      setError(msg); toast.error(msg);
       setSaving(false);
     }
   }

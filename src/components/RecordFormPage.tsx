@@ -4,6 +4,7 @@ import { Loader2, AlertCircle, Save, Search } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from './PageHero';
 import { SmartBack } from './SmartBack';
+import { toast } from './Toast';
 
 type Row = Record<string, unknown>;
 type Option = { value: string | number; label: string };
@@ -161,9 +162,12 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
       } else {
         await apiRequest(`/api/portal/edit/${config.slug}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       }
+      toast.success(`${config.title} ${isNew ? 'created' : 'saved'}.`);
       navigate(config.listPath);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const msg = e instanceof Error ? e.message : 'Save failed.';
+      setError(msg);
+      toast.error(msg);
       setSaving(false);
     }
   }

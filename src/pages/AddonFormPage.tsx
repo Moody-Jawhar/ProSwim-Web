@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Trash2, DivideCircle } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
+import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
 
@@ -119,9 +120,11 @@ export function AddonFormPage() {
     try {
       if (isNew) await apiRequest('/api/portal/edit/addon', { method: 'POST', body: JSON.stringify(body) });
       else await apiRequest(`/api/portal/edit/addon/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast.success('Add-on saved.');
       navigate('/payroll/addons');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const msg = e instanceof Error ? e.message : 'Save failed.';
+      setError(msg); toast.error(msg);
       setSaving(false);
     }
   }

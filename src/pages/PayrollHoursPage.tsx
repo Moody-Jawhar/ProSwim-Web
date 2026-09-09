@@ -7,6 +7,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, ArrowLeft, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 const DISCIPLINES = [
   { label: 'Private', sys: 'PayrollPrivateHr', cnt: 'PayrollPrivateHrCnt' },
@@ -61,9 +62,11 @@ export function PayrollHoursPage() {
       });
       await apiRequest('/api/portal/edit/payroll-hours', { method: 'PUT', body: JSON.stringify({ rows: payload }) });
       setSaved(true);
+      toast.success('Payroll hours saved.');
       load();
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const m = e instanceof Error ? e.message : 'Save failed.';
+      setError(m); toast.error(m);
     } finally {
       setSaving(false);
     }

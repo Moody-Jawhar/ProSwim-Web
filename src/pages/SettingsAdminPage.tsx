@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Save, CheckCircle2, Settings as SettingsIcon } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 interface Setting { field: string; html: boolean; value: string }
 
@@ -44,8 +45,10 @@ export function SettingsAdminPage() {
       });
       setSettings((list) => (list ?? []).map((s) => (s.field === active ? { ...s, value } : s)));
       setSaved(true);
+      toast.success('Setting saved.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the setting.');
+      const m = e instanceof Error ? e.message : 'Could not save the setting.';
+      setError(m); toast.error(m);
     } finally {
       setSaving(false);
     }

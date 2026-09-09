@@ -6,6 +6,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Save, Search, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
+import { toast } from '../components/Toast';
 
 type Opt = { value: number; label: string };
 
@@ -103,8 +104,10 @@ export function ExtraAttendancePage() {
         body: JSON.stringify({ sessions: rows }),
       });
       setSaved(true);
+      toast.success('Attendance saved.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const m = e instanceof Error ? e.message : 'Save failed.';
+      setError(m); toast.error(m);
     } finally {
       setSaving(false);
     }

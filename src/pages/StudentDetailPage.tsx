@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { useRef } from 'react';
 import { Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus, ListChecks } from 'lucide-react';
+import { toast } from '../components/Toast';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
 import { AiStudentOverview } from '../components/AiStudentOverview';
 import { SmartBack } from '../components/SmartBack';
@@ -199,8 +200,11 @@ export function StudentDetailPage() {
       initForm(updated);
       setSearchParams({});
       setNotice('Saved. Changes are audit-logged per field, same as the legacy tool.');
+      toast.success('Student saved.');
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Save failed.');
+      const msg = e instanceof Error ? e.message : 'Save failed.';
+      setError(msg);
+      toast.error(msg);
     } finally {
       setSaving(false);
     }
