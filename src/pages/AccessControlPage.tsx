@@ -26,6 +26,7 @@ export function AccessControlPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [savingCell, setSavingCell] = useState('');
+  const [section, setSection] = useState(''); // '' = all sections
 
   function load() {
     setLoading(true);
@@ -74,6 +75,8 @@ export function AccessControlPage() {
   }, [data]);
 
   const roles = data?.roles ?? [];
+  const sectionNames = groups.map((g) => g.group);
+  const shownGroups = section ? groups.filter((g) => g.group === section) : groups;
 
   return (
     <div className="p-6 md:p-8">
@@ -81,10 +84,20 @@ export function AccessControlPage() {
         title="Access Control"
         subtitle="What each role can see and do, per page"
         right={
-          <button onClick={resetAll}
-            className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
-            <RotateCcw className="size-3.5" /> Reset to defaults
-          </button>
+          <div className="flex items-center gap-2">
+            <select
+              value={section}
+              onChange={(e) => setSection(e.target.value)}
+              className="rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-xs font-semibold text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
+            >
+              <option value="">All sections</option>
+              {sectionNames.map((s) => <option key={s} value={s}>{s}</option>)}
+            </select>
+            <button onClick={resetAll}
+              className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">
+              <RotateCcw className="size-3.5" /> Reset to defaults
+            </button>
+          </div>
         }
       />
 
@@ -111,7 +124,7 @@ export function AccessControlPage() {
               </tr>
             </thead>
             <tbody>
-              {groups.map((g) => (
+              {shownGroups.map((g) => (
                 <Fragment key={g.group}>
                   <tr className="bg-slate-50/70">
                     <td colSpan={roles.length + 1} className="px-4 py-1.5 text-[11px] font-bold uppercase tracking-wider text-slate-500">{g.group}</td>
