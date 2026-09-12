@@ -106,7 +106,7 @@ const FULL_NAV: NavEntry[] = [
     ],
   },
   {
-    label: 'Website',
+    label: 'Setup Website',
     icon: Globe,
     children: [
       { to: '/web/classes', label: 'Classes', icon: Globe },
@@ -122,21 +122,6 @@ const FULL_NAV: NavEntry[] = [
     icon: MessageCircle,
     children: [
       { to: '/bulk-whatsapp', label: 'Bulk WhatsApp', icon: MessageCircle },
-    ],
-  },
-  {
-    label: 'Setup',
-    icon: Wrench,
-    children: [
-      { to: '/locations', label: 'Locations', icon: MapPin },
-      { to: '/location-photos', label: 'Location Photos', icon: MapPin },
-      { to: '/coaches', label: 'Coaches', icon: UserRound },
-      { to: '/users', label: 'Users', icon: Shield },
-      { to: '/settings', label: 'System Settings', icon: Settings },
-      { to: '/text-settings', label: 'Text Settings', icon: MessageSquare },
-      { to: '/user-activity', label: 'Activity Log', icon: Clock, superOnly: true },
-      { to: '/change-log', label: 'Trace Log', icon: History },
-      { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
   {
@@ -166,18 +151,32 @@ const FULL_NAV: NavEntry[] = [
   {
     label: 'Reports',
     icon: BarChart3,
-    superOnly: true,
     children: [
-      { to: '/reports/by-month', label: 'By Month', icon: BarChart3 },
-      { to: '/reports/by-semester', label: 'By Semester', icon: BarChart3 },
-      { to: '/reports/by-coach', label: 'By Coach', icon: BarChart3 },
-      { to: '/reports/by-private', label: 'Private Sessions', icon: BarChart3 },
-      { to: '/reports/by-attendance', label: 'Attendance', icon: BarChart3 },
-      { to: '/reports/payments-by-coach', label: 'Payments by Coach', icon: BarChart3 },
+      { to: '/reports/by-month', label: 'By Month', icon: BarChart3, superOnly: true },
+      { to: '/reports/by-semester', label: 'By Semester', icon: BarChart3, superOnly: true },
+      { to: '/reports/by-coach', label: 'By Coach', icon: BarChart3, superOnly: true },
+      { to: '/reports/by-private', label: 'Private Sessions', icon: BarChart3, superOnly: true },
+      { to: '/reports/by-attendance', label: 'Attendance', icon: BarChart3, superOnly: true },
+      { to: '/reports/payments-by-coach', label: 'Payments by Coach', icon: BarChart3, superOnly: true },
+      { to: '/user-activity', label: 'Activity Log', icon: Clock, superOnly: true },
+      { to: '/change-log', label: 'Trace Log', icon: History },
+      { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
+  {
+    label: 'Setup',
+    icon: Wrench,
+    children: [
+      { to: '/locations', label: 'Locations', icon: MapPin },
+      { to: '/location-photos', label: 'Location Photos', icon: MapPin },
+      { to: '/coaches', label: 'Coaches', icon: UserRound },
+      { to: '/users', label: 'Users', icon: Shield },
+      { to: '/settings', label: 'System Settings', icon: Settings },
+      { to: '/text-settings', label: 'Text Settings', icon: MessageSquare },
+    ],
+  },
 ];
 
 // Legacy Admin_TopMenu short-circuits for restricted personas, kept flat.
