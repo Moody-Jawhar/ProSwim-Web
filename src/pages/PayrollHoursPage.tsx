@@ -29,21 +29,39 @@ export function PayrollHoursPage() {
   const canSave = user?.userType?.toLowerCase() !== 'guest' && user?.canSave !== false;
 
   const [rows, setRows] = useState<Row[]>([]);
+  const [locations, setLocations] = useState<{ value: number; label: string }[]>([]);
+  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
+  const [timesheets, setTimesheets] = useState<{ id: number; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
 
+  useEffect(() => {
+    apiRequest<{ locations: { value: number; label: string }[] }>('/api/portal/modules/lookups')
+      .then((lk) => setLocations(lk.locations ?? []))
+      .catch(() => {});
+    // Timesheet switcher (newest first), like the legacy ddlTimeSheets.
+    apiRequest<Row[]>('/api/portal/payroll/timesheets')
+      .then((ts) => setTimesheets(ts.map((t) => ({
+        id: Number(t.TimesheetID),
+        label: String(t.TimesheetTitle ?? `${t.TimesheetYr}/${String(t.TimesheetMonth).padStart(2, '0')}`),
+      }))))
+      .catch(() => {});
+  }, []);
+
   function load() {
     setLoading(true);
     setError('');
-    apiRequest<Row[]>(`/api/portal/modules/payroll-hours?timesheetId=${tsId}`)
+    const q = new URLSearchParams({ timesheetId: String(tsId) });
+    if (locationId) q.set('locationId', String(locationId));
+    apiRequest<Row[]>(`/api/portal/modules/payroll-hours?${q}`)
       .then((data) => setRows(data.map((r) => ({ ...r, PayrollID: Number(r.PayrollID) }))))
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load payroll rows.'))
       .finally(() => setLoading(false));
   }
 
-  useEffect(() => { load(); }, [tsId]); // eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(() => { load(); }, [tsId, locationId]); // eslint-disable-line react-hooks/exhaustive-deps
 
   function set(id: number, key: string, value: string) {
     const n = value === '' ? 0 : Number(value);
@@ -102,6 +120,31 @@ export function PayrollHoursPage() {
           </div>
         }
       />
+
+      <div className="bg-white rounded-2xl border border-slate-100 shadow-sm p-3 mb-4 flex flex-wrap items-center gap-2">
+        <label className="text-xs text-slate-500 flex items-center gap-1">
+          Timesheet
+          <select
+            value={tsId}
+            onChange={(e) => navigate(`/payroll/hours/${e.target.value}`)}
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
+          >
+            {timesheets.length === 0 && <option value={tsId}>{title}</option>}
+            {timesheets.map((t) => <option key={t.id} value={t.id}>{t.label}</option>)}
+          </select>
+        </label>
+        <label className="text-xs text-slate-500 flex items-center gap-1">
+          Location
+          <select
+            value={locationId}
+            onChange={(e) => setLocationId(Number(e.target.value))}
+            className="rounded-lg border border-slate-200 bg-white px-2 py-1.5 text-xs text-slate-600 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40"
+          >
+            <option value={0}>All locations</option>
+            {locations.map((l) => <option key={l.value} value={l.value}>{l.label}</option>)}
+          </select>
+        </label>
+      </div>
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-3">
