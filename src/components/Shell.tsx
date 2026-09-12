@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck, Home,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -46,7 +46,8 @@ const isGroup = (e: NavEntry): e is NavGroup => 'children' in e;
 // long flat list collapses to a handful of headers (cf. the legacy top menu's
 // dropdowns). Single links stay flat.
 const FULL_NAV: NavEntry[] = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { to: '/', label: 'Home', icon: Home, end: true },
+  { to: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
   {
     label: 'Students',
     icon: Users,
@@ -183,12 +184,14 @@ const FULL_NAV: NavEntry[] = [
 
 // Legacy Admin_TopMenu short-circuits for restricted personas, kept flat.
 const GUEST_NAV: NavEntry[] = [
+  { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/schedule', label: 'Group Schedule', icon: CalendarDays },
   { to: '/pr-schedule', label: 'Private Schedule', icon: GraduationCap },
   { to: '/students', label: 'Students', icon: Users },
 ];
 
 const PAYMENT_AUDIT_NAV: NavEntry[] = [
+  { to: '/', label: 'Home', icon: Home, end: true },
   { to: '/payments', label: 'Group Payments', icon: CreditCard },
   { to: '/pr-payments', label: 'Private Payments', icon: GraduationCap },
   { to: '/ex-payments', label: 'Extra Payments', icon: BookOpen },
@@ -223,8 +226,9 @@ export function Shell() {
   // registered route that prefixes the current path.
   const deniedRoute = (() => {
     const p = location.pathname;
+    if (p === '/') return ''; // the landing is always accessible
     const match = Object.keys(accessMap)
-      .filter((code) => p === code || p.startsWith(code + '/'))
+      .filter((code) => code !== '/' && (p === code || p.startsWith(code + '/')))
       .sort((a, b) => b.length - a.length)[0];
     return match && accessMap[match] === 'None' ? match : '';
   })();

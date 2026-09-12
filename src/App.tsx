@@ -60,20 +60,21 @@ import {
   WebClassesPage, WebClassForm, WebFaqsPage, WebFaqForm, WebLevelsPage, WebLevelForm,
   WebPressesPage, WebPressForm, WebVideosPage, WebVideoForm, WebFeedbackPage,
 } from './pages/WebCmsPages';
-import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
-import { AccessProvider } from './components/AccessProvider';
+import { getStoredToken } from './api/portalApi';
+import { AccessProvider, useAccess } from './components/AccessProvider';
 import { AccessControlPage } from './pages/AccessControlPage';
+import { LandingPage } from './pages/LandingPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!getStoredToken()) return <Navigate to="/login" replace />;
   return <>{children}</>;
 }
 
-/** Home: super users see the admin dashboard, everyone else goes to the calendar. */
-function HomeRoute() {
-  return isSuperUser(getStoredUser())
-    ? <DashboardPage />
-    : <Navigate to="/schedule" replace />;
+/** Analytics dashboard is Full-only (default: SiteMaster). Others sent home. */
+function DashboardRoute() {
+  const { loading, canEdit } = useAccess();
+  if (loading) return null;
+  return canEdit('/dashboard') ? <DashboardPage /> : <Navigate to="/" replace />;
 }
 
 /** Reset scroll to the top on every route change — otherwise a new page keeps
@@ -101,7 +102,8 @@ export default function App() {
             </RequireAuth>
           }
         >
-          <Route path="/" element={<HomeRoute />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/new" element={<StudentForm />} />
           <Route path="/students/:id" element={<StudentDetailPage />} />
