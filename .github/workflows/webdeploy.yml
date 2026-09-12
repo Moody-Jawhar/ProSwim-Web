@@ -1,0 +1,25 @@
+name: WEBDEPLOY
+
+# Manual only — runs on the self-hosted runner on the ProSwim server when YOU
+# trigger it (Actions tab -> WEBDEPLOY -> Run workflow). Pulls latest and
+# rebuilds the portal into its served dist folder. Static files, no downtime.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-web
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: [self-hosted, proswim]
+    steps:
+      - name: Build & deploy web to IIS
+        shell: cmd
+        run: |
+          cd /d "C:\Users\sjawhar\Dropbox\PIS_Server\_WebsitesHosted\18Proswim_V27_Web"
+          git pull || exit /b 1
+          call npm ci || call npm install || exit /b 1
+          call npm run build || exit /b 1
+          echo WEBDEPLOY done.
