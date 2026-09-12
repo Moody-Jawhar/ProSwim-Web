@@ -26,7 +26,7 @@ export function AccessControlPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [savingCell, setSavingCell] = useState('');
-  const [section, setSection] = useState(''); // '' = all sections
+  const [section, setSection] = useState('General'); // default to the General section; '' = all
 
   function load() {
     setLoading(true);
