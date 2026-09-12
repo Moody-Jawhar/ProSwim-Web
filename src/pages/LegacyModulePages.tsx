@@ -4,9 +4,10 @@
 
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Loader2, KeyRound, Calculator, Clock } from 'lucide-react';
-import { ModuleListPage, type ModuleConfig } from '../components/ModuleListPage';
-import { apiRequest } from '../api/portalApi';
+import { Loader2, KeyRound, Calculator, Clock, Lock, Unlock } from 'lucide-react';
+import { ModuleListPage, type ModuleConfig, type Row } from '../components/ModuleListPage';
+import { apiRequest, getStoredUser } from '../api/portalApi';
+import { toast } from '../components/Toast';
 
 const LOOKUPS = '/api/portal/modules/lookups';
 
@@ -70,15 +71,64 @@ const packTypes: ModuleConfig = {
 
 // ── Timesheets (TimesheetsList.aspx) ─────────────────────────────────────────
 
+// Default the timesheet date range to this whole year — but during Q1 reach back
+// to the start of last year (so recent timesheets from last year still show).
+const TS_RANGE = (() => {
+  const now = new Date();
+  const y = now.getFullYear();
+  const q1 = now.getMonth() + 1 <= 3;
+  return { from: `${q1 ? y - 1 : y}-01-01`, to: `${y}-12-31` };
+})();
+
+const isTimesheetOpen = (r: Row) => String(r.TimesheetStatus) === 'Open';
+
+// Close / reopen a timesheet in place. Sitemaster only (the API gates it too).
+// Re-sends the row with a changed status, so every other field is preserved.
+function TimesheetStatusButton({ row, reload }: { row: Row; reload?: () => void }) {
+  const [busy, setBusy] = useState(false);
+  if ((getStoredUser()?.userType || '').toLowerCase() !== 'sitemaster') return null;
+  const open = isTimesheetOpen(row);
+  async function toggle(e: React.MouseEvent) {
+    e.stopPropagation();
+    const next = open ? 'Closed' : 'Open';
+    if (!window.confirm(`Mark this timesheet as ${next}?`)) return;
+    setBusy(true);
+    try {
+      await apiRequest(`/api/portal/edit/timesheet/${row.TimesheetID}`, {
+        method: 'PUT',
+        body: JSON.stringify({ ...row, TimesheetStatus: next }),
+      });
+      toast.success(`Timesheet ${next.toLowerCase()}.`);
+      reload?.();
+    } catch (err) {
+      toast.error(err instanceof Error ? err.message : 'Could not update the timesheet.');
+      setBusy(false);
+    }
+  }
+  return (
+    <button
+      onClick={toggle}
+      disabled={busy}
+      title={open ? 'Close this timesheet' : 'Reopen this timesheet'}
+      className={`inline-flex items-center gap-1 text-xs font-bold hover:underline ${open ? 'text-[#1e5c97]' : 'text-emerald-700'}`}
+    >
+      {busy ? <Loader2 className="size-3.5 animate-spin" /> : open ? <Lock className="size-3.5" /> : <Unlock className="size-3.5" />}
+      {open ? 'Close' : 'Reopen'}
+    </button>
+  );
+}
+
 const timesheets: ModuleConfig = {
   title: 'Timesheets',
   subtitle: 'Monthly payroll timesheets',
   endpoint: '/api/portal/payroll/timesheets',
   idKey: 'TimesheetID',
   editBase: '/payroll/timesheets',
+  // Open = working (green tint); Closed = done (blue tint).
+  rowClass: (r) => (isTimesheetOpen(r) ? 'bg-emerald-50/60' : 'bg-sky-50/50'),
   filters: [
-    { param: 'dateFrom', label: 'From', type: 'date' },
-    { param: 'dateTo', label: 'To', type: 'date' },
+    { param: 'dateFrom', label: 'From', type: 'date', initial: TS_RANGE.from },
+    { param: 'dateTo', label: 'To', type: 'date', initial: TS_RANGE.to },
   ],
   columns: [
     { key: 'TimesheetYr', label: 'Year' },
@@ -89,8 +139,16 @@ const timesheets: ModuleConfig = {
     { key: 'TimesheetRemarks', label: 'Remarks' },
     { key: '_payroll', label: '' },
     { key: '_hours', label: '' },
+    { key: '_close', label: '' },
   ],
-  renderCell: (row, col) => {
+  renderCell: (row, col, reload) => {
+    if (col.key === 'TimesheetStatus') {
+      const s = String(row.TimesheetStatus ?? '');
+      const cls = s === 'Open' ? 'bg-emerald-100 text-emerald-800'
+        : s === 'ClosedNoPayment' ? 'bg-amber-100 text-amber-800'
+        : 'bg-sky-100 text-sky-800';
+      return <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${cls}`}>{s || '-'}</span>;
+    }
     if (col.key === '_payroll') {
       return (
         <Link
@@ -113,6 +171,7 @@ const timesheets: ModuleConfig = {
         </Link>
       );
     }
+    if (col.key === '_close') return <TimesheetStatusButton row={row} reload={reload} />;
     return undefined;
   },
 };

@@ -44,7 +44,9 @@ export interface ModuleConfig {
   columns: ColumnDef[];
   idKey?: string;            // row key column
   lookups?: string;          // endpoint returning Record<string, FilterOption[]>
-  renderCell?: (row: Row, col: ColumnDef) => React.ReactNode | undefined;
+  renderCell?: (row: Row, col: ColumnDef, reload?: () => void) => React.ReactNode | undefined;
+  /** Optional per-row CSS classes (e.g. tint a row by status). */
+  rowClass?: (row: Row) => string;
   /** Base route for add/edit forms (e.g. "/semesters"). Enables Add New + row Edit. */
   editBase?: string;
 }
@@ -380,10 +382,10 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
                 {pageRows.map((r, i) => (
                   <tr
                     key={String(rowId(r, config.idKey) ?? i)}
-                    className="border-b border-slate-50 last:border-0"
+                    className={`border-b border-slate-50 last:border-0 ${config.rowClass?.(r) ?? ''}`}
                   >
                     {cols.map((c) => {
-                      const custom = config.renderCell?.(r, c);
+                      const custom = config.renderCell?.(r, c, load);
                       return (
                         <td key={c.key + c.label} className="px-3 py-2.5 text-slate-600 max-w-64 overflow-hidden text-ellipsis">
                           {custom !== undefined ? custom : fmt(r[c.key], c.format)}
