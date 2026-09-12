@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -14,6 +14,7 @@ import { Bubbles } from './Bubbles';
 import { AiPanel } from './AiPanel';
 import { CommandPalette } from './CommandPalette';
 import { ToastHost } from './Toast';
+import { useAccess } from './AccessProvider';
 
 type Icon = React.ComponentType<{ className?: string }>;
 
@@ -175,6 +176,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/users', label: 'Users', icon: Shield },
       { to: '/settings', label: 'System Settings', icon: Settings },
       { to: '/text-settings', label: 'Text Settings', icon: MessageSquare },
+      { to: '/access-control', label: 'Access Control', icon: ShieldCheck },
     ],
   },
 ];
@@ -215,10 +217,24 @@ export function Shell() {
   const location = useLocation();
   const user = getStoredUser();
   const superU = isSuperUser(user);
+  const { canView, map: accessMap } = useAccess();
+  // Block direct navigation to a page the role has no access to (menu hides it,
+  // but a typed URL / stale link would still land here). Match the longest
+  // registered route that prefixes the current path.
+  const deniedRoute = (() => {
+    const p = location.pathname;
+    const match = Object.keys(accessMap)
+      .filter((code) => p === code || p.startsWith(code + '/'))
+      .sort((a, b) => b.length - a.length)[0];
+    return match && accessMap[match] === 'None' ? match : '';
+  })();
+  // A leaf is shown when the role's access map allows viewing its route (and it
+  // isn't gated to super users by an explicit flag). Groups show if any child does.
+  const showLeaf = (it: NavItem) => canView(it.to) && (!it.superOnly || superU);
   const NAV = navForUserType(user?.userType)
     .filter((e) => !e.superOnly || superU)
-    .map((e) => (isGroup(e) ? { ...e, children: e.children.filter((c) => !c.superOnly || superU) } : e))
-    .filter((e) => !isGroup(e) || e.children.length > 0);
+    .map((e) => (isGroup(e) ? { ...e, children: e.children.filter(showLeaf) } : e))
+    .filter((e) => (isGroup(e) ? e.children.length > 0 : showLeaf(e)));
 
   // Post-login cinematic intro, plays once per sign-in.
   const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('showIntro') === '1');
@@ -479,7 +495,15 @@ export function Shell() {
           pt-14 clears the fixed mobile top bar. */}
       <main className="flex-1 min-w-0 overflow-x-hidden pt-14 md:pt-0">
         <div key={location.pathname} className="page-in">
-          <Outlet />
+          {deniedRoute ? (
+            <div className="flex flex-col items-center justify-center h-[70vh] text-center px-6">
+              <ShieldCheck className="size-10 text-slate-300 mb-3" />
+              <p className="text-lg font-bold text-slate-700">No access to this page</p>
+              <p className="text-sm text-slate-500 mt-1">Your role doesn’t have access here. Ask a SiteMaster if you need it.</p>
+            </div>
+          ) : (
+            <Outlet />
+          )}
         </div>
       </main>
 

@@ -61,6 +61,8 @@ import {
   WebPressesPage, WebPressForm, WebVideosPage, WebVideoForm, WebFeedbackPage,
 } from './pages/WebCmsPages';
 import { getStoredToken, getStoredUser, isSuperUser } from './api/portalApi';
+import { AccessProvider } from './components/AccessProvider';
+import { AccessControlPage } from './pages/AccessControlPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!getStoredToken()) return <Navigate to="/login" replace />;
@@ -93,7 +95,9 @@ export default function App() {
         <Route
           element={
             <RequireAuth>
-              <Shell />
+              <AccessProvider>
+                <Shell />
+              </AccessProvider>
             </RequireAuth>
           }
         >
@@ -166,6 +170,7 @@ export default function App() {
           <Route path="/pack-types/:id" element={<PackTypeForm />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
           <Route path="/text-settings" element={<TextSettingsPage />} />
+          <Route path="/access-control" element={<AccessControlPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />

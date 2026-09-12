@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, Download, Plus, Pencil,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useAccess } from './AccessProvider';
 import { PageHero } from './PageHero';
 
 // Generic, config-driven list page: filter bar → portal API endpoint that
@@ -100,7 +101,9 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
   const user = getStoredUser();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const canEdit = !!config.editBase && config.idKey && user?.userType?.toLowerCase() !== 'guest' && user?.canSave !== false;
+  const access = useAccess();
+  const canEdit = !!config.editBase && config.idKey && user?.userType?.toLowerCase() !== 'guest'
+    && user?.canSave !== false && access.canEdit(config.editBase);
   const [rows, setRows] = useState<Row[]>([]);
   const [lookups, setLookups] = useState<Record<string, FilterOption[]>>({});
   const [values, setValues] = useState<Record<string, string | number | boolean>>(() => {
