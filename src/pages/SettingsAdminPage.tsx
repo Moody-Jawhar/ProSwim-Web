@@ -1,5 +1,6 @@
-// System settings, port of Settings.aspx + SettingsTxt.aspx. The five
-// whitelisted keys (welcome text, rules, WhatsApp templates) edited in place.
+// Two settings pages sharing one editor:
+//  - SettingsAdminPage  -> System Settings (welcome text + class rules/terms)
+//  - TextSettingsPage    -> Text Message Settings (birthday wish, session reminder)
 // SiteMaster only, enforced server-side too.
 
 import { useEffect, useState } from 'react';
@@ -10,7 +11,35 @@ import { toast } from '../components/Toast';
 
 interface Setting { field: string; html: boolean; value: string }
 
+// Fields that are messages sent to families → "Text Message Settings".
+// Everything else in the whitelist is app content → "System Settings".
+const TEXT_FIELDS = new Set(['birthday wish', 'session reminder']);
+const isTextField = (f: string) => TEXT_FIELDS.has(f.toLowerCase());
+
 export function SettingsAdminPage() {
+  return (
+    <SettingsEditor
+      title="System Settings"
+      subtitle="Welcome text and the class rules & terms shown in the apps"
+      filter={(f) => !isTextField(f)}
+    />
+  );
+}
+
+export function TextSettingsPage() {
+  return (
+    <SettingsEditor
+      title="Text Message Settings"
+      subtitle="Templates sent to families (birthday wish, session reminder)"
+      filter={isTextField}
+    />
+  );
+}
+
+// The in-place setting editor, scoped to whichever fields `filter` allows.
+function SettingsEditor({ title, subtitle, filter }: {
+  title: string; subtitle: string; filter: (field: string) => boolean;
+}) {
   const [settings, setSettings] = useState<Setting[] | null>(null);
   const [active, setActive] = useState('');
   const [value, setValue] = useState('');
@@ -21,28 +50,22 @@ export function SettingsAdminPage() {
   useEffect(() => {
     apiRequest<Setting[]>('/api/portal/admin/settings')
       .then((list) => {
-        setSettings(list);
-        if (list.length > 0) { setActive(list[0].field); setValue(list[0].value); }
+        const scoped = list.filter((s) => filter(s.field));
+        setSettings(scoped);
+        if (scoped.length > 0) { setActive(scoped[0].field); setValue(scoped[0].value); }
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load settings.'));
-  }, []);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   function pick(field: string) {
     const s = settings?.find((x) => x.field === field);
-    setActive(field);
-    setValue(s?.value ?? '');
-    setSaved(false);
-    setError('');
+    setActive(field); setValue(s?.value ?? ''); setSaved(false); setError('');
   }
 
   async function save() {
-    setSaving(true);
-    setError('');
-    setSaved(false);
+    setSaving(true); setError(''); setSaved(false);
     try {
-      await apiRequest('/api/portal/admin/settings', {
-        method: 'PUT', body: JSON.stringify({ field: active, value }),
-      });
+      await apiRequest('/api/portal/admin/settings', { method: 'PUT', body: JSON.stringify({ field: active, value }) });
       setSettings((list) => (list ?? []).map((s) => (s.field === active ? { ...s, value } : s)));
       setSaved(true);
       toast.success('Setting saved.');
@@ -58,7 +81,7 @@ export function SettingsAdminPage() {
 
   return (
     <div className="p-6 md:p-8 max-w-4xl">
-      <PageHero title="Settings" subtitle="Welcome text, rules & message templates" slide={4} />
+      <PageHero title={title} subtitle={subtitle} slide={4} />
 
       {error && (
         <div className="flex items-center gap-2 bg-red-50 border border-red-100 rounded-xl p-3 mb-4">
@@ -69,15 +92,15 @@ export function SettingsAdminPage() {
 
       {!settings ? (
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
+      ) : settings.length === 0 ? (
+        <p className="text-sm text-slate-400">No settings in this section.</p>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5">
           <div className="flex flex-wrap gap-2 mb-4">
             {settings.map((s) => (
               <button key={s.field} onClick={() => pick(s.field)}
                 className={`text-sm font-semibold rounded-full px-4 py-1.5 border transition-colors ${
-                  active === s.field
-                    ? 'bg-[#1e5c97] text-white border-[#1e5c97]'
-                    : 'text-slate-600 border-slate-200 hover:border-[#1e5c97]/40'
+                  active === s.field ? 'bg-[#1e5c97] text-white border-[#1e5c97]' : 'text-slate-600 border-slate-200 hover:border-[#1e5c97]/40'
                 }`}>
                 {s.field}
               </button>

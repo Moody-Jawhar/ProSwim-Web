@@ -128,9 +128,14 @@ const FULL_NAV: NavEntry[] = [
     label: 'Setup',
     icon: Wrench,
     children: [
-      { to: '/coaches', label: 'Coaches', icon: UserRound },
       { to: '/locations', label: 'Locations', icon: MapPin },
       { to: '/location-photos', label: 'Location Photos', icon: MapPin },
+      { to: '/coaches', label: 'Coaches', icon: UserRound },
+      { to: '/users', label: 'Users', icon: Shield },
+      { to: '/settings', label: 'System Settings', icon: Settings },
+      { to: '/text-settings', label: 'Text Settings', icon: MessageSquare },
+      { to: '/user-activity', label: 'Activity Log', icon: Clock, superOnly: true },
+      { to: '/change-log', label: 'Trace Log', icon: History },
       { to: '/cleanup', label: 'Data Cleanup', icon: Wand2 },
     ],
   },
@@ -172,10 +177,6 @@ const FULL_NAV: NavEntry[] = [
     ],
   },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare },
-  { to: '/settings', label: 'Settings', icon: Settings },
-  { to: '/users', label: 'Users', icon: Shield },
-  { to: '/user-activity', label: 'Activity Log', icon: Clock, superOnly: true },
-  { to: '/change-log', label: 'Change Log', icon: History },
   { to: '/notifications-list', label: 'Notifications', icon: Bell, badge: 'notifs' },
 ];
 
@@ -214,9 +215,11 @@ export function Shell() {
   const navigate = useNavigate();
   const location = useLocation();
   const user = getStoredUser();
-  const NAV = navForUserType(user?.userType).filter(
-    (e) => !e.superOnly || isSuperUser(user)
-  );
+  const superU = isSuperUser(user);
+  const NAV = navForUserType(user?.userType)
+    .filter((e) => !e.superOnly || superU)
+    .map((e) => (isGroup(e) ? { ...e, children: e.children.filter((c) => !c.superOnly || superU) } : e))
+    .filter((e) => !isGroup(e) || e.children.length > 0);
 
   // Post-login cinematic intro, plays once per sign-in.
   const [showIntro, setShowIntro] = useState(() => sessionStorage.getItem('showIntro') === '1');

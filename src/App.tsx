@@ -44,7 +44,7 @@ import {
 } from './pages/ReportsPages';
 import { PaymentDeliveriesPage, PrivateDeliveriesPage } from './pages/DeliveriesPage';
 import { BulkWhatsAppPage } from './pages/BulkWhatsAppPage';
-import { SettingsAdminPage } from './pages/SettingsAdminPage';
+import { SettingsAdminPage, TextSettingsPage } from './pages/SettingsAdminPage';
 import { PayrollSheetPage } from './pages/PayrollSheetPage';
 import { AddonFormPage } from './pages/AddonFormPage';
 import { AttendanceSummaryPage, AttendanceDetailsPage } from './pages/AttendanceReports';
@@ -165,6 +165,7 @@ export default function App() {
           <Route path="/pack-types" element={<PackTypesPage />} />
           <Route path="/pack-types/:id" element={<PackTypeForm />} />
           <Route path="/settings" element={<SettingsAdminPage />} />
+          <Route path="/text-settings" element={<TextSettingsPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />
