@@ -344,18 +344,19 @@ export function PayrollSheetPage() {
                       <Link to={`/coaches/${num(r, 'CoachID')}`} title={str(r, 'CoachFullName')}
                         className="font-semibold text-[#1e5c97] hover:underline">{shortName(str(r, 'CoachFullName'))}</Link>
                     </td>
-                    <td className="px-2 py-1 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
+                    <td className="px-2 py-1 text-right tabular-nums font-medium bg-emerald-50/40">{money(num(r, 'PayrollSalary'))}</td>
                     {visibleDisciplines.map(([cnt, total]) => (
                       <td key={cnt} className="px-1.5 py-1 border-l border-slate-100 bg-sky-50/40">
-                        <div className="flex items-center justify-end gap-1.5">
+                        <div className="flex items-center gap-1">
                           <input type="number" min={0} disabled={!canEdit} value={val(r, cnt)}
-                            onChange={(e) => edit(id, cnt, Number(e.target.value))} className={numInput} />
-                          <span className="w-10 text-right text-xs tabular-nums text-slate-500">{money(num(r, total))}</span>
+                            onChange={(e) => edit(id, cnt, Number(e.target.value))}
+                            className="w-14 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
+                          <span className="text-xs tabular-nums text-slate-500">{money(num(r, total))}</span>
                         </div>
                       </td>
                     ))}
                     {ADJUSTMENTS.map(([, f, sign]) => (
-                      <td key={f} className={`px-1.5 py-1 text-right ${f === 'PayrollBonus' ? 'border-l border-slate-100' : ''}`}>
+                      <td key={f} className={`px-1.5 py-1 text-right ${f === 'PayrollBonus' ? 'border-l border-slate-100' : ''} ${sign < 0 ? 'bg-rose-50/50' : 'bg-emerald-50/40'}`}>
                         <input type="number" disabled={!canEdit} value={val(r, f)}
                           onChange={(e) => edit(id, f, Number(e.target.value))}
                           className={`${numInput} ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
