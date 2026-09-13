@@ -35,6 +35,14 @@ const tsLabel = (r: Row): string => {
   if (d) { const dt = new Date(d); if (!isNaN(dt.getTime())) return `${dt.getFullYear()}/${dt.getMonth() + 1}`; }
   return str(r, 'TimesheetTitle');
 };
+// Sortable timestamp for a payroll row (end date, else year/month, else id).
+const tsTime = (r: Row): number => {
+  const d = str(r, 'TimesheetEndDate');
+  const t = d ? new Date(d).getTime() : NaN;
+  if (!isNaN(t)) return t;
+  const y = num(r, 'TimesheetYr'), m = num(r, 'TimesheetMonth');
+  return y ? y * 12 + m : num(r, 'TimesheetID');
+};
 
 // [countField, totalField, label]
 const DISCIPLINES: [string, string, string][] = [
@@ -546,7 +554,7 @@ function CoachCard({
               <p className="text-sm text-slate-400">No past payrolls found.</p>
             ) : (
               <div className="divide-y divide-slate-100 rounded-lg border border-slate-100 bg-white">
-                {hist.map((h) => {
+                {[...hist].sort((a, b) => tsTime(b) - tsTime(a)).map((h) => {
                   const hts = num(h, 'TimesheetID');
                   const hcur = curOf(h);
                   const isActive = num(h, 'PayrollID') === id;
