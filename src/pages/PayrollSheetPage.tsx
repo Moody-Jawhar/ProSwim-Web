@@ -304,8 +304,9 @@ export function PayrollSheetPage() {
           <table className="w-full text-sm whitespace-nowrap border-collapse">
             <thead>
               <tr className="text-xs uppercase tracking-wide text-slate-500 border-b-2 border-slate-200 bg-slate-50">
+                <th className="px-1.5 py-2 text-center font-semibold"></th>
                 <th className="px-2 py-2 text-left font-semibold">Loc</th>
-                <th className="px-2 py-2 text-left font-semibold sticky left-0 bg-slate-50">Coach</th>
+                <th className="px-2 py-2 text-left font-semibold">Coach</th>
                 <th className="px-2 py-2 text-right font-semibold">Salary</th>
                 {visibleDisciplines.map(([cnt, , label]) => (
                   <th key={cnt} className="px-1.5 py-2 text-center font-semibold border-l border-slate-200">{label}</th>
@@ -318,7 +319,6 @@ export function PayrollSheetPage() {
                 <th className="px-2 py-2 text-right font-semibold">Net2Pay</th>
                 <th className="px-1.5 py-2 text-center font-semibold">Paid</th>
                 <th className="px-1.5 py-2 text-center font-semibold">NoWork</th>
-                <th className="px-1.5 py-2 text-center font-semibold border-l border-slate-200">Links</th>
               </tr>
             </thead>
             <tbody>
@@ -329,8 +329,18 @@ export function PayrollSheetPage() {
                 const cur = curOf(r);
                 return (
                   <tr key={id} className={`border-b border-slate-100 ${noWork ? 'bg-rose-50/60' : paid ? 'bg-emerald-50/50' : 'hover:bg-slate-50/60'}`}>
+                    <td className="px-1.5 py-1">
+                      <div className="flex items-center justify-center gap-0.5">
+                        <button title="Edit this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
+                          className="rounded-md p-1 text-[#1e5c97] hover:bg-[#e8f0f8]"><SquarePen className="size-4" /></button>
+                        <button title="Payroll history" onClick={() => { setStartHist(true); setOpenId(id); }}
+                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><History className="size-4" /></button>
+                        <Link title="Coach file & HR rate" to={`/coaches/${num(r, 'CoachID')}`}
+                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><UserCog className="size-4" /></Link>
+                      </div>
+                    </td>
                     <td className="px-2 py-1 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
-                    <td className="px-2 py-1 sticky left-0 bg-inherit">
+                    <td className="px-2 py-1">
                       <Link to={`/coaches/${num(r, 'CoachID')}`} title={str(r, 'CoachFullName')}
                         className="font-semibold text-[#1e5c97] hover:underline">{shortName(str(r, 'CoachFullName'))}</Link>
                     </td>
@@ -359,16 +369,6 @@ export function PayrollSheetPage() {
                     <td className="px-1.5 py-1 text-center">
                       <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
                     </td>
-                    <td className="px-1.5 py-1 border-l border-slate-100">
-                      <div className="flex items-center justify-center gap-1">
-                        <button title="Edit this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
-                          className="rounded-md p-1.5 text-[#1e5c97] hover:bg-[#e8f0f8]"><SquarePen className="size-4" /></button>
-                        <button title="Payroll history" onClick={() => { setStartHist(true); setOpenId(id); }}
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"><History className="size-4" /></button>
-                        <Link title="Coach file & HR rate" to={`/coaches/${num(r, 'CoachID')}`}
-                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"><UserCog className="size-4" /></Link>
-                      </div>
-                    </td>
                   </tr>
                 );
               })}
@@ -379,6 +379,7 @@ export function PayrollSheetPage() {
             {viewRows.length > 0 && (
               <tfoot>
                 <tr className="text-sm bg-slate-100 border-t-2 border-slate-300">
+                  <td />
                   <td className="px-2 py-2 font-bold text-slate-600" colSpan={2}>Totals</td>
                   <td className="px-2 py-2 text-right font-bold"><CurStack v={totals.salary} /></td>
                   {visibleDisciplines.map(([cnt, total]) => (
@@ -396,7 +397,7 @@ export function PayrollSheetPage() {
                       <div className="text-rose-600">Bal {money(totals.balance.USD + totals.balance.LBP)}</div>
                     </div>
                   </td>
-                  <td colSpan={3} />
+                  <td colSpan={2} />
                 </tr>
               </tfoot>
             )}

@@ -95,6 +95,9 @@ export interface RecordFormConfig {
   lookups?: string;            // endpoint returning Record<string, Option[]>
   /** Defaults applied when creating a new record. */
   createDefaults?: Record<string, unknown>;
+  /** Endpoint returning server-side defaults to merge over createDefaults on create
+   *  (e.g. carry the last timesheet's USD→LBP rate into a new one). */
+  createPrefill?: string;
   heroSlide?: number;
 }
 
@@ -139,6 +142,11 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
         for (const fd of sec.fields)
           f[fd.key] = config.createDefaults?.[fd.key] ?? (fd.type === 'checkbox' ? false : '');
       setForm(f);
+      // Merge server-side defaults (e.g. last timesheet's rate) over the blanks.
+      if (config.createPrefill)
+        apiRequest<Record<string, unknown>>(config.createPrefill)
+          .then((pre) => setForm((cur) => ({ ...cur, ...pre })))
+          .catch(() => {});
       return;
     }
     apiRequest<Row>(`/api/portal/edit/${config.slug}/${id}`)

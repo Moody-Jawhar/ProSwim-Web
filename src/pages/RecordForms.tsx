@@ -370,6 +370,8 @@ const timesheet: RecordFormConfig = {
     TimesheetSalaryPercent: 100,
     TimeSheetCurrencyRate: 1500,
   },
+  // On a new timesheet, carry the USD→LBP rate (and salary %) from the last one.
+  createPrefill: '/api/portal/payroll/timesheet-defaults',
   sections: [
     {
       title: 'Timesheet',
