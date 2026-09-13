@@ -8,8 +8,8 @@
 // a time in a clean layout.
 
 import React, { useEffect, useMemo, useState } from 'react';
-import { useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check } from 'lucide-react';
+import { useParams, Link } from 'react-router-dom';
+import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check, History, UserCog, ChevronRight } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -57,6 +57,7 @@ export function PayrollSheetPage() {
   const [showZero, setShowZero] = useState(false);
   const [loc, setLoc] = useState(''); // '' = all locations
   const [openId, setOpenId] = useState<number | null>(null);
+  const [startHist, setStartHist] = useState(false);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -310,6 +311,7 @@ export function PayrollSheetPage() {
                 <th className="px-3 py-2.5 text-right font-semibold">Net2Pay</th>
                 <th className="px-3 py-2.5 text-center font-semibold">Paid</th>
                 <th className="px-3 py-2.5 text-center font-semibold">NoWork</th>
+                <th className="px-3 py-2.5 text-center font-semibold border-l border-slate-200">Links</th>
               </tr>
             </thead>
             <tbody>
@@ -322,7 +324,7 @@ export function PayrollSheetPage() {
                   <tr key={id} className={`border-b border-slate-100 ${noWork ? 'bg-rose-50/60' : paid ? 'bg-emerald-50/50' : 'hover:bg-slate-50/60'}`}>
                     <td className="px-3 py-1.5 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
                     <td className="px-3 py-1.5 sticky left-0 bg-inherit">
-                      <button onClick={() => setOpenId(id)}
+                      <button onClick={() => { setStartHist(false); setOpenId(id); }}
                         className="font-semibold text-[#1e5c97] hover:underline">{str(r, 'CoachFullName')}</button>
                     </td>
                     <td className="px-3 py-1.5 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
@@ -350,11 +352,21 @@ export function PayrollSheetPage() {
                     <td className="px-3 py-1.5 text-center">
                       <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
                     </td>
+                    <td className="px-3 py-1.5 border-l border-slate-100">
+                      <div className="flex items-center justify-center gap-1.5">
+                        <button title="Open this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
+                          className="rounded-md p-1 text-[#1e5c97] hover:bg-[#e8f0f8]"><UserCog className="size-4" /></button>
+                        <button title="Payroll history" onClick={() => { setStartHist(true); setOpenId(id); }}
+                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><History className="size-4" /></button>
+                        <Link title="Coach file & HR rate" to={`/coaches/${num(r, 'CoachID')}`}
+                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><ChevronRight className="size-4" /></Link>
+                      </div>
+                    </td>
                   </tr>
                 );
               })}
               {viewRows.length === 0 && (
-                <tr><td colSpan={visibleDisciplines.length * 2 + 9} className="px-4 py-10 text-center text-slate-400">No payroll rows.</td></tr>
+                <tr><td colSpan={visibleDisciplines.length * 2 + 12} className="px-4 py-10 text-center text-slate-400">No payroll rows.</td></tr>
               )}
             </tbody>
             {viewRows.length > 0 && (
@@ -380,7 +392,7 @@ export function PayrollSheetPage() {
                       <div className="text-rose-600">Bal {totals.balance.USD ? `US ${money(totals.balance.USD)}` : ''}{totals.balance.LBP ? ` LB ${money(totals.balance.LBP)}` : ''}{!totals.balance.USD && !totals.balance.LBP ? '0' : ''}</div>
                     </div>
                   </td>
-                  <td colSpan={2} />
+                  <td colSpan={3} />
                 </tr>
               </tfoot>
             )}
@@ -393,6 +405,8 @@ export function PayrollSheetPage() {
           row={openRow}
           canEdit={canEdit}
           busy={busy}
+          startWithHistory={startHist}
+          currentTimesheetId={Number(timesheetId)}
           val={val}
           edit={edit}
           onToggle={toggle}
@@ -406,15 +420,17 @@ export function PayrollSheetPage() {
 
 // ── Per-coach payroll card (modal): review + edit one coach cleanly ──────────
 function CoachCard({
-  row, canEdit, busy, val, edit, onToggle, onSave, onClose,
+  row, canEdit, busy, startWithHistory, currentTimesheetId, val, edit, onToggle, onSave, onClose,
 }: {
   row: Row; canEdit: boolean; busy: boolean;
+  startWithHistory?: boolean; currentTimesheetId?: number;
   val: (r: Row, f: string) => number;
   edit: (id: number, f: string, v: number) => void;
   onToggle: (r: Row, kind: 'paid' | 'nowork', on: boolean) => void;
   onSave: () => void; onClose: () => void;
 }) {
   const id = num(row, 'PayrollID');
+  const coachId = num(row, 'CoachID');
   const cur = curOf(row);
   const sym = cur === 'USD' ? '$' : 'LL';
   const paid = row.PayrollIndivPaid === true;
@@ -423,19 +439,84 @@ function CoachCard({
   const box = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
   const label = 'text-xs font-semibold uppercase tracking-wide text-slate-400';
 
+  const [showHist, setShowHist] = useState(!!startWithHistory);
+  const [hist, setHist] = useState<Row[] | null>(null);
+  const [histLoading, setHistLoading] = useState(false);
+
+  useEffect(() => {
+    if (!showHist || hist || histLoading || !coachId) return;
+    setHistLoading(true);
+    apiRequest<Row[]>(`/api/portal/payroll/coach-history/${coachId}`)
+      .then((d) => setHist(Array.isArray(d) ? d : []))
+      .catch(() => setHist([]))
+      .finally(() => setHistLoading(false));
+  }, [showHist, coachId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const linkBtn = 'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold';
+
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* header */}
-        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
-          <div>
-            <h2 className="text-lg font-bold text-slate-800">{str(row, 'CoachFullName')}</h2>
-            <p className="text-sm text-slate-500">{str(row, 'LocationNickName')} · paid in {cur}</p>
+        <div className="border-b border-slate-100 p-5">
+          <div className="flex items-start justify-between gap-3">
+            <div>
+              <h2 className="text-lg font-bold text-slate-800">{str(row, 'CoachFullName')}</h2>
+              <p className="text-sm text-slate-500">{str(row, 'LocationNickName')} · paid in {cur}</p>
+            </div>
+            <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="size-5" /></button>
           </div>
-          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="size-5" /></button>
+          {/* quick links */}
+          <div className="mt-3 flex flex-wrap gap-2">
+            <Link to={`/coaches/${coachId}`} onClick={onClose}
+              className={`${linkBtn} border-slate-200 text-[#1e5c97] hover:bg-[#e8f0f8]`}>
+              <UserCog className="size-3.5" /> Edit coach file &amp; HR rate
+            </Link>
+            <button onClick={() => setShowHist((s) => !s)}
+              className={`${linkBtn} ${showHist ? 'border-[#1e5c97] bg-[#e8f0f8] text-[#1e5c97]' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+              <History className="size-3.5" /> All payrolls
+            </button>
+          </div>
         </div>
 
-        <div className="p-5 space-y-6">
+        {/* history panel */}
+        {showHist && (
+          <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+            <p className={label + ' mb-2'}>Payroll history</p>
+            {histLoading ? (
+              <div className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="size-4 animate-spin" /> Loading…</div>
+            ) : !hist || hist.length === 0 ? (
+              <p className="text-sm text-slate-400">No past payrolls found.</p>
+            ) : (
+              <div className="divide-y divide-slate-100 rounded-lg border border-slate-100 bg-white">
+                {hist.map((h) => {
+                  const hts = num(h, 'TimesheetID');
+                  const hcur = curOf(h);
+                  const isCurrent = hts === currentTimesheetId;
+                  return (
+                    <Link key={num(h, 'PayrollID')} to={`/payroll/sheet/${hts}`} onClick={onClose}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-slate-50">
+                      <span className="flex items-center gap-2 font-medium text-slate-700">
+                        {str(h, 'TimesheetTitle') || `#${hts}`}
+                        {isCurrent && <span className="rounded bg-[#e8f0f8] px-1.5 py-0.5 text-[10px] font-bold text-[#1e5c97]">current</span>}
+                      </span>
+                      <span className="flex items-center gap-3 tabular-nums">
+                        <span className={h.PayrollIndivPaid === true ? 'text-emerald-600' : 'text-rose-500'}>
+                          {h.PayrollIndivPaid === true ? 'Paid' : 'Unpaid'}
+                        </span>
+                        <span className="font-bold text-slate-800">{hcur === 'USD' ? '$' : 'LL'} {money(num(h, 'PayrollNetToPay'))}</span>
+                        <ChevronRight className="size-4 text-slate-300" />
+                      </span>
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
+            <p className="mt-2 text-[11px] text-slate-400">Click a month to open that payroll sheet, where you can edit it.</p>
+          </div>
+        )}
+
+        <div className="p-5 space-y-4">
           {/* salary */}
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
             <div>
@@ -447,10 +528,17 @@ function CoachCard({
 
           {/* disciplines */}
           <div>
-            <p className={label + ' mb-2'}>Hours (system · counted for pay · amount)</p>
-            <div className="space-y-1.5">
+            <p className={label + ' mb-2'}>Hours</p>
+            {/* column header */}
+            <div className="grid grid-cols-12 items-center gap-2 px-3 pb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              <span className="col-span-3">Discipline</span>
+              <span className="col-span-3 text-right">System</span>
+              <span className="col-span-3 text-right">Counted</span>
+              <span className="col-span-3 text-right">Amount</span>
+            </div>
+            <div className="divide-y divide-slate-100 rounded-lg border border-slate-100">
               {DISCIPLINES.map(([cnt, total, dl]) => (
-                <div key={cnt} className="grid grid-cols-12 items-center gap-2 rounded-lg bg-slate-50/70 px-3 py-1.5">
+                <div key={cnt} className="grid grid-cols-12 items-center gap-2 px-3 py-0.5 odd:bg-slate-50/60">
                   <span className="col-span-3 text-sm font-medium text-slate-700">{dl}</span>
                   <span className="col-span-3 text-right text-sm text-slate-400 tabular-nums" title="System-detected hours">{money(num(row, SYS_HR[cnt]))}</span>
                   <div className="col-span-3">
