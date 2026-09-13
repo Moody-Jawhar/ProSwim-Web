@@ -337,10 +337,10 @@ export function PayrollSheetPage() {
                     <td className="px-2 py-1 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
                     {visibleDisciplines.map(([cnt, total]) => (
                       <td key={cnt} className="px-1.5 py-1 border-l border-slate-100 bg-sky-50/40">
-                        <div className="flex flex-col items-end gap-0.5">
+                        <div className="flex items-center justify-end gap-1.5">
                           <input type="number" min={0} disabled={!canEdit} value={val(r, cnt)}
                             onChange={(e) => edit(id, cnt, Number(e.target.value))} className={numInput} />
-                          <span className="text-[11px] tabular-nums text-slate-500">{money(num(r, total))}</span>
+                          <span className="w-10 text-right text-xs tabular-nums text-slate-500">{money(num(r, total))}</span>
                         </div>
                       </td>
                     ))}
