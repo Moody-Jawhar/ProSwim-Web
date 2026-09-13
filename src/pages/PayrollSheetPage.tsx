@@ -8,8 +8,9 @@
 // a time in a clean layout.
 
 import React, { useEffect, useMemo, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
-import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check, History, UserCog, ChevronRight } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check, History, UserCog, ChevronRight, SquarePen } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -324,8 +325,8 @@ export function PayrollSheetPage() {
                   <tr key={id} className={`border-b border-slate-100 ${noWork ? 'bg-rose-50/60' : paid ? 'bg-emerald-50/50' : 'hover:bg-slate-50/60'}`}>
                     <td className="px-3 py-1.5 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
                     <td className="px-3 py-1.5 sticky left-0 bg-inherit">
-                      <button onClick={() => { setStartHist(false); setOpenId(id); }}
-                        className="font-semibold text-[#1e5c97] hover:underline">{str(r, 'CoachFullName')}</button>
+                      <Link to={`/coaches/${num(r, 'CoachID')}`} title="Open coach file"
+                        className="font-semibold text-[#1e5c97] hover:underline">{str(r, 'CoachFullName')}</Link>
                     </td>
                     <td className="px-3 py-1.5 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
                     {visibleDisciplines.map(([cnt, total]) => (
@@ -353,13 +354,13 @@ export function PayrollSheetPage() {
                       <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
                     </td>
                     <td className="px-3 py-1.5 border-l border-slate-100">
-                      <div className="flex items-center justify-center gap-1.5">
-                        <button title="Open this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
-                          className="rounded-md p-1 text-[#1e5c97] hover:bg-[#e8f0f8]"><UserCog className="size-4" /></button>
+                      <div className="flex items-center justify-center gap-1">
+                        <button title="Edit this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
+                          className="rounded-md p-1.5 text-[#1e5c97] hover:bg-[#e8f0f8]"><SquarePen className="size-4" /></button>
                         <button title="Payroll history" onClick={() => { setStartHist(true); setOpenId(id); }}
-                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><History className="size-4" /></button>
+                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"><History className="size-4" /></button>
                         <Link title="Coach file & HR rate" to={`/coaches/${num(r, 'CoachID')}`}
-                          className="rounded-md p-1 text-slate-500 hover:bg-slate-100"><ChevronRight className="size-4" /></Link>
+                          className="rounded-md p-1.5 text-slate-500 hover:bg-slate-100"><UserCog className="size-4" /></Link>
                       </div>
                     </td>
                   </tr>
@@ -436,8 +437,8 @@ function CoachCard({
   const paid = row.PayrollIndivPaid === true;
   const noWork = row.PayrollIndivNoWork === true;
 
-  const box = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
-  const label = 'text-xs font-semibold uppercase tracking-wide text-slate-400';
+  const box = 'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+  const label = 'text-[11px] font-semibold uppercase tracking-wide text-slate-400';
 
   const [showHist, setShowHist] = useState(!!startWithHistory);
   const [hist, setHist] = useState<Row[] | null>(null);
@@ -454,13 +455,16 @@ function CoachCard({
 
   const linkBtn = 'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold';
 
-  return (
+  return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
       <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
         {/* header */}
-        <div className="border-b border-slate-100 p-5">
+        <div className="border-b border-slate-100 p-4">
           <div className="flex items-start justify-between gap-3">
             <div>
+              <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#e8f0f8] px-2.5 py-0.5 text-xs font-bold text-[#1e5c97]">
+                <History className="size-3" /> {str(row, 'TimesheetTitle') || (currentTimesheetId ? `Timesheet #${currentTimesheetId}` : 'Payroll')}
+              </div>
               <h2 className="text-lg font-bold text-slate-800">{str(row, 'CoachFullName')}</h2>
               <p className="text-sm text-slate-500">{str(row, 'LocationNickName')} · paid in {cur}</p>
             </div>
@@ -481,7 +485,7 @@ function CoachCard({
 
         {/* history panel */}
         {showHist && (
-          <div className="border-b border-slate-100 bg-slate-50/60 px-5 py-4">
+          <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
             <p className={label + ' mb-2'}>Payroll history</p>
             {histLoading ? (
               <div className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="size-4 animate-spin" /> Loading…</div>
@@ -516,14 +520,12 @@ function CoachCard({
           </div>
         )}
 
-        <div className="p-5 space-y-4">
+        <div className="p-4 space-y-3">
           {/* salary */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
-            <div>
-              <label className={label}>Salary ({sym})</label>
-              <input type="number" disabled={!canEdit} value={val(row, 'PayrollSalary')}
-                onChange={(e) => edit(id, 'PayrollSalary', Number(e.target.value))} className={box + ' mt-1'} />
-            </div>
+          <div className="flex items-center gap-3">
+            <label className={label + ' shrink-0'}>Salary ({sym})</label>
+            <input type="number" disabled={!canEdit} value={val(row, 'PayrollSalary')}
+              onChange={(e) => edit(id, 'PayrollSalary', Number(e.target.value))} className={box + ' max-w-[160px]'} />
           </div>
 
           {/* disciplines */}
@@ -553,7 +555,7 @@ function CoachCard({
           </div>
 
           {/* adjustments */}
-          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {ADJUSTMENTS.map(([al, f, sign]) => (
               <div key={f}>
                 <label className={label}>{al}{sign < 0 ? ' −' : ' +'}</label>
@@ -565,14 +567,14 @@ function CoachCard({
           </div>
 
           {/* summary */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#e8f0f8] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#e8f0f8] px-4 py-2.5">
             <div>
               <p className={label}>SubTotal</p>
-              <p className="text-lg font-bold text-slate-700 tabular-nums">{sym} {money(num(row, 'SubTotal'))}</p>
+              <p className="text-base font-bold text-slate-700 tabular-nums">{sym} {money(num(row, 'SubTotal'))}</p>
             </div>
             <div className="text-right">
               <p className={label}>Net to Pay</p>
-              <p className="text-2xl font-extrabold text-[#1e5c97] tabular-nums">{sym} {money(num(row, 'PayrollNetToPay'))}</p>
+              <p className="text-xl font-extrabold text-[#1e5c97] tabular-nums">{sym} {money(num(row, 'PayrollNetToPay'))}</p>
             </div>
           </div>
 
@@ -590,7 +592,7 @@ function CoachCard({
         </div>
 
         {/* footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-4">
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-3">
           <p className="mr-auto text-xs text-slate-400">Saving re-runs the HR recalculation for updated totals.</p>
           <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
           {canEdit && (
@@ -601,6 +603,7 @@ function CoachCard({
           )}
         </div>
       </div>
-    </div>
+    </div>,
+    document.body,
   );
 }
