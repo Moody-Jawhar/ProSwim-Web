@@ -9,7 +9,7 @@ import {
   LayoutGrid, Users, GraduationCap, CalendarDays, ClipboardCheck, UserRound, BookOpen,
   CreditCard, Trophy, Medal, MapPin, Wallet, Clock, MessageSquare, Settings, Shield,
   BarChart3, Globe, Megaphone, Truck, Layers, Receipt, Wand2, History, Bell, Inbox,
-  CalendarX, Newspaper, Waves, Smartphone, ExternalLink, MessageCircle, CalendarPlus, ShieldCheck,
+  CalendarX, Newspaper, Waves, Smartphone, ExternalLink, MessageCircle, CalendarPlus, ShieldCheck, PowerOff,
 } from 'lucide-react';
 import { getStoredUser } from '../api/portalApi';
 import { useAccess } from '../components/AccessProvider';
@@ -42,6 +42,7 @@ const ICONS: Record<string, Icon> = {
   '/web/videos': Globe, '/web/feedback': Globe,
   '/locations': MapPin, '/location-photos': MapPin, '/coaches': UserRound, '/users': Shield,
   '/settings': Settings, '/text-settings': MessageSquare, '/access-control': ShieldCheck,
+  '/old-system': PowerOff,
 };
 
 // Order groups the way the sidebar reads.

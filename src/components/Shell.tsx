@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck, Home,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck, Home, PowerOff,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -178,6 +178,7 @@ const FULL_NAV: NavEntry[] = [
       { to: '/settings', label: 'System Settings', icon: Settings },
       { to: '/text-settings', label: 'Text Settings', icon: MessageSquare },
       { to: '/access-control', label: 'Access Control', icon: ShieldCheck },
+      { to: '/old-system', label: 'Old System', icon: PowerOff },
     ],
   },
 ];

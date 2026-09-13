@@ -63,6 +63,7 @@ import {
 import { getStoredToken } from './api/portalApi';
 import { AccessProvider, useAccess } from './components/AccessProvider';
 import { AccessControlPage } from './pages/AccessControlPage';
+import { OldSystemPage } from './pages/OldSystemPage';
 import { LandingPage } from './pages/LandingPage';
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
@@ -173,6 +174,7 @@ export default function App() {
           <Route path="/settings" element={<SettingsAdminPage />} />
           <Route path="/text-settings" element={<TextSettingsPage />} />
           <Route path="/access-control" element={<AccessControlPage />} />
+          <Route path="/old-system" element={<OldSystemPage />} />
           <Route path="/users" element={<UsersAdminPage />} />
           <Route path="/users/:id" element={<UserForm />} />
           <Route path="/user-activity" element={<UserActivityPage />} />
