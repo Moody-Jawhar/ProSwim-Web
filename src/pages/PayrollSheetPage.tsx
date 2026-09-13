@@ -7,7 +7,7 @@
 // and a per-coach payroll card (click a coach) to review and edit one coach at
 // a time in a clean layout.
 
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check, History, UserCog, ChevronRight, SquarePen } from 'lucide-react';
@@ -23,6 +23,12 @@ const num = (r: Row, k: string) => Number(r[k] ?? 0);
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const money = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 0 });
 const curOf = (r: Row): Cur => (str(r, 'PayrollSalaryCurrency') === 'LBP' ? 'LBP' : 'USD');
+// Compact coach name: first 2 letters of the first name, then the rest as-is.
+// "Ibrahim Hassan" -> "Ib Hassan", "Ahmad Al Zaybak" -> "Ah Al Zaybak".
+const shortName = (full: string) => {
+  const parts = full.trim().split(/\s+/);
+  return parts.length <= 1 ? full : [parts[0].slice(0, 2), ...parts.slice(1)].join(' ');
+};
 
 // [countField, totalField, label]
 const DISCIPLINES: [string, string, string][] = [
@@ -232,8 +238,8 @@ export function PayrollSheetPage() {
     'w-16 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
   const CurStack = ({ v, cls = '' }: { v: Record<Cur, number>; cls?: string }) => (
     <div className={`leading-tight tabular-nums ${cls}`}>
-      {v.USD ? <div>US {money(v.USD)}</div> : null}
-      {v.LBP ? <div>LB {money(v.LBP)}</div> : null}
+      {v.USD ? <div>{money(v.USD)}</div> : null}
+      {v.LBP ? <div>{money(v.LBP)}</div> : null}
       {!v.USD && !v.LBP ? <span className="text-slate-300">0</span> : null}
     </div>
   );
@@ -298,21 +304,21 @@ export function PayrollSheetPage() {
           <table className="w-full text-sm whitespace-nowrap border-collapse">
             <thead>
               <tr className="text-xs uppercase tracking-wide text-slate-500 border-b-2 border-slate-200 bg-slate-50">
-                <th className="px-3 py-2.5 text-left font-semibold">Loc</th>
-                <th className="px-3 py-2.5 text-left font-semibold sticky left-0 bg-slate-50">Coach</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Salary</th>
+                <th className="px-2 py-2 text-left font-semibold">Loc</th>
+                <th className="px-2 py-2 text-left font-semibold sticky left-0 bg-slate-50">Coach</th>
+                <th className="px-2 py-2 text-right font-semibold">Salary</th>
                 {visibleDisciplines.map(([cnt, , label]) => (
-                  <th key={cnt} colSpan={2} className="px-3 py-2.5 text-center font-semibold border-l border-slate-200">{label}<span className="block text-[10px] normal-case font-normal text-slate-400">hrs · total</span></th>
+                  <th key={cnt} className="px-1.5 py-2 text-center font-semibold border-l border-slate-200">{label}</th>
                 ))}
-                <th className="px-3 py-2.5 text-right font-semibold border-l border-slate-200">Bonus</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Penalty</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Advance</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Loans</th>
-                <th className="px-3 py-2.5 text-right font-semibold border-l border-slate-200">SubTotal</th>
-                <th className="px-3 py-2.5 text-right font-semibold">Net2Pay</th>
-                <th className="px-3 py-2.5 text-center font-semibold">Paid</th>
-                <th className="px-3 py-2.5 text-center font-semibold">NoWork</th>
-                <th className="px-3 py-2.5 text-center font-semibold border-l border-slate-200">Links</th>
+                <th className="px-1.5 py-2 text-right font-semibold border-l border-slate-200">Bonus</th>
+                <th className="px-1.5 py-2 text-right font-semibold">Penalty</th>
+                <th className="px-1.5 py-2 text-right font-semibold">Advance</th>
+                <th className="px-1.5 py-2 text-right font-semibold">Loans</th>
+                <th className="px-2 py-2 text-right font-semibold border-l border-slate-200">SubTotal</th>
+                <th className="px-2 py-2 text-right font-semibold">Net2Pay</th>
+                <th className="px-1.5 py-2 text-center font-semibold">Paid</th>
+                <th className="px-1.5 py-2 text-center font-semibold">NoWork</th>
+                <th className="px-1.5 py-2 text-center font-semibold border-l border-slate-200">Links</th>
               </tr>
             </thead>
             <tbody>
@@ -323,37 +329,37 @@ export function PayrollSheetPage() {
                 const cur = curOf(r);
                 return (
                   <tr key={id} className={`border-b border-slate-100 ${noWork ? 'bg-rose-50/60' : paid ? 'bg-emerald-50/50' : 'hover:bg-slate-50/60'}`}>
-                    <td className="px-3 py-1.5 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
-                    <td className="px-3 py-1.5 sticky left-0 bg-inherit">
-                      <Link to={`/coaches/${num(r, 'CoachID')}`} title="Open coach file"
-                        className="font-semibold text-[#1e5c97] hover:underline">{str(r, 'CoachFullName')}</Link>
+                    <td className="px-2 py-1 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
+                    <td className="px-2 py-1 sticky left-0 bg-inherit">
+                      <Link to={`/coaches/${num(r, 'CoachID')}`} title={str(r, 'CoachFullName')}
+                        className="font-semibold text-[#1e5c97] hover:underline">{shortName(str(r, 'CoachFullName'))}</Link>
                     </td>
-                    <td className="px-3 py-1.5 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
+                    <td className="px-2 py-1 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
                     {visibleDisciplines.map(([cnt, total]) => (
-                      <React.Fragment key={cnt}>
-                        <td className="px-2 py-1.5 text-right border-l border-slate-100 bg-sky-50/40">
+                      <td key={cnt} className="px-1.5 py-1 border-l border-slate-100 bg-sky-50/40">
+                        <div className="flex flex-col items-end gap-0.5">
                           <input type="number" min={0} disabled={!canEdit} value={val(r, cnt)}
                             onChange={(e) => edit(id, cnt, Number(e.target.value))} className={numInput} />
-                        </td>
-                        <td className="px-2 py-1.5 text-right tabular-nums text-slate-500">{money(num(r, total))}</td>
-                      </React.Fragment>
+                          <span className="text-[11px] tabular-nums text-slate-500">{money(num(r, total))}</span>
+                        </div>
+                      </td>
                     ))}
                     {ADJUSTMENTS.map(([, f, sign]) => (
-                      <td key={f} className={`px-2 py-1.5 text-right ${f === 'PayrollBonus' ? 'border-l border-slate-100' : ''}`}>
+                      <td key={f} className={`px-1.5 py-1 text-right ${f === 'PayrollBonus' ? 'border-l border-slate-100' : ''}`}>
                         <input type="number" disabled={!canEdit} value={val(r, f)}
                           onChange={(e) => edit(id, f, Number(e.target.value))}
                           className={`${numInput} ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
                       </td>
                     ))}
-                    <td className="px-3 py-1.5 text-right tabular-nums font-semibold bg-slate-50 border-l border-slate-100">{money(num(r, 'SubTotal'))}</td>
-                    <td className="px-3 py-1.5 text-right tabular-nums font-extrabold bg-amber-50/70">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollNetToPay'))}</td>
-                    <td className="px-3 py-1.5 text-center">
+                    <td className="px-2 py-1 text-right tabular-nums font-semibold bg-slate-50 border-l border-slate-100">{money(num(r, 'SubTotal'))}</td>
+                    <td className="px-2 py-1 text-right tabular-nums font-extrabold bg-amber-50/70">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollNetToPay'))}</td>
+                    <td className="px-1.5 py-1 text-center">
                       <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => toggle(r, 'paid', e.target.checked)} className="size-4 accent-emerald-600" />
                     </td>
-                    <td className="px-3 py-1.5 text-center">
+                    <td className="px-1.5 py-1 text-center">
                       <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
                     </td>
-                    <td className="px-3 py-1.5 border-l border-slate-100">
+                    <td className="px-1.5 py-1 border-l border-slate-100">
                       <div className="flex items-center justify-center gap-1">
                         <button title="Edit this payroll" onClick={() => { setStartHist(false); setOpenId(id); }}
                           className="rounded-md p-1.5 text-[#1e5c97] hover:bg-[#e8f0f8]"><SquarePen className="size-4" /></button>
@@ -367,30 +373,27 @@ export function PayrollSheetPage() {
                 );
               })}
               {viewRows.length === 0 && (
-                <tr><td colSpan={visibleDisciplines.length * 2 + 12} className="px-4 py-10 text-center text-slate-400">No payroll rows.</td></tr>
+                <tr><td colSpan={visibleDisciplines.length + 12} className="px-4 py-10 text-center text-slate-400">No payroll rows.</td></tr>
               )}
             </tbody>
             {viewRows.length > 0 && (
               <tfoot>
                 <tr className="text-sm bg-slate-100 border-t-2 border-slate-300">
-                  <td className="px-3 py-2.5 font-bold text-slate-600" colSpan={2}>Totals</td>
-                  <td className="px-3 py-2.5 text-right font-bold"><CurStack v={totals.salary} /></td>
+                  <td className="px-2 py-2 font-bold text-slate-600" colSpan={2}>Totals</td>
+                  <td className="px-2 py-2 text-right font-bold"><CurStack v={totals.salary} /></td>
                   {visibleDisciplines.map(([cnt, total]) => (
-                    <React.Fragment key={cnt}>
-                      <td className="border-l border-slate-200" />
-                      <td className="px-2 py-2.5 text-right font-semibold text-slate-600"><CurStack v={totals.disc[total]} /></td>
-                    </React.Fragment>
+                    <td key={cnt} className="px-1.5 py-2 text-right font-semibold text-slate-600 border-l border-slate-200"><CurStack v={totals.disc[total]} /></td>
                   ))}
-                  <td className="px-2 py-2.5 text-right font-semibold text-emerald-700 border-l border-slate-200"><CurStack v={totals.bonus} /></td>
-                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.penalty} /></td>
-                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.advance} /></td>
-                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.loans} /></td>
-                  <td className="px-3 py-2.5 text-right font-bold border-l border-slate-200"><CurStack v={totals.subtotal} /></td>
-                  <td className="px-3 py-2.5 text-right font-bold">
+                  <td className="px-1.5 py-2 text-right font-semibold text-emerald-700 border-l border-slate-200"><CurStack v={totals.bonus} /></td>
+                  <td className="px-1.5 py-2 text-right font-semibold text-rose-700"><CurStack v={totals.penalty} /></td>
+                  <td className="px-1.5 py-2 text-right font-semibold text-rose-700"><CurStack v={totals.advance} /></td>
+                  <td className="px-1.5 py-2 text-right font-semibold text-rose-700"><CurStack v={totals.loans} /></td>
+                  <td className="px-2 py-2 text-right font-bold border-l border-slate-200"><CurStack v={totals.subtotal} /></td>
+                  <td className="px-2 py-2 text-right font-bold">
                     <CurStack v={totals.net} />
-                    <div className="mt-1 border-t border-slate-300 pt-1 text-[11px] font-semibold text-slate-500">
-                      <div className="text-emerald-700">Paid {totals.paid.USD ? `US ${money(totals.paid.USD)}` : ''}{totals.paid.LBP ? ` LB ${money(totals.paid.LBP)}` : ''}{!totals.paid.USD && !totals.paid.LBP ? '0' : ''}</div>
-                      <div className="text-rose-600">Bal {totals.balance.USD ? `US ${money(totals.balance.USD)}` : ''}{totals.balance.LBP ? ` LB ${money(totals.balance.LBP)}` : ''}{!totals.balance.USD && !totals.balance.LBP ? '0' : ''}</div>
+                    <div className="mt-1 border-t border-slate-300 pt-1 text-[11px] font-semibold">
+                      <div className="text-emerald-700">Paid {money(totals.paid.USD + totals.paid.LBP)}</div>
+                      <div className="text-rose-600">Bal {money(totals.balance.USD + totals.balance.LBP)}</div>
                     </div>
                   </td>
                   <td colSpan={3} />
