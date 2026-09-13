@@ -6,7 +6,7 @@ import {
   PanelLeftClose, PanelLeftOpen, ChevronDown, Layers, Wrench, Wand2,
   Menu, X, Newspaper, Inbox, Megaphone, Medal, MapPin, CalendarX,
   Smartphone, MessageCircle, Settings, Bell, Wallet, Receipt, Truck,
-  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck, Home, PowerOff,
+  Shield, Clock, MessageSquare, BarChart3, History, CalendarPlus, Globe, Search, ShieldCheck, Home, PowerOff, KeyRound,
 } from 'lucide-react';
 import { getStoredUser, clearAuth, apiRequest, isSuperUser } from '../api/portalApi';
 import { IntroSplash } from './IntroSplash';
@@ -485,6 +485,14 @@ export function Shell() {
               <p className="text-[10px] text-white/50 truncate">{user?.userType || ''}</p>
             </>
           )}
+          <button
+            onClick={() => navigate('/change-password')}
+            title="Change password"
+            className={`flex items-center text-xs text-white/60 hover:text-white ${rail ? 'justify-center' : 'gap-1.5 mt-2'}`}
+          >
+            <KeyRound className="size-3.5 shrink-0" />
+            {!rail && 'Change password'}
+          </button>
           <button
             onClick={logout}
             title="Sign out"

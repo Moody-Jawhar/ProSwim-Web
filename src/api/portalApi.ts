@@ -191,6 +191,43 @@ export async function me(): Promise<{ userId: number; userType: string }> {
   return apiRequest<{ userId: number; userType: string }>("/api/portal/auth/me");
 }
 
+// --- Password reset / change ---
+
+export async function forgotPassword(email: string): Promise<{
+  challengeId: string;
+  sentTo: string;
+  expiresInSeconds: number;
+  resendInSeconds: number;
+}> {
+  return apiRequest(
+    "/api/portal/auth/forgot-password",
+    { method: "POST", body: JSON.stringify({ email }) },
+    false
+  );
+}
+
+export async function resetPassword(
+  challengeId: string,
+  code: string,
+  newPassword: string
+): Promise<{ ok: boolean }> {
+  return apiRequest(
+    "/api/portal/auth/reset-password",
+    { method: "POST", body: JSON.stringify({ challengeId, code, newPassword }) },
+    false
+  );
+}
+
+export async function changePassword(
+  currentPassword: string,
+  newPassword: string
+): Promise<{ ok: boolean }> {
+  return apiRequest("/api/portal/auth/change-password", {
+    method: "POST",
+    body: JSON.stringify({ currentPassword, newPassword }),
+  });
+}
+
 // --- AI assistant (super users only) ---
 
 export interface AiOverviewResponse { overview: string | null; error: string | null; }

@@ -1,6 +1,8 @@
 import { useEffect } from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
+import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
+import { ChangePasswordPage } from './pages/ChangePasswordPage';
 import { Shell } from './components/Shell';
 import { DashboardPage } from './pages/DashboardPage';
 import { StudentsPage } from './pages/StudentsPage';
@@ -94,6 +96,7 @@ export default function App() {
       <ScrollToTop />
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route
           element={
             <RequireAuth>
@@ -104,6 +107,7 @@ export default function App() {
           }
         >
           <Route path="/" element={<LandingPage />} />
+          <Route path="/change-password" element={<ChangePasswordPage />} />
           <Route path="/dashboard" element={<DashboardRoute />} />
           <Route path="/students" element={<StudentsPage />} />
           <Route path="/students/new" element={<StudentForm />} />

@@ -175,6 +175,12 @@ export function LoginPage() {
               {loading && <Loader2 className="size-4 animate-spin" />}
               Sign in
             </button>
+            <div className="text-center">
+              <button type="button" onClick={() => navigate('/forgot-password')}
+                className="text-xs font-semibold text-[#1e5c97] hover:underline">
+                Forgot your password?
+              </button>
+            </div>
           </form>
         ) : (
           <form onSubmit={onSubmitCode} className="space-y-4">
