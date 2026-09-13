@@ -2,19 +2,26 @@
 // stored procedures (rates × hours, salary %, net); this grid shows the
 // computed columns, lets the SiteMaster edit hour counts / bonus / penalty /
 // loans, toggle Paid / NoWork, and re-run the HR recalculation.
+//
+// Two ways to work: the overview grid (location filter + full column totals),
+// and a per-coach payroll card (click a coach) to review and edit one coach at
+// a time in a clean layout.
 
 import React, { useEffect, useMemo, useState } from 'react';
 import { useParams } from 'react-router-dom';
-import { Loader2, AlertCircle, RefreshCw, Save, Download } from 'lucide-react';
+import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
+import { toast } from '../components/Toast';
 
 type Row = Record<string, unknown>;
+type Cur = 'USD' | 'LBP';
 
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const money = (v: number) => v.toLocaleString(undefined, { maximumFractionDigits: 0 });
+const curOf = (r: Row): Cur => (str(r, 'PayrollSalaryCurrency') === 'LBP' ? 'LBP' : 'USD');
 
 // [countField, totalField, label]
 const DISCIPLINES: [string, string, string][] = [
@@ -26,8 +33,21 @@ const DISCIPLINES: [string, string, string][] = [
   ['PayrollPhysioHrCnt', 'PayrollPhysioTotal', 'Physio'],
   ['PayrollMiscHrCnt', 'PayrollMiscTotal', 'Misc'],
 ];
+// system-detected hours field per discipline (shown read-only in the card)
+const SYS_HR: Record<string, string> = {
+  PayrollPrivateHrCnt: 'PayrollPrivateHr', PayrollTeamHrCnt: 'PayrollTeamHr',
+  PayrollSchoolHrCnt: 'PayrollSchoolHr', PayrollAquaBabyHrCnt: 'PayrollAquaBabyHr',
+  PayrollAquaGymHrCnt: 'PayrollAquaGymHr', PayrollPhysioHrCnt: 'PayrollPhysioHr',
+  PayrollMiscHrCnt: 'PayrollMiscHr',
+};
 
-const EXTRA_EDITABLE = ['PayrollBonus', 'PayrollPenalty', 'PayrollLoansShort', 'PayrollLoansLong'];
+// label, field, sign(- means it reduces net) for the adjustment columns
+const ADJUSTMENTS: [string, string, 1 | -1][] = [
+  ['Bonus', 'PayrollBonus', 1],
+  ['Penalty', 'PayrollPenalty', -1],
+  ['Advance', 'PayrollLoansShort', -1],
+  ['Loans', 'PayrollLoansLong', -1],
+];
 
 export function PayrollSheetPage() {
   const { timesheetId } = useParams<{ timesheetId: string }>();
@@ -35,6 +55,8 @@ export function PayrollSheetPage() {
   const [edits, setEdits] = useState<Record<number, Record<string, number>>>({});
   const [showNoWork, setShowNoWork] = useState(false);
   const [showZero, setShowZero] = useState(false);
+  const [loc, setLoc] = useState(''); // '' = all locations
+  const [openId, setOpenId] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
@@ -53,10 +75,22 @@ export function PayrollSheetPage() {
   }
   useEffect(() => load(), [timesheetId, showNoWork]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Hide disciplines with zero hours across the sheet unless "show zero" is on.
+  // Location filter options built from the loaded sheet.
+  const locations = useMemo(() => {
+    const seen = new Set<string>();
+    for (const r of rows) { const n = str(r, 'LocationNickName'); if (n) seen.add(n); }
+    return [...seen].sort();
+  }, [rows]);
+
+  const viewRows = useMemo(
+    () => (loc ? rows.filter((r) => str(r, 'LocationNickName') === loc) : rows),
+    [rows, loc],
+  );
+
+  // Hide disciplines with zero hours across the view unless "show zero" is on.
   const visibleDisciplines = useMemo(
-    () => DISCIPLINES.filter(([cnt]) => showZero || rows.some((r) => num(r, cnt) > 0)),
-    [rows, showZero],
+    () => DISCIPLINES.filter(([cnt]) => showZero || viewRows.some((r) => num(r, cnt) > 0)),
+    [viewRows, showZero],
   );
 
   const title = rows.length > 0 ? str(rows[0], 'TimesheetTitle') : `Timesheet #${timesheetId}`;
@@ -65,7 +99,6 @@ export function PayrollSheetPage() {
     setEdits((prev) => ({ ...prev, [payrollId]: { ...prev[payrollId], [field]: value } }));
     setNotice('');
   }
-
   function val(r: Row, field: string): number {
     const id = num(r, 'PayrollID');
     return edits[id]?.[field] ?? num(r, field);
@@ -83,62 +116,94 @@ export function PayrollSheetPage() {
           ? { ...row, [kind === 'paid' ? 'PayrollIndivPaid' : 'PayrollIndivNoWork']: on }
           : row));
     } catch (e) {
-      window.alert(e instanceof Error ? e.message : 'Could not update the row.');
+      toast.error(e instanceof Error ? e.message : 'Could not update the row.');
     }
   }
 
+  // Persist one row from its pending edits (used by both the card and Save Changes).
+  async function saveRow(id: number) {
+    const row = rows.find((r) => num(r, 'PayrollID') === id);
+    if (!row) return;
+    const fields = edits[id] ?? {};
+    const body: Record<string, number> = {};
+    for (const p of [
+      'PayrollSalary', 'PayrollPrivateHr', 'PayrollPrivateHrCnt', 'PayrollTeamHr', 'PayrollTeamHrCnt',
+      'PayrollSchoolHr', 'PayrollSchoolHrCnt', 'PayrollAquaBabyHr', 'PayrollAquaBabyHrCnt',
+      'PayrollAquaGymHr', 'PayrollAquaGymHrCnt', 'PayrollPhysioHr', 'PayrollPhysioHrCnt',
+      'PayrollMiscHr', 'PayrollMiscHrCnt', 'PayrollBonus', 'PayrollLoansShort', 'PayrollLoansLong',
+      'PayrollPenalty', 'PayrollNetToPay',
+    ])
+      body[p] = fields[p] ?? num(row, p);
+    await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+  }
+
   async function saveAll() {
-    const dirty = Object.entries(edits);
+    const dirty = Object.keys(edits).map(Number);
     if (dirty.length === 0) { setNotice('Nothing to save.'); return; }
     setBusy(true);
     setError('');
     try {
-      for (const [idStr, fields] of dirty) {
-        const id = Number(idStr);
-        const row = rows.find((r) => num(r, 'PayrollID') === id);
-        if (!row) continue;
-        const body: Record<string, number> = {};
-        for (const p of [
-          'PayrollSalary', 'PayrollPrivateHr', 'PayrollPrivateHrCnt', 'PayrollTeamHr', 'PayrollTeamHrCnt',
-          'PayrollSchoolHr', 'PayrollSchoolHrCnt', 'PayrollAquaBabyHr', 'PayrollAquaBabyHrCnt',
-          'PayrollAquaGymHr', 'PayrollAquaGymHrCnt', 'PayrollPhysioHr', 'PayrollPhysioHrCnt',
-          'PayrollMiscHr', 'PayrollMiscHrCnt', 'PayrollBonus', 'PayrollLoansShort', 'PayrollLoansLong',
-          'PayrollPenalty', 'PayrollNetToPay',
-        ])
-          body[p] = fields[p] ?? num(row, p === 'PayrollNetToPay' ? 'PayrollNetToPay' : p);
-        await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-      }
+      for (const id of dirty) await saveRow(id);
       setNotice(`${dirty.length} row(s) saved, recalculating…`);
+      toast.success('Payroll saved.');
       load(true); // the procs recompute the totals
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not save the changes.');
+      const m = e instanceof Error ? e.message : 'Could not save the changes.';
+      setError(m); toast.error(m);
     } finally {
       setBusy(false);
     }
   }
 
-  // Footer totals per currency column.
-  const totals = useMemo(() => {
-    const sum = (field: string, curField: string, cur: string) =>
-      rows.reduce((s, r) => (str(r, curField) === cur ? s + num(r, field) : s), 0);
-    return {
-      salaryLB: sum('PayrollSalary', 'PayrollSalaryCurrency', 'LBP'),
-      salaryUS: sum('PayrollSalary', 'PayrollSalaryCurrency', 'USD'),
-      netLB: sum('PayrollNetToPay', 'PayrollSalaryCurrency', 'LBP'),
-      netUS: sum('PayrollNetToPay', 'PayrollSalaryCurrency', 'USD'),
-      netBalLB: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'LBP' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPay') : s), 0),
-      netBalUS: rows.reduce((s, r) => (str(r, 'PayrollSalaryCurrency') === 'USD' && r.PayrollIndivPaid !== true ? s + num(r, 'PayrollNetToPay') : s), 0),
-    };
-  }, [rows]);
+  // Save just one coach (from the card), then close & recalc.
+  async function saveOne(id: number) {
+    setBusy(true);
+    try {
+      await saveRow(id);
+      toast.success('Coach payroll saved.');
+      setOpenId(null);
+      load(true);
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save.');
+    } finally {
+      setBusy(false);
+    }
+  }
 
-  const cellInput = 'w-20 rounded border border-slate-200 px-1.5 py-0.5 text-xs text-right focus:outline-none focus:ring-1 focus:ring-[#1e5c97]/50';
-  const canExport = getStoredUser()?.canExport;
+  // Per-column totals, split by currency (only nonzero currencies render).
+  const sumCur = (field: string) => {
+    const o: Record<Cur, number> = { USD: 0, LBP: 0 };
+    for (const r of viewRows) o[curOf(r)] += num(r, field);
+    return o;
+  };
+  const totals = useMemo(() => {
+    const net = sumCur('PayrollNetToPay');
+    const paid: Record<Cur, number> = { USD: 0, LBP: 0 };
+    for (const r of viewRows) if (r.PayrollIndivPaid === true) paid[curOf(r)] += num(r, 'PayrollNetToPay');
+    return {
+      salary: sumCur('PayrollSalary'),
+      disc: Object.fromEntries(visibleDisciplines.map(([, t]) => [t, sumCur(t)])),
+      bonus: sumCur('PayrollBonus'),
+      penalty: sumCur('PayrollPenalty'),
+      advance: sumCur('PayrollLoansShort'),
+      loans: sumCur('PayrollLoansLong'),
+      subtotal: sumCur('SubTotal'),
+      net,
+      paid,
+      balance: { USD: net.USD - paid.USD, LBP: net.LBP - paid.LBP } as Record<Cur, number>,
+    };
+  }, [viewRows, visibleDisciplines]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const user = getStoredUser();
+  const canEdit = user?.userType?.toLowerCase() !== 'guest' && user?.canSave !== false;
+  const canExport = user?.canExport;
+  const dirtyCount = Object.keys(edits).length;
 
   function exportCsv() {
     const cols: [string, (r: Row) => string][] = [
       ['Location', (r) => str(r, 'LocationNickName')],
       ['Coach', (r) => str(r, 'CoachFullName')],
-      ['Currency', (r) => str(r, 'PayrollSalaryCurrency')],
+      ['Currency', (r) => curOf(r)],
       ['Salary', (r) => String(num(r, 'PayrollSalary'))],
       ...DISCIPLINES.map(([, total, label]) =>
         [label, (r: Row) => String(num(r, total))] as [string, (r: Row) => string]),
@@ -151,21 +216,42 @@ export function PayrollSheetPage() {
       ['Paid', (r) => (r.PayrollIndivPaid === true ? 'Yes' : 'No')],
     ];
     const header = cols.map((c) => c[0]).join(',');
-    const lines = rows.map((r) => cols.map((c) => `"${c[1](r).replace(/"/g, '""')}"`).join(','));
+    const lines = viewRows.map((r) => cols.map((c) => `"${c[1](r).replace(/"/g, '""')}"`).join(','));
     const blob = new Blob([[header, ...lines].join('\n')], { type: 'text/csv' });
     const a = document.createElement('a');
     a.href = URL.createObjectURL(blob);
-    a.download = `payroll-${timesheetId}.csv`;
+    a.download = `payroll-${timesheetId}${loc ? '-' + loc : ''}.csv`;
     a.click();
     URL.revokeObjectURL(a.href);
   }
 
+  // ── shared cell styles ──────────────────────────────────────────────────
+  const numInput =
+    'w-16 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+  const CurStack = ({ v, cls = '' }: { v: Record<Cur, number>; cls?: string }) => (
+    <div className={`leading-tight tabular-nums ${cls}`}>
+      {v.USD ? <div>US {money(v.USD)}</div> : null}
+      {v.LBP ? <div>LB {money(v.LBP)}</div> : null}
+      {!v.USD && !v.LBP ? <span className="text-slate-300">0</span> : null}
+    </div>
+  );
+
+  const openRow = openId != null ? rows.find((r) => num(r, 'PayrollID') === openId) : undefined;
+
   return (
     <div className="p-6 md:p-8">
       <SmartBack label="Timesheets" fallback="/payroll/timesheets" />
-      <PageHero title={`Payroll: ${title}`} subtitle={`${rows.length} coach(es)`} slide={2} />
+      <PageHero title={`Payroll: ${title}`} subtitle={`${viewRows.length} coach(es)${loc ? ` · ${loc}` : ''}`} slide={2} />
 
       <div className="flex flex-wrap items-center gap-3 mb-4">
+        <label className="flex items-center gap-1.5 text-sm text-slate-600">
+          <span className="font-semibold text-slate-500">Location</span>
+          <select value={loc} onChange={(e) => setLoc(e.target.value)}
+            className="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40">
+            <option value="">All locations</option>
+            {locations.map((l) => <option key={l} value={l}>{l}</option>)}
+          </select>
+        </label>
         <label className="flex items-center gap-1.5 text-sm text-slate-600 select-none">
           <input type="checkbox" checked={showNoWork} onChange={(e) => setShowNoWork(e.target.checked)} className="accent-[#1e5c97]" />
           Show "No Work"
@@ -175,7 +261,7 @@ export function PayrollSheetPage() {
           Show zero columns
         </label>
         <div className="flex-1" />
-        {canExport && rows.length > 0 && (
+        {canExport && viewRows.length > 0 && (
           <button onClick={exportCsv}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-slate-50">
             <Download className="size-4" /> Export
@@ -185,11 +271,13 @@ export function PayrollSheetPage() {
           className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-[#e8f0f8] disabled:opacity-50">
           <RefreshCw className="size-4" /> Re-Calculate from HR
         </button>
-        <button onClick={saveAll} disabled={busy || Object.keys(edits).length === 0}
-          className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-5 py-1.5 disabled:opacity-50">
-          {busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
-          Save Changes {Object.keys(edits).length > 0 && `(${Object.keys(edits).length})`}
-        </button>
+        {canEdit && (
+          <button onClick={saveAll} disabled={busy || dirtyCount === 0}
+            className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-5 py-1.5 disabled:opacity-50">
+            {busy ? <Loader2 className="size-4 animate-spin" /> : <Save className="size-4" />}
+            Save Changes {dirtyCount > 0 && `(${dirtyCount})`}
+          </button>
+        )}
       </div>
 
       {error && (
@@ -199,90 +287,232 @@ export function PayrollSheetPage() {
         </div>
       )}
       {notice && <p className="text-sm text-emerald-700 mb-3">{notice}</p>}
+      <p className="text-xs text-slate-400 mb-3">Tip: click a coach's name to open their payroll card and edit it.</p>
 
       {loading ? (
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-          <table className="tbl w-full text-xs whitespace-nowrap">
+          <table className="w-full text-sm whitespace-nowrap border-collapse">
             <thead>
-              <tr>
-                <th className="text-left">Loc</th>
-                <th className="text-left">Coach</th>
-                <th className="text-right">Salary</th>
+              <tr className="text-xs uppercase tracking-wide text-slate-500 border-b-2 border-slate-200 bg-slate-50">
+                <th className="px-3 py-2.5 text-left font-semibold">Loc</th>
+                <th className="px-3 py-2.5 text-left font-semibold sticky left-0 bg-slate-50">Coach</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Salary</th>
                 {visibleDisciplines.map(([cnt, , label]) => (
-                  <th key={cnt} colSpan={2} className="text-center">{label} (hrs · total)</th>
+                  <th key={cnt} colSpan={2} className="px-3 py-2.5 text-center font-semibold border-l border-slate-200">{label}<span className="block text-[10px] normal-case font-normal text-slate-400">hrs · total</span></th>
                 ))}
-                <th className="text-right">Bonus</th>
-                <th className="text-right">Penalty</th>
-                <th className="text-right">Advance</th>
-                <th className="text-right">Loans</th>
-                <th className="text-right">SubTotal</th>
-                <th className="text-right">Net2Pay</th>
-                <th className="text-center">Paid</th>
-                <th className="text-center">NoWork</th>
+                <th className="px-3 py-2.5 text-right font-semibold border-l border-slate-200">Bonus</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Penalty</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Advance</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Loans</th>
+                <th className="px-3 py-2.5 text-right font-semibold border-l border-slate-200">SubTotal</th>
+                <th className="px-3 py-2.5 text-right font-semibold">Net2Pay</th>
+                <th className="px-3 py-2.5 text-center font-semibold">Paid</th>
+                <th className="px-3 py-2.5 text-center font-semibold">NoWork</th>
               </tr>
             </thead>
             <tbody>
-              {rows.map((r) => {
+              {viewRows.map((r) => {
                 const id = num(r, 'PayrollID');
                 const paid = r.PayrollIndivPaid === true;
                 const noWork = r.PayrollIndivNoWork === true;
-                const salCur = str(r, 'PayrollSalaryCurrency');
+                const cur = curOf(r);
                 return (
-                  <tr key={id} className={noWork ? 'bg-red-50' : paid ? 'bg-emerald-50' : ''}>
-                    <td>{str(r, 'LocationIcon')}</td>
-                    <td className="font-semibold">{str(r, 'CoachFullName')}</td>
-                    <td className="text-right">{salCur} {money(num(r, 'PayrollSalary'))}</td>
+                  <tr key={id} className={`border-b border-slate-100 ${noWork ? 'bg-rose-50/60' : paid ? 'bg-emerald-50/50' : 'hover:bg-slate-50/60'}`}>
+                    <td className="px-3 py-1.5 text-slate-500">{str(r, 'LocationIcon') || str(r, 'LocationNickName')}</td>
+                    <td className="px-3 py-1.5 sticky left-0 bg-inherit">
+                      <button onClick={() => setOpenId(id)}
+                        className="font-semibold text-[#1e5c97] hover:underline">{str(r, 'CoachFullName')}</button>
+                    </td>
+                    <td className="px-3 py-1.5 text-right tabular-nums font-medium bg-emerald-50/40">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollSalary'))}</td>
                     {visibleDisciplines.map(([cnt, total]) => (
                       <React.Fragment key={cnt}>
-                        <td className="text-right">
-                          <input type="number" value={val(r, cnt)}
-                            onChange={(e) => edit(id, cnt, Number(e.target.value))}
-                            className={cellInput} style={{ width: 56 }} />
+                        <td className="px-2 py-1.5 text-right border-l border-slate-100 bg-sky-50/40">
+                          <input type="number" min={0} disabled={!canEdit} value={val(r, cnt)}
+                            onChange={(e) => edit(id, cnt, Number(e.target.value))} className={numInput} />
                         </td>
-                        <td className="text-right text-slate-500">{money(num(r, total))}</td>
+                        <td className="px-2 py-1.5 text-right tabular-nums text-slate-500">{money(num(r, total))}</td>
                       </React.Fragment>
                     ))}
-                    {EXTRA_EDITABLE.map((f) => (
-                      <td key={f} className="text-right">
-                        <input type="number" value={val(r, f)}
+                    {ADJUSTMENTS.map(([, f, sign]) => (
+                      <td key={f} className={`px-2 py-1.5 text-right ${f === 'PayrollBonus' ? 'border-l border-slate-100' : ''}`}>
+                        <input type="number" disabled={!canEdit} value={val(r, f)}
                           onChange={(e) => edit(id, f, Number(e.target.value))}
-                          className={cellInput} />
+                          className={`${numInput} ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
                       </td>
                     ))}
-                    <td className="text-right font-semibold">{money(num(r, 'SubTotal'))}</td>
-                    <td className="text-right font-extrabold">{salCur} {money(num(r, 'PayrollNetToPay'))}</td>
-                    <td className="text-center">
-                      <input type="checkbox" checked={paid} onChange={(e) => toggle(r, 'paid', e.target.checked)} className="accent-emerald-600" />
+                    <td className="px-3 py-1.5 text-right tabular-nums font-semibold bg-slate-50 border-l border-slate-100">{money(num(r, 'SubTotal'))}</td>
+                    <td className="px-3 py-1.5 text-right tabular-nums font-extrabold bg-amber-50/70">{cur === 'USD' ? '$' : 'LL'} {money(num(r, 'PayrollNetToPay'))}</td>
+                    <td className="px-3 py-1.5 text-center">
+                      <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => toggle(r, 'paid', e.target.checked)} className="size-4 accent-emerald-600" />
                     </td>
-                    <td className="text-center">
-                      <input type="checkbox" checked={noWork} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="accent-red-500" />
+                    <td className="px-3 py-1.5 text-center">
+                      <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggle(r, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
                     </td>
                   </tr>
                 );
               })}
+              {viewRows.length === 0 && (
+                <tr><td colSpan={visibleDisciplines.length * 2 + 9} className="px-4 py-10 text-center text-slate-400">No payroll rows.</td></tr>
+              )}
             </tbody>
-            <tfoot>
-              <tr className="font-bold bg-slate-50">
-                <td colSpan={2}>Totals</td>
-                <td className="text-right">
-                  {totals.salaryLB > 0 && <div>LB {money(totals.salaryLB)}</div>}
-                  {totals.salaryUS > 0 && <div>US {money(totals.salaryUS)}</div>}
-                </td>
-                <td colSpan={visibleDisciplines.length * 2 + EXTRA_EDITABLE.length + 1} />
-                <td className="text-right">
-                  {totals.netBalLB > 0 && <div className="text-red-600">Bal LB {money(totals.netBalLB)}</div>}
-                  {totals.netBalUS > 0 && <div className="text-red-600">Bal US {money(totals.netBalUS)}</div>}
-                  {totals.netLB > 0 && <div>LB {money(totals.netLB)}</div>}
-                  {totals.netUS > 0 && <div>US {money(totals.netUS)}</div>}
-                </td>
-                <td colSpan={2} />
-              </tr>
-            </tfoot>
+            {viewRows.length > 0 && (
+              <tfoot>
+                <tr className="text-sm bg-slate-100 border-t-2 border-slate-300">
+                  <td className="px-3 py-2.5 font-bold text-slate-600" colSpan={2}>Totals</td>
+                  <td className="px-3 py-2.5 text-right font-bold"><CurStack v={totals.salary} /></td>
+                  {visibleDisciplines.map(([cnt, total]) => (
+                    <React.Fragment key={cnt}>
+                      <td className="border-l border-slate-200" />
+                      <td className="px-2 py-2.5 text-right font-semibold text-slate-600"><CurStack v={totals.disc[total]} /></td>
+                    </React.Fragment>
+                  ))}
+                  <td className="px-2 py-2.5 text-right font-semibold text-emerald-700 border-l border-slate-200"><CurStack v={totals.bonus} /></td>
+                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.penalty} /></td>
+                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.advance} /></td>
+                  <td className="px-2 py-2.5 text-right font-semibold text-rose-700"><CurStack v={totals.loans} /></td>
+                  <td className="px-3 py-2.5 text-right font-bold border-l border-slate-200"><CurStack v={totals.subtotal} /></td>
+                  <td className="px-3 py-2.5 text-right font-bold">
+                    <CurStack v={totals.net} />
+                    <div className="mt-1 border-t border-slate-300 pt-1 text-[11px] font-semibold text-slate-500">
+                      <div className="text-emerald-700">Paid {totals.paid.USD ? `US ${money(totals.paid.USD)}` : ''}{totals.paid.LBP ? ` LB ${money(totals.paid.LBP)}` : ''}{!totals.paid.USD && !totals.paid.LBP ? '0' : ''}</div>
+                      <div className="text-rose-600">Bal {totals.balance.USD ? `US ${money(totals.balance.USD)}` : ''}{totals.balance.LBP ? ` LB ${money(totals.balance.LBP)}` : ''}{!totals.balance.USD && !totals.balance.LBP ? '0' : ''}</div>
+                    </div>
+                  </td>
+                  <td colSpan={2} />
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       )}
+
+      {openRow && (
+        <CoachCard
+          row={openRow}
+          canEdit={canEdit}
+          busy={busy}
+          val={val}
+          edit={edit}
+          onToggle={toggle}
+          onSave={() => saveOne(num(openRow, 'PayrollID'))}
+          onClose={() => setOpenId(null)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Per-coach payroll card (modal): review + edit one coach cleanly ──────────
+function CoachCard({
+  row, canEdit, busy, val, edit, onToggle, onSave, onClose,
+}: {
+  row: Row; canEdit: boolean; busy: boolean;
+  val: (r: Row, f: string) => number;
+  edit: (id: number, f: string, v: number) => void;
+  onToggle: (r: Row, kind: 'paid' | 'nowork', on: boolean) => void;
+  onSave: () => void; onClose: () => void;
+}) {
+  const id = num(row, 'PayrollID');
+  const cur = curOf(row);
+  const sym = cur === 'USD' ? '$' : 'LL';
+  const paid = row.PayrollIndivPaid === true;
+  const noWork = row.PayrollIndivNoWork === true;
+
+  const box = 'w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-right text-base tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+  const label = 'text-xs font-semibold uppercase tracking-wide text-slate-400';
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
+      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* header */}
+        <div className="flex items-start justify-between gap-3 border-b border-slate-100 p-5">
+          <div>
+            <h2 className="text-lg font-bold text-slate-800">{str(row, 'CoachFullName')}</h2>
+            <p className="text-sm text-slate-500">{str(row, 'LocationNickName')} · paid in {cur}</p>
+          </div>
+          <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="size-5" /></button>
+        </div>
+
+        <div className="p-5 space-y-6">
+          {/* salary */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-3">
+            <div>
+              <label className={label}>Salary ({sym})</label>
+              <input type="number" disabled={!canEdit} value={val(row, 'PayrollSalary')}
+                onChange={(e) => edit(id, 'PayrollSalary', Number(e.target.value))} className={box + ' mt-1'} />
+            </div>
+          </div>
+
+          {/* disciplines */}
+          <div>
+            <p className={label + ' mb-2'}>Hours (system · counted for pay · amount)</p>
+            <div className="space-y-1.5">
+              {DISCIPLINES.map(([cnt, total, dl]) => (
+                <div key={cnt} className="grid grid-cols-12 items-center gap-2 rounded-lg bg-slate-50/70 px-3 py-1.5">
+                  <span className="col-span-3 text-sm font-medium text-slate-700">{dl}</span>
+                  <span className="col-span-3 text-right text-sm text-slate-400 tabular-nums" title="System-detected hours">{money(num(row, SYS_HR[cnt]))}</span>
+                  <div className="col-span-3">
+                    <input type="number" min={0} disabled={!canEdit} value={val(row, cnt)}
+                      onChange={(e) => edit(id, cnt, Number(e.target.value))}
+                      className="w-full rounded-md border border-sky-200 bg-sky-50/50 px-2 py-1 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
+                  </div>
+                  <span className="col-span-3 text-right text-sm font-semibold text-slate-600 tabular-nums">{sym} {money(num(row, total))}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* adjustments */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+            {ADJUSTMENTS.map(([al, f, sign]) => (
+              <div key={f}>
+                <label className={label}>{al}{sign < 0 ? ' −' : ' +'}</label>
+                <input type="number" disabled={!canEdit} value={val(row, f)}
+                  onChange={(e) => edit(id, f, Number(e.target.value))}
+                  className={`${box} mt-1 ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
+              </div>
+            ))}
+          </div>
+
+          {/* summary */}
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#e8f0f8] p-4">
+            <div>
+              <p className={label}>SubTotal</p>
+              <p className="text-lg font-bold text-slate-700 tabular-nums">{sym} {money(num(row, 'SubTotal'))}</p>
+            </div>
+            <div className="text-right">
+              <p className={label}>Net to Pay</p>
+              <p className="text-2xl font-extrabold text-[#1e5c97] tabular-nums">{sym} {money(num(row, 'PayrollNetToPay'))}</p>
+            </div>
+          </div>
+
+          {/* toggles */}
+          <div className="flex items-center gap-6">
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
+              <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => onToggle(row, 'paid', e.target.checked)} className="size-4 accent-emerald-600" />
+              Paid
+            </label>
+            <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
+              <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => onToggle(row, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
+              No Work this month
+            </label>
+          </div>
+        </div>
+
+        {/* footer */}
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-4">
+          <p className="mr-auto text-xs text-slate-400">Saving re-runs the HR recalculation for updated totals.</p>
+          <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
+          {canEdit && (
+            <button onClick={onSave} disabled={busy}
+              className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-5 py-2 text-sm font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
+              {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save
+            </button>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
