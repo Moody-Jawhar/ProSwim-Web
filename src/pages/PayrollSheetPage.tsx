@@ -29,6 +29,12 @@ const shortName = (full: string) => {
   const parts = full.trim().split(/\s+/);
   return parts.length <= 1 ? full : [parts[0].slice(0, 2), ...parts.slice(1)].join(' ');
 };
+// Timesheet label from the "To" (end) date's month — falls back to the stored title.
+const tsLabel = (r: Row): string => {
+  const d = str(r, 'TimesheetEndDate');
+  if (d) { const dt = new Date(d); if (!isNaN(dt.getTime())) return `${dt.getFullYear()}/${dt.getMonth() + 1}`; }
+  return str(r, 'TimesheetTitle');
+};
 
 // [countField, totalField, label]
 const DISCIPLINES: [string, string, string][] = [
@@ -54,6 +60,15 @@ const ADJUSTMENTS: [string, string, 1 | -1][] = [
   ['Penalty', 'PayrollPenalty', -1],
   ['Advance', 'PayrollLoansShort', -1],
   ['Loans', 'PayrollLoansLong', -1],
+];
+
+// Every param P_TimeSheet_Payroll_Update needs when saving a row.
+const SAVE_FIELDS = [
+  'PayrollSalary', 'PayrollPrivateHr', 'PayrollPrivateHrCnt', 'PayrollTeamHr', 'PayrollTeamHrCnt',
+  'PayrollSchoolHr', 'PayrollSchoolHrCnt', 'PayrollAquaBabyHr', 'PayrollAquaBabyHrCnt',
+  'PayrollAquaGymHr', 'PayrollAquaGymHrCnt', 'PayrollPhysioHr', 'PayrollPhysioHrCnt',
+  'PayrollMiscHr', 'PayrollMiscHrCnt', 'PayrollBonus', 'PayrollLoansShort', 'PayrollLoansLong',
+  'PayrollPenalty', 'PayrollNetToPay',
 ];
 
 export function PayrollSheetPage() {
@@ -101,7 +116,7 @@ export function PayrollSheetPage() {
     [viewRows, showZero],
   );
 
-  const title = rows.length > 0 ? str(rows[0], 'TimesheetTitle') : `Timesheet #${timesheetId}`;
+  const title = rows.length > 0 ? tsLabel(rows[0]) : `Timesheet #${timesheetId}`;
 
   function edit(payrollId: number, field: string, value: number) {
     setEdits((prev) => ({ ...prev, [payrollId]: { ...prev[payrollId], [field]: value } }));
@@ -164,20 +179,6 @@ export function PayrollSheetPage() {
   }
 
   // Save just one coach (from the card), then close & recalc.
-  async function saveOne(id: number) {
-    setBusy(true);
-    try {
-      await saveRow(id);
-      toast.success('Coach payroll saved.');
-      setOpenId(null);
-      load(true);
-    } catch (e) {
-      toast.error(e instanceof Error ? e.message : 'Could not save.');
-    } finally {
-      setBusy(false);
-    }
-  }
-
   // Per-column totals, split by currency (only nonzero currencies render).
   const sumCur = (field: string) => {
     const o: Record<Cur, number> = { USD: 0, LBP: 0 };
@@ -410,13 +411,9 @@ export function PayrollSheetPage() {
         <CoachCard
           row={openRow}
           canEdit={canEdit}
-          busy={busy}
           startWithHistory={startHist}
           currentTimesheetId={Number(timesheetId)}
-          val={val}
-          edit={edit}
-          onToggle={toggle}
-          onSave={() => saveOne(num(openRow, 'PayrollID'))}
+          onReloadCurrent={() => load(true)}
           onClose={() => setOpenId(null)}
         />
       )}
@@ -425,39 +422,90 @@ export function PayrollSheetPage() {
 }
 
 // ── Per-coach payroll card (modal): review + edit one coach cleanly ──────────
+// Self-contained: keeps its own active row + edits so the payroll-history list
+// can switch to any month in the SAME popup and still edit + save it.
 function CoachCard({
-  row, canEdit, busy, startWithHistory, currentTimesheetId, val, edit, onToggle, onSave, onClose,
+  row, canEdit, startWithHistory, currentTimesheetId, onReloadCurrent, onClose,
 }: {
-  row: Row; canEdit: boolean; busy: boolean;
+  row: Row; canEdit: boolean;
   startWithHistory?: boolean; currentTimesheetId?: number;
-  val: (r: Row, f: string) => number;
-  edit: (id: number, f: string, v: number) => void;
-  onToggle: (r: Row, kind: 'paid' | 'nowork', on: boolean) => void;
-  onSave: () => void; onClose: () => void;
+  onReloadCurrent?: () => void; onClose: () => void;
 }) {
-  const id = num(row, 'PayrollID');
   const coachId = num(row, 'CoachID');
-  const cur = curOf(row);
-  const sym = cur === 'USD' ? '$' : 'LL';
-  const paid = row.PayrollIndivPaid === true;
-  const noWork = row.PayrollIndivNoWork === true;
-
-  const box = 'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
-  const label = 'text-[11px] font-semibold uppercase tracking-wide text-slate-400';
-
+  const [active, setActive] = useState<Row>(row);
+  const [edits, setEdits] = useState<Record<string, number>>({});
+  const [saving, setSaving] = useState(false);
   const [showHist, setShowHist] = useState(!!startWithHistory);
   const [hist, setHist] = useState<Row[] | null>(null);
   const [histLoading, setHistLoading] = useState(false);
 
-  useEffect(() => {
-    if (!showHist || hist || histLoading || !coachId) return;
+  // Reset when a different coach/payroll is opened from the grid.
+  useEffect(() => { setActive(row); setEdits({}); setShowHist(!!startWithHistory); },
+    [num(row, 'PayrollID')]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  function loadHistory() {
+    if (!coachId) return;
     setHistLoading(true);
     apiRequest<Row[]>(`/api/portal/payroll/coach-history/${coachId}`)
       .then((d) => setHist(Array.isArray(d) ? d : []))
       .catch(() => setHist([]))
       .finally(() => setHistLoading(false));
-  }, [showHist, coachId]); // eslint-disable-line react-hooks/exhaustive-deps
+  }
+  useEffect(() => { if (showHist && !hist && !histLoading) loadHistory(); }, [showHist]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  const id = num(active, 'PayrollID');
+  const activeTs = num(active, 'TimesheetID');
+  const cur = curOf(active);
+  const sym = cur === 'USD' ? '$' : 'LL';
+  const paid = active.PayrollIndivPaid === true;
+  const noWork = active.PayrollIndivNoWork === true;
+  const monthLabel = tsLabel(active) || (activeTs ? `#${activeTs}` : 'Payroll');
+
+  const v = (f: string) => edits[f] ?? num(active, f);
+  const setF = (f: string, val: number) => setEdits((e) => ({ ...e, [f]: val }));
+
+  // Pull fresh (recalculated) figures for the coach and re-point active at this row.
+  async function refreshActive() {
+    try {
+      const d = await apiRequest<Row[]>(`/api/portal/payroll/coach-history/${coachId}`);
+      const list = Array.isArray(d) ? d : [];
+      setHist(list);
+      const fresh = list.find((h) => num(h, 'PayrollID') === id);
+      if (fresh) setActive(fresh);
+    } catch { /* ignore */ }
+  }
+
+  async function saveActive() {
+    setSaving(true);
+    try {
+      const body: Record<string, number> = {};
+      for (const p of SAVE_FIELDS) body[p] = edits[p] ?? num(active, p);
+      await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
+      toast.success('Payroll saved.');
+      setEdits({});
+      await refreshActive();
+      if (activeTs === currentTimesheetId) onReloadCurrent?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not save.');
+    } finally { setSaving(false); }
+  }
+
+  async function toggleActive(kind: 'paid' | 'nowork', on: boolean) {
+    try {
+      await apiRequest(`/api/portal/payroll/rows/${id}/${kind}`, {
+        method: 'POST', body: JSON.stringify(kind === 'paid' ? { paid: on } : { noWork: on }),
+      });
+      setActive((a) => ({ ...a, [kind === 'paid' ? 'PayrollIndivPaid' : 'PayrollIndivNoWork']: on }));
+      if (activeTs === currentTimesheetId) onReloadCurrent?.();
+    } catch (e) {
+      toast.error(e instanceof Error ? e.message : 'Could not update.');
+    }
+  }
+
+  function pickHistory(h: Row) { setActive(h); setEdits({}); setShowHist(false); }
+
+  const box = 'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+  const label = 'text-[11px] font-semibold uppercase tracking-wide text-slate-400';
   const linkBtn = 'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold';
 
   return createPortal(
@@ -468,10 +516,10 @@ function CoachCard({
           <div className="flex items-start justify-between gap-3">
             <div>
               <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#e8f0f8] px-2.5 py-0.5 text-xs font-bold text-[#1e5c97]">
-                <History className="size-3" /> {str(row, 'TimesheetTitle') || (currentTimesheetId ? `Timesheet #${currentTimesheetId}` : 'Payroll')}
+                <History className="size-3" /> {monthLabel}
               </div>
-              <h2 className="text-lg font-bold text-slate-800">{str(row, 'CoachFullName')}</h2>
-              <p className="text-sm text-slate-500">{str(row, 'LocationNickName')} · paid in {cur}</p>
+              <h2 className="text-lg font-bold text-slate-800">{str(active, 'CoachFullName')}</h2>
+              <p className="text-sm text-slate-500">{str(active, 'LocationNickName')} · paid in {cur}</p>
             </div>
             <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="size-5" /></button>
           </div>
@@ -501,13 +549,14 @@ function CoachCard({
                 {hist.map((h) => {
                   const hts = num(h, 'TimesheetID');
                   const hcur = curOf(h);
-                  const isCurrent = hts === currentTimesheetId;
+                  const isActive = num(h, 'PayrollID') === id;
                   return (
-                    <Link key={num(h, 'PayrollID')} to={`/payroll/sheet/${hts}`} onClick={onClose}
-                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm hover:bg-slate-50">
+                    <button key={num(h, 'PayrollID')} onClick={() => pickHistory(h)}
+                      className={`flex w-full items-center justify-between gap-3 px-3 py-2 text-left text-sm hover:bg-slate-50 ${isActive ? 'bg-[#e8f0f8]' : ''}`}>
                       <span className="flex items-center gap-2 font-medium text-slate-700">
-                        {str(h, 'TimesheetTitle') || `#${hts}`}
-                        {isCurrent && <span className="rounded bg-[#e8f0f8] px-1.5 py-0.5 text-[10px] font-bold text-[#1e5c97]">current</span>}
+                        {tsLabel(h) || `#${hts}`}
+                        {isActive && <span className="rounded bg-[#1e5c97] px-1.5 py-0.5 text-[10px] font-bold text-white">viewing</span>}
+                        {hts === currentTimesheetId && !isActive && <span className="rounded bg-slate-200 px-1.5 py-0.5 text-[10px] font-bold text-slate-600">current</span>}
                       </span>
                       <span className="flex items-center gap-3 tabular-nums">
                         <span className={h.PayrollIndivPaid === true ? 'text-emerald-600' : 'text-rose-500'}>
@@ -516,12 +565,12 @@ function CoachCard({
                         <span className="font-bold text-slate-800">{hcur === 'USD' ? '$' : 'LL'} {money(num(h, 'PayrollNetToPay'))}</span>
                         <ChevronRight className="size-4 text-slate-300" />
                       </span>
-                    </Link>
+                    </button>
                   );
                 })}
               </div>
             )}
-            <p className="mt-2 text-[11px] text-slate-400">Click a month to open that payroll sheet, where you can edit it.</p>
+            <p className="mt-2 text-[11px] text-slate-400">Click a month to open that payroll here.</p>
           </div>
         )}
 
@@ -529,8 +578,8 @@ function CoachCard({
           {/* salary */}
           <div className="flex items-center gap-3">
             <label className={label + ' shrink-0'}>Salary ({sym})</label>
-            <input type="number" disabled={!canEdit} value={val(row, 'PayrollSalary')}
-              onChange={(e) => edit(id, 'PayrollSalary', Number(e.target.value))} className={box + ' max-w-[160px]'} />
+            <input type="number" disabled={!canEdit} value={v('PayrollSalary')}
+              onChange={(e) => setF('PayrollSalary', Number(e.target.value))} className={box + ' max-w-[160px]'} />
           </div>
 
           {/* disciplines */}
@@ -547,13 +596,13 @@ function CoachCard({
               {DISCIPLINES.map(([cnt, total, dl]) => (
                 <div key={cnt} className="grid grid-cols-12 items-center gap-2 px-3 py-0.5 odd:bg-slate-50/60">
                   <span className="col-span-3 text-sm font-medium text-slate-700">{dl}</span>
-                  <span className="col-span-3 text-right text-sm text-slate-400 tabular-nums" title="System-detected hours">{money(num(row, SYS_HR[cnt]))}</span>
+                  <span className="col-span-3 text-right text-sm text-slate-400 tabular-nums" title="System-detected hours">{money(num(active, SYS_HR[cnt]))}</span>
                   <div className="col-span-3">
-                    <input type="number" min={0} disabled={!canEdit} value={val(row, cnt)}
-                      onChange={(e) => edit(id, cnt, Number(e.target.value))}
+                    <input type="number" min={0} disabled={!canEdit} value={v(cnt)}
+                      onChange={(e) => setF(cnt, Number(e.target.value))}
                       className="w-full rounded-md border border-sky-200 bg-sky-50/50 px-2 py-1 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
                   </div>
-                  <span className="col-span-3 text-right text-sm font-semibold text-slate-600 tabular-nums">{sym} {money(num(row, total))}</span>
+                  <span className="col-span-3 text-right text-sm font-semibold text-slate-600 tabular-nums">{sym} {money(num(active, total))}</span>
                 </div>
               ))}
             </div>
@@ -564,8 +613,8 @@ function CoachCard({
             {ADJUSTMENTS.map(([al, f, sign]) => (
               <div key={f}>
                 <label className={label}>{al}{sign < 0 ? ' −' : ' +'}</label>
-                <input type="number" disabled={!canEdit} value={val(row, f)}
-                  onChange={(e) => edit(id, f, Number(e.target.value))}
+                <input type="number" disabled={!canEdit} value={v(f)}
+                  onChange={(e) => setF(f, Number(e.target.value))}
                   className={`${box} mt-1 ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
               </div>
             ))}
@@ -575,22 +624,22 @@ function CoachCard({
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#e8f0f8] px-4 py-2.5">
             <div>
               <p className={label}>SubTotal</p>
-              <p className="text-base font-bold text-slate-700 tabular-nums">{sym} {money(num(row, 'SubTotal'))}</p>
+              <p className="text-base font-bold text-slate-700 tabular-nums">{sym} {money(num(active, 'SubTotal'))}</p>
             </div>
             <div className="text-right">
               <p className={label}>Net to Pay</p>
-              <p className="text-xl font-extrabold text-[#1e5c97] tabular-nums">{sym} {money(num(row, 'PayrollNetToPay'))}</p>
+              <p className="text-xl font-extrabold text-[#1e5c97] tabular-nums">{sym} {money(num(active, 'PayrollNetToPay'))}</p>
             </div>
           </div>
 
           {/* toggles */}
           <div className="flex items-center gap-6">
             <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
-              <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => onToggle(row, 'paid', e.target.checked)} className="size-4 accent-emerald-600" />
+              <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => toggleActive('paid', e.target.checked)} className="size-4 accent-emerald-600" />
               Paid
             </label>
             <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
-              <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => onToggle(row, 'nowork', e.target.checked)} className="size-4 accent-rose-500" />
+              <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggleActive('nowork', e.target.checked)} className="size-4 accent-rose-500" />
               No Work this month
             </label>
           </div>
@@ -601,9 +650,9 @@ function CoachCard({
           <p className="mr-auto text-xs text-slate-400">Saving re-runs the HR recalculation for updated totals.</p>
           <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
           {canEdit && (
-            <button onClick={onSave} disabled={busy}
+            <button onClick={saveActive} disabled={saving}
               className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-5 py-2 text-sm font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
-              {busy ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save
             </button>
           )}
         </div>
