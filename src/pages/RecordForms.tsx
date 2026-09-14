@@ -353,8 +353,11 @@ const portalUser: RecordFormConfig = {
 
 // ── Timesheet (TimeSheetsIndividual.aspx) ────────────────────────────────────
 
-const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'))
-  .map((v) => ({ value: v, label: v }));
+// Value is the plain month number ("1".."12") to match the DB int column;
+// label is the month name. (Padded "08" never matched the stored 8.)
+const MONTH_NAMES = ['January', 'February', 'March', 'April', 'May', 'June',
+  'July', 'August', 'September', 'October', 'November', 'December'];
+const MONTHS = MONTH_NAMES.map((label, i) => ({ value: String(i + 1), label }));
 const YEARS = Array.from({ length: 10 }, (_, i) => String(2019 + i))
   .map((v) => ({ value: v, label: v }));
 
