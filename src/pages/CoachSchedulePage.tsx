@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, RotateCcw, ArrowLeft, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { canGoBack } from '../lib/history';
 import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
@@ -94,7 +95,7 @@ export function CoachSchedulePage() {
         subtitle={coachName || `Coach #${coachId}`}
         right={
           <button
-            onClick={() => navigate('/coaches')}
+            onClick={() => (canGoBack() ? navigate(-1) : navigate('/coaches'))}
             className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-slate-50"
           >
             <ArrowLeft className="size-3.5" /> Coaches

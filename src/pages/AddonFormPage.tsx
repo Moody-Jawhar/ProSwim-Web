@@ -7,6 +7,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Trash2, DivideCircle } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
 import { DateInput } from '../components/DateInput';
+import { canGoBack } from '../lib/history';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -26,6 +27,13 @@ export function AddonFormPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const isNew = !id || id === 'new';
+
+  // Return to the list exactly as the user left it: its filters (location,
+  // type, dates…) live in the URL, so going back in history restores them.
+  // Fall back to the plain list when the form was opened directly.
+  function goBackToList() {
+    if (canGoBack()) navigate(-1); else navigate('/payroll/addons');
+  }
 
   const [locations, setLocations] = useState<Option[]>([]);
   const [coaches, setCoaches] = useState<Option[]>([]);
@@ -129,9 +137,7 @@ export function AddonFormPage() {
       if (isNew) await apiRequest('/api/portal/edit/addon', { method: 'POST', body: JSON.stringify(body) });
       else await apiRequest(`/api/portal/edit/addon/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       toast.success('Add-on saved.');
-      // Return to the list still scoped to this coach's location, not the
-      // viewer's primary location, so the row you just edited is in view.
-      navigate(locationId ? `/payroll/addons?locationIds=${locationId}` : '/payroll/addons');
+      goBackToList();
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed.';
       setError(msg); toast.error(msg);
@@ -143,7 +149,7 @@ export function AddonFormPage() {
     if (!window.confirm('Delete this addon permanently?')) return;
     try {
       await apiRequest(`/api/portal/edit/addon/${id}`, { method: 'DELETE' });
-      navigate(locationId ? `/payroll/addons?locationIds=${locationId}` : '/payroll/addons');
+      goBackToList();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed.');
     }

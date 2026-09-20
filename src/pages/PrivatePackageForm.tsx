@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Search, X } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { canGoBack } from '../lib/history';
 import { DateInput } from '../components/DateInput';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
@@ -227,7 +228,7 @@ export function PrivatePackageForm() {
         await apiRequest(`/api/portal/edit/private-package/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       }
       toast.success('Package saved.');
-      navigate('/privates');
+      if (canGoBack()) navigate(-1); else navigate('/privates');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed.';
       setError(msg); toast.error(msg);

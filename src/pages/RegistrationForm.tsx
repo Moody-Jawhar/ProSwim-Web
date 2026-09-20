@@ -11,6 +11,7 @@ import {
   CreditCard, Trash2, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { canGoBack } from '../lib/history';
 import { DateInput } from '../components/DateInput';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
@@ -250,7 +251,7 @@ export function RegistrationForm() {
     if (!window.confirm('Are you absolutely sure? All linked data may be affected.')) return;
     try {
       await apiRequest(`/api/portal/edit/registration/${id}`, { method: 'DELETE' });
-      navigate('/registrations');
+      if (canGoBack()) navigate(-1); else navigate('/registrations');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed.');
     }

@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { Loader2, Save, ArrowLeft, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { canGoBack } from '../lib/history';
+import { useUrlParam } from '../lib/urlState';
 import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
@@ -30,7 +32,10 @@ export function PayrollHoursPage() {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [locations, setLocations] = useState<{ value: number; label: string }[]>([]);
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
+  // Location lives in the URL so leaving this page and coming back keeps it.
+  const [locParam, setLocParam] = useUrlParam('locationId', String(user?.primaryLocationId ?? 0));
+  const locationId = Number(locParam) || 0;
+  const setLocationId = (n: number) => setLocParam(String(n));
   const [timesheets, setTimesheets] = useState<{ id: number; label: string }[]>([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -102,7 +107,7 @@ export function PayrollHoursPage() {
         right={
           <div className="flex items-center gap-2">
             <button
-              onClick={() => navigate('/payroll/timesheets')}
+              onClick={() => (canGoBack() ? navigate(-1) : navigate('/payroll/timesheets'))}
               className="flex items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-[#1e5c97] hover:bg-slate-50"
             >
               <ArrowLeft className="size-3.5" /> Timesheets

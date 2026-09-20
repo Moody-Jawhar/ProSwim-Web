@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Search } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { canGoBack } from '../lib/history';
 import { DateInput } from './DateInput';
 import { PageHero } from './PageHero';
 import { SmartBack } from './SmartBack';
@@ -172,7 +173,9 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
         await apiRequest(`/api/portal/edit/${config.slug}/${id}`, { method: 'PUT', body: JSON.stringify(payload) });
       }
       toast.success(`${config.title} ${isNew ? 'created' : 'saved'}.`);
-      navigate(config.listPath);
+      // Back to the list as the user left it (filters live in its URL), not a
+      // fresh default-filtered copy; bare list only when opened directly.
+      if (canGoBack()) navigate(-1); else navigate(config.listPath);
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed.';
       setError(msg);

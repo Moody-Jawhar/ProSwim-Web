@@ -103,7 +103,7 @@ function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
 export function ModuleListPage({ config }: { config: ModuleConfig }) {
   const user = getStoredUser();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const access = useAccess();
   const canEdit = !!config.editBase && config.idKey && user?.userType?.toLowerCase() !== 'guest'
     && user?.canSave !== false && access.canEdit(config.editBase);
@@ -208,6 +208,16 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
   // On cascading pages the semester effect above owns the first load, so we
   // don't fire a throwaway request against a not-yet-resolved semester.
   useEffect(() => { if (!cascades) load(); }, [config.endpoint]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Mirror the filters into the URL as they change, so leaving the list (edit,
+  // back button) and returning restores the same criteria instead of the
+  // defaults. The values initialiser above already reads them back. `replace`
+  // keeps typing in a text filter from flooding the history stack.
+  useEffect(() => {
+    const next = new URLSearchParams(searchParams);
+    for (const f of config.filters) next.set(f.param, String(values[f.param] ?? ''));
+    if (next.toString() !== searchParams.toString()) setSearchParams(next, { replace: true });
+  }, [values]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const sorted = useMemo(() => {
     if (!sortKey) return rows;

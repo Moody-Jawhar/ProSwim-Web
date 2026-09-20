@@ -8,6 +8,7 @@
 // a time in a clean layout.
 
 import { useEffect, useMemo, useState } from 'react';
+import { useUrlParam } from '../lib/urlState';
 import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
 import { Loader2, AlertCircle, RefreshCw, Save, Download, X, Check, History, UserCog, ChevronRight, SquarePen } from 'lucide-react';
@@ -85,7 +86,7 @@ export function PayrollSheetPage() {
   const [edits, setEdits] = useState<Record<number, Record<string, number>>>({});
   const [showNoWork, setShowNoWork] = useState(false);
   const [showZero, setShowZero] = useState(false);
-  const [loc, setLoc] = useState(''); // '' = all locations
+  const [loc, setLoc] = useUrlParam('loc', ''); // '' = all locations; kept in the URL so it survives leaving the page
   const [openId, setOpenId] = useState<number | null>(null);
   const [startHist, setStartHist] = useState(false);
   const [loading, setLoading] = useState(true);
