@@ -68,7 +68,11 @@ export function DateInput({ value, onChange, className, disabled, min, max, ...r
   function openPicker() {
     const el = picker.current;
     if (!el || disabled) return;
-    if ('showPicker' in el) el.showPicker(); else el.click();
+    // showPicker() opens the calendar. It is missing on older browsers and can
+    // throw NotAllowedError in some contexts; either way fall back to click().
+    // (Don't use an `in` guard: the DOM types declare it always present, which
+    // narrows the else branch to `never` and fails `tsc -b`.)
+    try { el.showPicker(); } catch { el.click(); }
   }
 
   return (
