@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Pause, StickyNote, Phone, CreditCard, Package, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
@@ -234,9 +235,9 @@ export function PrSchedulePage() {
             className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50">
             <ChevronLeft className="size-4 text-slate-500" />
           </button>
-          <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={selectCls} />
+          <DateInput value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={selectCls} />
           <span className="text-xs text-slate-400">→</span>
-          <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={selectCls} />
+          <DateInput value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={selectCls} />
           <button type="button" onClick={() => shiftWeek(0)} title="This week"
             className="p-1.5 rounded-lg border border-slate-200 bg-white hover:bg-slate-50">
             <Pause className="size-4 text-slate-500" />

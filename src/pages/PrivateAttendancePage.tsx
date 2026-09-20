@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Save, Search, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
@@ -158,7 +159,7 @@ export function PrivateAttendancePage() {
       >
         <label className="flex items-center gap-1 text-xs text-slate-500">
           Date
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
+          <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
         </label>
         <select value={locationId} onChange={(e) => setLocationId(Number(e.target.value))} className={inputCls}>
           <option value={0}>All locations</option>
@@ -235,7 +236,7 @@ export function PrivateAttendancePage() {
                       className={`${inputCls} w-40`} />
                   </td>
                   <td className="px-3 py-2">
-                    <input type="date" disabled={!canSave} value={r.PrivateSessionMkupDate}
+                    <DateInput disabled={!canSave} value={r.PrivateSessionMkupDate}
                       onChange={(e) => set(r.PrivateSessionId, 'PrivateSessionMkupDate', e.target.value)}
                       className={inputCls} />
                   </td>

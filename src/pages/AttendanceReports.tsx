@@ -18,6 +18,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -292,9 +293,9 @@ export function AttendanceSummaryPage() {
           </select>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDay(''); }} className={inputCls} />
+          <DateInput value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDay(''); }} className={inputCls} />
           <span className="text-slate-400 text-sm">to</span>
-          <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDay(''); }} className={inputCls} />
+          <DateInput value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDay(''); }} className={inputCls} />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load()} placeholder="Search student…" className={`${inputCls} w-44`} />
           <label className="flex items-center gap-1.5 text-sm text-slate-600 select-none">
@@ -556,9 +557,9 @@ export function AttendanceDetailsPage() {
           </select>
         </div>
         <div className="flex flex-wrap items-center gap-2">
-          <input type="date" value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDay(''); }} className={inputCls} />
+          <DateInput value={dateFrom} onChange={(e) => { setDateFrom(e.target.value); setDay(''); }} className={inputCls} />
           <span className="text-slate-400 text-sm">to</span>
-          <input type="date" value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDay(''); }} className={inputCls} />
+          <DateInput value={dateTo} onChange={(e) => { setDateTo(e.target.value); setDay(''); }} className={inputCls} />
           <input value={search} onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === 'Enter' && load()} placeholder="Search student…" className={`${inputCls} w-44`} />
           <button onClick={() => load()} disabled={loading}

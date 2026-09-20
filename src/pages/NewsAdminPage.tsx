@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle, Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Newspaper, UploadCloud, FileText } from 'lucide-react';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 
 // Raw rows from /api/portal/news (P_News_SelectAll passthrough).
@@ -267,7 +268,7 @@ export function NewsAdminPage() {
               </div>
               <div>
                 <label className="block text-xs font-semibold text-slate-500 mb-1">Date (default today)</label>
-                <input type="date" value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} className={inputCls} />
+                <DateInput value={form.date} onChange={(e) => setForm((f) => ({ ...f, date: e.target.value }))} className={inputCls} />
               </div>
             </div>
             <div>

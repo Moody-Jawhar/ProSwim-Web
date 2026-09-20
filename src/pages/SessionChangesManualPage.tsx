@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CalendarX, Check, User, Repeat } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
@@ -228,7 +229,7 @@ export function SessionChangesManualPage() {
                         <>
                           <div>
                             <p className="text-[11px] font-semibold text-slate-500 mb-1">Makeup date</p>
-                            <input type="date" value={newDate} onChange={(e) => setNewDate(e.target.value)}
+                            <DateInput value={newDate} onChange={(e) => setNewDate(e.target.value)}
                               className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm bg-white" />
                           </div>
                           <div>

@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus, ListChecks } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { AiStudentOverview } from '../components/AiStudentOverview';
 import { SmartBack } from '../components/SmartBack';
@@ -259,7 +260,7 @@ export function StudentDetailPage() {
         return (
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
-            <input type="date" value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
+            <DateInput value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
           </div>
         );
       case 'gender':

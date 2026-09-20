@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Plus, Pencil, Trash2, X, CalendarDays, MapPin } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
@@ -129,12 +130,12 @@ export function CompetitionsPage() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Start date *</label>
-              <input className={inputCls} type="date" value={form.startDate}
+              <DateInput className={inputCls} value={form.startDate}
                 onChange={(e) => setForm({ ...form, startDate: e.target.value })} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">End date</label>
-              <input className={inputCls} type="date" value={form.endDate}
+              <DateInput className={inputCls} value={form.endDate}
                 onChange={(e) => setForm({ ...form, endDate: e.target.value })} />
             </div>
             <div className="md:col-span-2">

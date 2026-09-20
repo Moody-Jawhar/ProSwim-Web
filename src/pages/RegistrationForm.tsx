@@ -11,6 +11,7 @@ import {
   CreditCard, Trash2, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -371,7 +372,7 @@ export function RegistrationForm() {
 
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Registration date</label>
-              <input type="date" value={regDate} onChange={(e) => setRegDate(e.target.value)} className={inputCls} />
+              <DateInput value={regDate} onChange={(e) => setRegDate(e.target.value)} className={inputCls} />
             </div>
 
             <div className="flex items-end gap-4">
@@ -515,7 +516,7 @@ export function RegistrationForm() {
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-xs font-semibold text-red-700 mb-1">Stop date</label>
-                <input type="date" value={stopDate} onChange={(e) => setStopDate(e.target.value)} className={inputCls} />
+                <DateInput value={stopDate} onChange={(e) => setStopDate(e.target.value)} className={inputCls} />
               </div>
               <div>
                 <label className="block text-xs font-semibold text-red-700 mb-1">Money on hold</label>

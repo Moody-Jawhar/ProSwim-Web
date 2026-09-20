@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Trash2, DivideCircle } from 'lucide-react';
 import { apiRequest } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -193,7 +194,7 @@ export function AddonFormPage() {
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Date</label>
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
+            <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={inputCls} />
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Total Amount</label>

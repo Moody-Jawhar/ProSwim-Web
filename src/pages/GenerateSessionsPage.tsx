@@ -5,6 +5,7 @@
 import { useEffect, useState } from 'react';
 import { Loader2, CalendarPlus, AlertCircle, CheckCircle2 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
@@ -117,7 +118,7 @@ export function GenerateSessionsPage() {
           </select>
           <label className="flex items-center gap-1 text-xs text-slate-500">
             Date
-            <input type="date" value={date} onChange={(e) => setDate(e.target.value)} className={selectCls} />
+            <DateInput value={date} onChange={(e) => setDate(e.target.value)} className={selectCls} />
           </label>
           <button onClick={loadClasses} className="btn-grad rounded-lg text-xs font-semibold px-4 py-1.5">
             Load classes

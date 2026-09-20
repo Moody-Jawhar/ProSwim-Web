@@ -9,6 +9,7 @@ import {
   Loader2, AlertCircle, Plus, X, Truck, ChevronDown, ChevronRight, Lock, Unlock, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -427,7 +428,7 @@ function CreateDelivery({ variant, locations, initialLocation, onClose }: {
           )}
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Received Date</label>
-            <input type="date" value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)} className={`${inputCls} w-full`} />
+            <DateInput value={receivedDate} onChange={(e) => setReceivedDate(e.target.value)} className={`${inputCls} w-full`} />
           </div>
         </div>
 

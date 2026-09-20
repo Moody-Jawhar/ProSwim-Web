@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Search } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from './DateInput';
 import { PageHero } from './PageHero';
 import { SmartBack } from './SmartBack';
 import { toast } from './Toast';
@@ -247,7 +248,7 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
         return (
           <div key={fd.key}>
             <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
-            <input type="date" value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
+            <DateInput value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
           </div>
         );
       default:

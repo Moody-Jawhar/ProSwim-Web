@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Check, X, Inbox, CalendarX, Snowflake } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDateTime } from '../lib/dates';
 
 type Row = Record<string, unknown>;
@@ -309,7 +310,7 @@ export function SessionChangesApprovePage() {
                     <div className="flex flex-wrap items-end gap-2">
                       <div>
                         <p className="text-[11px] font-semibold text-slate-500 mb-1">Alternate date</p>
-                        <input type="date" value={altDate} onChange={(e) => setAltDate(e.target.value)}
+                        <DateInput value={altDate} onChange={(e) => setAltDate(e.target.value)}
                           className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm bg-white" />
                       </div>
                       <div>

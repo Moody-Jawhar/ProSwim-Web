@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SmartBack } from '../components/SmartBack';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
@@ -378,7 +379,7 @@ function ResultsSection({ data, competitions, canSave, busy, mutate, del, studen
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Date</label>
-              <input className={inputCls} type="date" value={form.resultDate}
+              <DateInput className={inputCls} value={form.resultDate}
                 onChange={(e) => setForm({ ...form, resultDate: e.target.value })} />
             </div>
             <div>
@@ -531,7 +532,7 @@ function AwardsSection({ data, canSave, busy, mutate, del, studentId }: SectionP
           </div>
           <div>
             <label className="block text-xs font-semibold text-slate-500 mb-1">Date</label>
-            <input className={inputCls} type="date" value={form.awardDate} onChange={(e) => setForm({ ...form, awardDate: e.target.value })} />
+            <DateInput className={inputCls} value={form.awardDate} onChange={(e) => setForm({ ...form, awardDate: e.target.value })} />
           </div>
           <div className="md:col-span-2">
             <label className="block text-xs font-semibold text-slate-500 mb-1">Competition</label>

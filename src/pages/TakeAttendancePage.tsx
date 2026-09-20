@@ -11,6 +11,7 @@ import {
   Loader2, AlertCircle, Save, Check, X, Users, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -355,7 +356,7 @@ function MakeupModal({ attendanceId, studentName, onClose, onAssigned }: {
         </div>
         <label className="flex items-center gap-2 text-xs text-slate-500 mb-3">
           Date
-          <input type="date" value={date} onChange={(e) => setDate(e.target.value)}
+          <DateInput value={date} onChange={(e) => setDate(e.target.value)}
             className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40" />
         </label>
         {error && <p className="text-sm text-red-600 mb-2">{error}</p>}

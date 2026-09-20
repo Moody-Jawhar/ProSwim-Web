@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, Download, Plus, Pencil,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from './DateInput';
 import { fmtDate } from '../lib/dates';
 import { useAccess } from './AccessProvider';
 import { PageHero } from './PageHero';
@@ -313,7 +314,7 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
               return (
                 <label key={f.param} className="flex items-center gap-1 text-xs text-slate-500">
                   {f.label}
-                  <input type="date" value={String(val ?? '')} onChange={(e) => set(e.target.value)} className={selectCls} />
+                  <DateInput value={String(val ?? '')} onChange={(e) => set(e.target.value)} className={selectCls} />
                 </label>
               );
             case 'checkbox':

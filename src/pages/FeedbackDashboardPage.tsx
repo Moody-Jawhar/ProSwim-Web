@@ -7,6 +7,7 @@ import {
   Loader2, AlertCircle, Star, Search, MessageSquare, Pencil, Save, Plus, X, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
@@ -125,9 +126,9 @@ export function FeedbackDashboardPage() {
             <option key={str(c.CoachName)} value={str(c.CoachName)}>{str(c.CoachName)}</option>
           ))}
         </select>
-        <input type="date" value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={inputCls} />
+        <DateInput value={dateFrom} onChange={(e) => setDateFrom(e.target.value)} className={inputCls} />
         <span className="text-slate-400 text-sm">to</span>
-        <input type="date" value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={inputCls} />
+        <DateInput value={dateTo} onChange={(e) => setDateTo(e.target.value)} className={inputCls} />
         <button onClick={load} className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] hover:bg-[#17497a] text-white text-sm font-semibold px-4 py-1.5">
           <Search className="size-4" /> Apply
         </button>

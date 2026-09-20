@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Loader2, AlertCircle, Save, Search, X } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { DateInput } from '../components/DateInput';
 import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
@@ -358,7 +359,7 @@ export function PrivatePackageForm() {
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Start date</label>
-              <input type="date" value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
+              <DateInput value={startDate} onChange={(e) => setStartDate(e.target.value)} className={inputCls} />
             </div>
             <div>
               <label className="block text-xs font-semibold text-slate-500 mb-1">Status</label>
