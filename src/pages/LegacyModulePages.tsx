@@ -80,6 +80,17 @@ const TS_RANGE = (() => {
   return { from: `${q1 ? y - 1 : y}-01-01`, to: `${y}-12-31` };
 })();
 
+// Mirrors TimesheetsAddonsList.aspx.cs Page_Load: From = the 1st of the month,
+// rolled back to the PREVIOUS month while still in the first half (day < 16);
+// To = Jan 1 of next year.
+const ADDON_RANGE = (() => {
+  const now = new Date();
+  const iso = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  const fromMonth = now.getDate() < 16 ? now.getMonth() - 1 : now.getMonth(); // JS normalizes -1 → Dec of prior year
+  return { from: iso(new Date(now.getFullYear(), fromMonth, 1)), to: iso(new Date(now.getFullYear() + 1, 0, 1)) };
+})();
+
 const isTimesheetOpen = (r: Row) => String(r.TimesheetStatus) === 'Open';
 
 // Close / reopen a timesheet in place. Sitemaster only (the API gates it too).
@@ -188,8 +199,8 @@ const addons: ModuleConfig = {
   filters: [
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', autoSubmit: true },
     { param: 'type', label: 'Type', type: 'select', options: ADDON_TYPES, width: 'max-w-32' },
-    { param: 'dateFrom', label: 'From', type: 'date', initial: TS_RANGE.from },
-    { param: 'dateTo', label: 'To', type: 'date', initial: TS_RANGE.to },
+    { param: 'dateFrom', label: 'From', type: 'date', initial: ADDON_RANGE.from },
+    { param: 'dateTo', label: 'To', type: 'date', initial: ADDON_RANGE.to },
     { param: 'byAddonDate', label: 'Addon Date', type: 'checkbox', initial: true },
     { param: 'byPaymentDate', label: 'Payment Date', type: 'checkbox', initial: true },
   ],
