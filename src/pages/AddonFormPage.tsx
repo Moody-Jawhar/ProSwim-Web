@@ -70,7 +70,10 @@ export function AddonFormPage() {
         if (r.AddonDate) setDate(new Date(String(r.AddonDate)).toISOString().slice(0, 10));
         setPayments(Array.from({ length: 12 }, (_, i) => ({
           amount: Number(r[`Payment${i + 1}`] ?? 0),
-          month: String(r[`Payment${i + 1}Month`] ?? '01'),
+          // DB stores the month unpadded (e.g. 9); the <select> options are
+          // zero-padded ('09'), so pad on load or the value won't match and the
+          // control falls back to the first option (January).
+          month: String(r[`Payment${i + 1}Month`] || 1).padStart(2, '0'),
           year: String(r[`Payment${i + 1}YR`] ?? r[`Payment${i + 1}Yr`] ?? String(new Date().getFullYear())),
         })));
       })
@@ -80,11 +83,12 @@ export function AddonFormPage() {
 
   function distribute() {
     // Legacy rounding: each payment = round(total / n), last one corrected so
-    // the sum matches the total exactly.
+    // the sum matches the total exactly. Like the old system, the schedule
+    // starts from the add-on Date's month/year (parsed to avoid TZ drift).
     const n = Math.min(Math.max(count, 1), 12);
     const per = Math.round(total / n);
-    const first = payments[0];
-    const base = new Date(Number(first.year), Number(first.month) - 1, 1);
+    const [by, bm] = date.split('-').map(Number);
+    const base = new Date(by, (bm || 1) - 1, 1);
     const next = payments.map((p, i) => {
       if (i >= n) return { ...p, amount: 0 };
       const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
@@ -121,7 +125,9 @@ export function AddonFormPage() {
       if (isNew) await apiRequest('/api/portal/edit/addon', { method: 'POST', body: JSON.stringify(body) });
       else await apiRequest(`/api/portal/edit/addon/${id}`, { method: 'PUT', body: JSON.stringify(body) });
       toast.success('Add-on saved.');
-      navigate('/payroll/addons');
+      // Return to the list still scoped to this coach's location, not the
+      // viewer's primary location, so the row you just edited is in view.
+      navigate(locationId ? `/payroll/addons?locationIds=${locationId}` : '/payroll/addons');
     } catch (e) {
       const msg = e instanceof Error ? e.message : 'Save failed.';
       setError(msg); toast.error(msg);
@@ -133,7 +139,7 @@ export function AddonFormPage() {
     if (!window.confirm('Delete this addon permanently?')) return;
     try {
       await apiRequest(`/api/portal/edit/addon/${id}`, { method: 'DELETE' });
-      navigate('/payroll/addons');
+      navigate(locationId ? `/payroll/addons?locationIds=${locationId}` : '/payroll/addons');
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Delete failed.');
     }
@@ -190,27 +196,30 @@ export function AddonFormPage() {
             <label className="block text-xs font-semibold text-slate-500 mb-1">Total Amount</label>
             <input type="number" value={total} onChange={(e) => setTotal(Number(e.target.value))} className={inputCls} />
           </div>
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Currency</label>
-              <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
-                <option value="USD">USD</option>
-                <option value="LBP">LBP</option>
-              </select>
-            </div>
-            <div className="flex-1">
-              <label className="block text-xs font-semibold text-slate-500 mb-1">Payments</label>
-              <select value={count} onChange={(e) => setCount(Number(e.target.value))} className={inputCls}>
-                {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => <option key={n} value={n}>{n}</option>)}
-              </select>
-            </div>
+          <div>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">Currency</label>
+            <select value={currency} onChange={(e) => setCurrency(e.target.value)} className={inputCls}>
+              <option value="USD">USD</option>
+              <option value="LBP">LBP</option>
+            </select>
           </div>
         </div>
 
-        <button onClick={distribute}
-          className="mt-4 flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-[#e8f0f8]">
-          <DivideCircle className="size-4" /> Distribute over {count} payment(s)
-        </button>
+        {/* Old-system layout: Distribute + a months-count dropdown. The total is
+            split evenly over that many months, starting from the Date's month. */}
+        <div className="mt-4 flex items-center gap-2">
+          <button onClick={distribute}
+            className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-[#e8f0f8]">
+            <DivideCircle className="size-4" /> Distribute
+          </button>
+          <select value={count} onChange={(e) => setCount(Number(e.target.value))}
+            className="rounded-lg border border-slate-200 px-2 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40">
+            {Array.from({ length: 12 }, (_, i) => i + 1).map((n) => (
+              <option key={n} value={n}>{String(n).padStart(2, '0')}</option>
+            ))}
+          </select>
+          <span className="text-sm text-slate-500">Mnths</span>
+        </div>
       </div>
 
       <div className="bg-white rounded-2xl border border-slate-100 shadow-soft p-5 mb-4">

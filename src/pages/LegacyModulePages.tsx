@@ -186,7 +186,7 @@ const addons: ModuleConfig = {
   idKey: 'AddonID',
   editBase: '/payroll/addons',
   filters: [
-    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
+    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', autoSubmit: true },
     { param: 'type', label: 'Type', type: 'select', options: ADDON_TYPES, width: 'max-w-32' },
     { param: 'dateFrom', label: 'From', type: 'date' },
     { param: 'dateTo', label: 'To', type: 'date' },
@@ -217,7 +217,7 @@ const coachAttendance: ModuleConfig = {
   editBase: '/payroll/coach-attendance',
   filters: [
     { param: 'searchFor', label: 'Search…', type: 'text' },
-    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36' },
+    { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', autoSubmit: true },
     { param: 'coachId', label: 'Coach', type: 'select', optionsKey: 'coaches', width: 'max-w-36' },
     { param: 'dateFrom', label: 'From', type: 'date' },
     { param: 'dateTo', label: 'To', type: 'date' },

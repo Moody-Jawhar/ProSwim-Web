@@ -35,6 +35,9 @@ export interface FilterDef {
    *  where the endpoint has no such parameter (registrations, sessions): there
    *  location scopes the semester list, and the semester scopes the rows. */
   submit?: boolean;
+  /** When true, changing this filter reloads the grid immediately — no Search
+   *  click needed (e.g. the Location select on the payroll pages). */
+  autoSubmit?: boolean;
 }
 
 export interface ModuleConfig {
@@ -288,8 +291,12 @@ export function ModuleListPage({ config }: { config: ModuleConfig }) {
       >
         {config.filters.map((f) => {
           const val = values[f.param];
-          const set = (nv: string | number | boolean) =>
-            setValues((old) => ({ ...old, [f.param]: nv }));
+          const set = (nv: string | number | boolean) => {
+            const next = { ...values, [f.param]: nv };
+            setValues(next);
+            // Opt-in filters (e.g. Location on payroll) apply on change, no Search click.
+            if (f.autoSubmit) load(next);
+          };
           switch (f.type) {
             case 'text':
               return (
