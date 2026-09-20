@@ -188,8 +188,8 @@ const addons: ModuleConfig = {
   filters: [
     { param: 'locationIds', label: 'Location', type: 'select', optionsKey: 'locations', width: 'max-w-36', autoSubmit: true },
     { param: 'type', label: 'Type', type: 'select', options: ADDON_TYPES, width: 'max-w-32' },
-    { param: 'dateFrom', label: 'From', type: 'date' },
-    { param: 'dateTo', label: 'To', type: 'date' },
+    { param: 'dateFrom', label: 'From', type: 'date', initial: TS_RANGE.from },
+    { param: 'dateTo', label: 'To', type: 'date', initial: TS_RANGE.to },
     { param: 'byAddonDate', label: 'Addon Date', type: 'checkbox', initial: true },
     { param: 'byPaymentDate', label: 'Payment Date', type: 'checkbox', initial: true },
   ],
