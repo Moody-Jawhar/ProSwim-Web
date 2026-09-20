@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { Loader2, KeyRound, Calculator, Clock, Lock, Unlock } from 'lucide-react';
 import { ModuleListPage, type ModuleConfig, type Row } from '../components/ModuleListPage';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDateTime, toDate } from '../lib/dates';
 import { toast } from '../components/Toast';
 
 const LOOKUPS = '/api/portal/modules/lookups';
@@ -392,8 +393,8 @@ const userActivity: ModuleConfig = {
   // Audit rows need the time, not just the date.
   renderCell: (row, col) => {
     if (col.key !== 'ActivityDate') return undefined;
-    const d = new Date(String(row.ActivityDate ?? ''));
-    return isNaN(d.getTime()) ? undefined : d.toLocaleString();
+    const d = toDate(row.ActivityDate);
+    return d ? fmtDateTime(d) : undefined;
   },
 };
 
@@ -445,8 +446,8 @@ const changeLog: ModuleConfig = {
   ],
   renderCell: (row, col) => {
     if (col.key === 'TR_Date') {
-      const d = new Date(String(row.TR_Date ?? ''));
-      return isNaN(d.getTime()) ? undefined : d.toLocaleString();
+      const d = toDate(row.TR_Date);
+      return d ? fmtDateTime(d) : undefined;
     }
     if (col.key === 'TR_Link') {
       const route = traceLinkToRoute(String(row.TR_Link ?? ''));

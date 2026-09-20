@@ -15,6 +15,9 @@ type Option = { value: number | string; label: string };
 
 const MONTHS = Array.from({ length: 12 }, (_, i) => String(i + 1).padStart(2, '0'));
 const YEARS = Array.from({ length: 10 }, (_, i) => String(2019 + i));
+// One combined "mm/yyyy" choice per payment row. Spans the same 2019–2028
+// window as YEARS so any stored month/year still matches an option.
+const MONTH_YEARS = YEARS.flatMap((y) => MONTHS.map((m) => ({ value: `${y}-${m}`, label: `${m}/${y}` })));
 
 interface PaymentLine { amount: number; month: string; year: string }
 
@@ -234,15 +237,13 @@ export function AddonFormPage() {
               <input type="number" value={p.amount}
                 onChange={(e) => setPayments((prev) => prev.map((x, j) => (j === i ? { ...x, amount: Number(e.target.value) } : x)))}
                 className="w-28 rounded-lg border border-slate-200 px-2 py-1 text-sm text-right" />
-              <select value={p.month}
-                onChange={(e) => setPayments((prev) => prev.map((x, j) => (j === i ? { ...x, month: e.target.value } : x)))}
+              <select value={`${p.year}-${p.month}`}
+                onChange={(e) => {
+                  const [year, month] = e.target.value.split('-');
+                  setPayments((prev) => prev.map((x, j) => (j === i ? { ...x, month, year } : x)));
+                }}
                 className="rounded-lg border border-slate-200 px-1.5 py-1 text-sm">
-                {MONTHS.map((m) => <option key={m} value={m}>{m}</option>)}
-              </select>
-              <select value={p.year}
-                onChange={(e) => setPayments((prev) => prev.map((x, j) => (j === i ? { ...x, year: e.target.value } : x)))}
-                className="rounded-lg border border-slate-200 px-1.5 py-1 text-sm">
-                {YEARS.map((y) => <option key={y} value={y}>{y}</option>)}
+                {MONTH_YEARS.map((o) => <option key={o.value} value={o.value}>{o.label}</option>)}
               </select>
             </div>
           ))}

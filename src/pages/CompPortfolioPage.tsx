@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { SmartBack } from '../components/SmartBack';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
 
@@ -43,7 +44,7 @@ export function parseTime(text: string): number | null {
 function fmtDate(v: string): string {
   if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return toDMY(d);
 }
 
 const AWARD_COLORS: Record<string, string> = {

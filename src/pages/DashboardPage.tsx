@@ -6,6 +6,7 @@ import {
   MessageCircle, Truck, Receipt, Inbox, Megaphone, Star,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 import { AiRiskRadar } from '../components/AiRiskRadar';
 import { FinanceOverview } from '../components/FinanceOverview';
@@ -70,7 +71,7 @@ export function DashboardPage() {
       <Bubbles tint="blue" overlay />
       <PageHero
         title={`Welcome${user?.fullName ? `, ${user.fullName}` : ''}`}
-        subtitle={new Date().toLocaleDateString(undefined, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+        subtitle={`${new Date().toLocaleDateString(undefined, { weekday: 'long' })}, ${toDMY(new Date())}`}
         slide={1}
         right={<img src={`${import.meta.env.BASE_URL}ProSwimLogo.png`} alt="" className="h-7 w-auto hidden sm:block" />}
       />

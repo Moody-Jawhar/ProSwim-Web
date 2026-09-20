@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, Download, Send, ExternalLink, Pencil, Plus,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
 export interface StudentListItem {
@@ -73,7 +74,7 @@ function fmtCell(key: SortKey, v: unknown): string {
   if (v == null || v === '') return '-';
   if (typeof v === 'string' && /Date|Born/i.test(key)) {
     const d = new Date(v);
-    if (!isNaN(d.getTime())) return key === 'studentDateOfBirth' ? String(d.getFullYear()) : d.toLocaleDateString();
+    if (!isNaN(d.getTime())) return key === 'studentDateOfBirth' ? String(d.getFullYear()) : toDMY(d);
   }
   return String(v);
 }

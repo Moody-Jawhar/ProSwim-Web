@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle, Megaphone, Users, Search, X, Send, Trash2 } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDateTime } from '../lib/dates';
 
 interface Picker { id: number; label: string }
 interface Lookups {
@@ -262,7 +263,7 @@ export function AnnouncementsPage() {
             {sent.map((r, i) => {
               const type = String(r.Type ?? '');
               const desc = String(r.Desc ?? '');
-              const when = r.SentDate ? new Date(String(r.SentDate)).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit' }) : '-';
+              const when = fmtDateTime(r.SentDate);
               const key = type + desc;
               return (
                 <div key={i} className="py-2.5 flex items-start gap-3">

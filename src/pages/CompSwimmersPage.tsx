@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { Loader2, AlertCircle, Trophy, Medal, ChevronRight, Users } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
@@ -18,7 +19,7 @@ function ageOf(dob: string): number | null {
 function fmtDate(v: string): string {
   if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return toDMY(d);
 }
 
 function initialsOf(name: string): string {

@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Search, AlertTriangle, OctagonX, Phone, Cake, StickyNote, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -162,7 +163,7 @@ export function GSchedulePage() {
       const cur = Math.floor(((now.getTime() - start.getTime()) / 86400000 + 6) / 7);
       head = `Week ${cur} of ${weeks}`;
     }
-    return `${head} · ${start.toLocaleDateString()} → ${end.toLocaleDateString()}`;
+    return `${head} · ${toDMY(start)} → ${toDMY(end)}`;
   }
 
   const distinctClasses = new Set(
@@ -358,7 +359,7 @@ export function GSchedulePage() {
                                     </span>
                                   )}
                                   {isBirthdayNear(r.DOB) && (
-                                    <span title={new Date(s(r.DOB)).toLocaleDateString()}>
+                                    <span title={toDMY(r.DOB)}>
                                       <Cake className="size-3 text-pink-500" />
                                     </span>
                                   )}

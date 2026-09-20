@@ -5,6 +5,7 @@
 
 import { useEffect, useState } from 'react';
 import { getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { Bubbles } from './Bubbles';
 
 const TOTAL_MS = 3400;
@@ -22,9 +23,7 @@ export function IntroSplash({ onDone }: { onDone: () => void }) {
   const firstName = (user?.fullName || '').trim().split(/\s+/)[0];
   const now = new Date();
   const greeting = `${greetingFor(now.getHours())}${firstName ? `, ${firstName}` : ''}`;
-  const dateLine = now.toLocaleDateString(undefined, {
-    weekday: 'long', day: 'numeric', month: 'long',
-  });
+  const dateLine = `${now.toLocaleDateString(undefined, { weekday: 'long' })}, ${toDMY(now)}`;
 
   function leave() {
     if (leaving) return;

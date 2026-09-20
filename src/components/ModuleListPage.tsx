@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, Download, Plus, Pencil,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate } from '../lib/dates';
 import { useAccess } from './AccessProvider';
 import { PageHero } from './PageHero';
 
@@ -81,10 +82,8 @@ function rowId(r: Row, key?: string): unknown {
 function fmt(v: unknown, format?: ColumnDef['format']): React.ReactNode {
   if (v == null || v === '') return '-';
   switch (format) {
-    case 'date': {
-      const d = new Date(String(v));
-      return isNaN(d.getTime()) ? String(v) : d.toLocaleDateString();
-    }
+    case 'date':
+      return fmtDate(v, String(v));
     case 'money':
       return Number(v).toLocaleString();
     case 'bool':

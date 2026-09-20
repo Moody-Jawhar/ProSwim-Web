@@ -6,6 +6,7 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Bell, Megaphone, Send } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDateTime } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -71,11 +72,7 @@ export function NotificationsListPage() {
               <div className="divide-y divide-slate-100">
                 {rows.map((r, i) => {
                   const type = String(r.Type ?? '');
-                  const when = r.SentDate
-                    ? new Date(String(r.SentDate)).toLocaleString(undefined, {
-                        day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-                      })
-                    : '-';
+                  const when = fmtDateTime(r.SentDate);
                   return (
                     <div key={i} className="py-3 flex items-start gap-3">
                       <span className={`shrink-0 text-[11px] font-bold rounded-full px-2 py-0.5 mt-0.5 ${

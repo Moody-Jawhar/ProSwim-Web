@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Pause, StickyNote, Phone, CreditCard, Package, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -191,7 +192,7 @@ export function PrSchedulePage() {
       <PageHero
         compact
         title="Private Schedule"
-        subtitle={`${new Date(dateFrom).toLocaleDateString()} → ${new Date(dateTo).toLocaleDateString()}`}
+        subtitle={`${toDMY(dateFrom)} → ${toDMY(dateTo)}`}
         slide={0}
         right={
           <div className="flex gap-2 flex-wrap justify-end">

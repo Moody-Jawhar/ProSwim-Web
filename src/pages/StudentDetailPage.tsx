@@ -4,6 +4,7 @@ import { useRef } from 'react';
 import { Loader2, AlertCircle, Save, Pencil, X, HeartPulse, PhoneCall, Trophy, Camera, Users, UserPlus, ListChecks } from 'lucide-react';
 import { toast } from '../components/Toast';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { AiStudentOverview } from '../components/AiStudentOverview';
 import { SmartBack } from '../components/SmartBack';
 
@@ -334,8 +335,7 @@ export function StudentDetailPage() {
     let text: string;
     if (v == null || v === '') text = '-';
     else if (fd.type === 'date') {
-      const d = new Date(String(v));
-      text = isNaN(d.getTime()) ? '-' : d.toLocaleDateString();
+      text = toDMY(v);
     } else if (fd.type === 'bloodType') {
       text = lookups?.bloodTypes.find((b) => b.bloodTypeId === Number(v))?.bloodTypeName ?? '-';
     } else if (fd.type === 'location') {

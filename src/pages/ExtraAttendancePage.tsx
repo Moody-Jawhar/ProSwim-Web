@@ -5,6 +5,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Loader2, Save, Search, AlertCircle } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
@@ -116,7 +117,7 @@ export function ExtraAttendancePage() {
   const inputCls =
     'rounded-lg border border-slate-200 bg-white px-2 py-1 text-xs focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40';
   const attended = useMemo(() => rows.filter((r) => r.ExtraClassSessionAttended).length, [rows]);
-  const fmtDate = (v?: string) => { const d = new Date(String(v)); return isNaN(d.getTime()) ? '' : d.toLocaleDateString(); };
+  const fmtDate = (v?: string) => toDMY(v, '');
 
   return (
     <div className="p-6">

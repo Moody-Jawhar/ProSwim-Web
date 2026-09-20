@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Loader2, AlertCircle, Plus, Pencil, Trash2, X, CalendarDays, MapPin } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
@@ -10,7 +11,7 @@ const num = (r: Row, k: string) => Number(r[k] ?? 0);
 function fmtDate(v: string): string {
   if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' });
+  return toDMY(d);
 }
 
 const inputCls =

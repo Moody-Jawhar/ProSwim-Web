@@ -3,17 +3,14 @@ import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Check, X, Inbox, CalendarX, Snowflake } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDateTime } from '../lib/dates';
 
 type Row = Record<string, unknown>;
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
 const num = (r: Row, k: string) => Number(r[k] ?? 0);
 
 function fmtDate(v: string): string {
-  if (!v) return '-';
-  const d = new Date(v);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleString(undefined, {
-    day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
-  });
+  return fmtDateTime(v);
 }
 
 // Parent-submitted private-session cancellation requests. Approving cancels

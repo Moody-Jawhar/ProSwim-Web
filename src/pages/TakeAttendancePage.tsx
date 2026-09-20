@@ -11,6 +11,7 @@ import {
   Loader2, AlertCircle, Save, Check, X, Users, RefreshCw, CheckCircle2,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
 
@@ -79,7 +80,7 @@ export function TakeAttendancePage() {
 
   const header = rows[0];
   const className = header ? str(header, 'ClassName') : '';
-  const sessionDate = header?.SessionDate ? new Date(String(header.SessionDate)).toLocaleDateString() : '';
+  const sessionDate = toDMY(header?.SessionDate, '');
   const remarksRequired = rows.some((r) => r.ClassObligatoryRemarksWhenAbsent === true);
 
   const counts = useMemo(() => {

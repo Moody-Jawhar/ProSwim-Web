@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { Loader2, AlertCircle, Plus, Pencil, Trash2, Eye, EyeOff, X, Save, Newspaper, UploadCloud, FileText } from 'lucide-react';
 import { apiRequest, apiUpload, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 
 // Raw rows from /api/portal/news (P_News_SelectAll passthrough).
 interface NewsRow {
@@ -361,7 +362,7 @@ export function NewsAdminPage() {
                   </div>
                   <p className="text-sm text-slate-500 mt-1 line-clamp-2 whitespace-pre-line">{r.NewsBody}</p>
                   <p className="text-xs text-slate-400 mt-1.5">
-                    {r.NewsDate ? new Date(r.NewsDate).toLocaleDateString() : '-'}
+                    {toDMY(r.NewsDate)}
                     {r.NewsCreatedBy && <> · {r.NewsCreatedBy}</>}
                   </p>
                 </div>

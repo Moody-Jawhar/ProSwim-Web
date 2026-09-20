@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Loader2, AlertCircle, CalendarX, Check, User, Repeat } from 'lucide-react';
 import { PageHero } from '../components/PageHero';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 
 type Row = Record<string, unknown>;
 const str = (r: Row, k: string) => (r[k] == null ? '' : String(r[k]));
@@ -10,7 +11,7 @@ const num = (r: Row, k: string) => Number(r[k] ?? 0);
 function fmtDay(v: string): string {
   if (!v) return '-';
   const d = new Date(v);
-  return isNaN(d.getTime()) ? '-' : d.toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' });
+  return toDMY(d);
 }
 
 // Staff-side manual change of a private session: search the swimmer, pick the

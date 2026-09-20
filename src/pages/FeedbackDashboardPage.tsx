@@ -7,6 +7,7 @@ import {
   Loader2, AlertCircle, Star, Search, MessageSquare, Pencil, Save, Plus, X, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
 type Row = Record<string, unknown>;
@@ -84,7 +85,7 @@ export function FeedbackDashboardPage() {
 
   function exportResponses() {
     const cols: [string, (r: Row) => string][] = [
-      ['Date', (r) => (r.FilledDate ? new Date(str(r.FilledDate)).toLocaleDateString() : '')],
+      ['Date', (r) => toDMY(r.FilledDate, '')],
       ['Student', (r) => str(r.StudentName) || `#${num(r.StudentId)}`],
       ['Type', (r) => str(r.RefType)],
       ['Location', (r) => str(r.LocationName)],
@@ -302,7 +303,7 @@ export function FeedbackDashboardPage() {
                   const avg = r.Avg != null ? Number(r.Avg) : null;
                   return (
                     <tr key={num(r.FeedbackId)}>
-                      <td>{r.FilledDate ? new Date(str(r.FilledDate)).toLocaleDateString() : '-'}</td>
+                      <td>{toDMY(r.FilledDate)}</td>
                       <td className="font-semibold">{str(r.StudentName) || `#${num(r.StudentId)}`}</td>
                       <td>
                         <span className={`text-[11px] font-bold rounded-full px-2 py-0.5 ${
