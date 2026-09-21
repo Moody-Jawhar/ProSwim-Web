@@ -5,6 +5,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, Download, Send, ExternalLink, Pencil, Plus,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
@@ -97,16 +98,18 @@ export function StudentsPage() {
   const [urlParams] = useSearchParams();
   const initialSearch = urlParams.get('searchFor') ?? '';
   // filter state
-  const [search, setSearch] = useState(initialSearch);
+  // Filters live in the URL so opening a student and coming back restores them
+  // (and the committed query below, so the grid reloads the same results).
+  const [search, setSearch] = useUrlState('searchFor', initialSearch);
   // Everyone opens scoped to their own location; only locked types can't change it.
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
-  const [school, setSchool] = useState('');
-  const [type, setType] = useState('');
-  const [yob, setYob] = useState('');
-  const [occupation, setOccupation] = useState('');
-  const [showDeleted, setShowDeleted] = useState(false);
-  const [showInactive, setShowInactive] = useState(true);
-  const [query, setQuery] = useState( // committed query string
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
+  const [school, setSchool] = useUrlState('school', '');
+  const [type, setType] = useUrlState('type', '');
+  const [yob, setYob] = useUrlState('yob', '');
+  const [occupation, setOccupation] = useUrlState('occupation', '');
+  const [showDeleted, setShowDeleted] = useUrlState('showDeleted', false);
+  const [showInactive, setShowInactive] = useUrlState('showInactive', true);
+  const [query, setQuery] = useUrlState('q', // committed query string
     initialSearch ? new URLSearchParams({ searchFor: initialSearch }).toString() : '');
 
   // grid state

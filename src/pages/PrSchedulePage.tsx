@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Search, ChevronLeft, ChevronRight, Pause, StickyNote, Phone, CreditCard, Package, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
@@ -88,14 +89,16 @@ export function PrSchedulePage() {
   const monday = mondayOfWeek(new Date());
   const [locations, setLocations] = useState<{ locationId: number; locationNickName: string | null }[]>([]);
   const [coaches, setCoaches] = useState<{ coachId: number; coachFullName: string | null }[]>([]);
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
-  const [coachId, setCoachId] = useState(0);
-  const [day, setDay] = useState('');
-  const [search, setSearch] = useState('');
-  const [dateFrom, setDateFrom] = useState(fmtISO(monday));
-  const [dateTo, setDateTo] = useState(fmtISO(new Date(monday.getTime() + 5 * 86400000)));
-  const [onlyActive, setOnlyActive] = useState(true);
-  const [freeTimes, setFreeTimes] = useState(false);
+  // Filters live in the URL so leaving the schedule and coming back restores
+  // them; the mount-time load below then reloads the same week and criteria.
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
+  const [coachId, setCoachId] = useUrlState('coachId', 0);
+  const [day, setDay] = useUrlState('day', '');
+  const [search, setSearch] = useUrlState('search', '');
+  const [dateFrom, setDateFrom] = useUrlState('dateFrom', fmtISO(monday));
+  const [dateTo, setDateTo] = useUrlState('dateTo', fmtISO(new Date(monday.getTime() + 5 * 86400000)));
+  const [onlyActive, setOnlyActive] = useUrlState('onlyActive', true);
+  const [freeTimes, setFreeTimes] = useUrlState('freeTimes', false);
   const [data, setData] = useState<PrivateData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');

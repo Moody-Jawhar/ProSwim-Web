@@ -9,6 +9,7 @@ import {
   Loader2, AlertCircle, Plus, X, Truck, ChevronDown, ChevronRight, Lock, Unlock, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 
@@ -75,15 +76,16 @@ function DeliveriesPage({ variant }: { variant: Variant }) {
 
   const [rows, setRows] = useState<Row[]>([]);
   const [locations, setLocations] = useState<Option[]>([]);
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
-  const [search, setSearch] = useState('');
-  const [showDeleted, setShowDeleted] = useState(false);
+  // Filters live in the URL so opening a delivery and coming back restores them.
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
+  const [search, setSearch] = useUrlState('search', '');
+  const [showDeleted, setShowDeleted] = useUrlState('showDeleted', false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [creating, setCreating] = useState(false);
   const [openId, setOpenId] = useState<number | null>(null);
   const [detail, setDetail] = useState<{ header: Row; lines: Row[] } | null>(null);
-  const [semFilter, setSemFilter] = useState('');
+  const [semFilter, setSemFilter] = useUrlState('semester', '');
 
   useEffect(() => {
     apiRequest<{ locations: Option[] }>('/api/portal/modules/lookups')

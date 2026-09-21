@@ -1,7 +1,8 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Loader2, AlertCircle, Search, AlertTriangle, OctagonX, Phone, Cake, StickyNote, MessageSquarePlus } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
 
@@ -50,10 +51,11 @@ export function GSchedulePage() {
 
   const [locations, setLocations] = useState<{ locationId: number; locationNickName: string | null }[]>([]);
   // Everyone opens scoped to their own location; only locked types can't change it.
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
+  // Filters live in the URL so leaving the schedule and coming back restores them.
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
   const [semesters, setSemesters] = useState<Row[]>([]);
-  const [semesterId, setSemesterId] = useState(0);
-  const [search, setSearch] = useState('');
+  const [semesterId, setSemesterId] = useUrlState('semesterId', 0);
+  const [search, setSearch] = useUrlState('search', '');
   const [data, setData] = useState<GroupData | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -64,18 +66,25 @@ export function GSchedulePage() {
     ).then((lk) => setLocations(lk.locations)).catch(() => {});
   }, []);
 
-  // Location → semester list (+ current semester as default)
+  // Location → semester list (+ current semester as default). On the first run
+  // keep a semester restored from the URL (coming back from a detail page)
+  // instead of snapping to the current one; later location changes re-default.
+  const restoredSemester = useRef(semesterId);
   useEffect(() => {
     apiRequest<{ semesters: Row[]; currentSemesterId: number }>(
       `/api/portal/schedule/semesters?locationId=${locationId}`
     )
       .then((r) => {
         setSemesters(r.semesters);
-        if (r.currentSemesterId) setSemesterId(r.currentSemesterId);
-        else if (r.semesters.length) setSemesterId(n(r.semesters[0].SemesterId ?? r.semesters[0].SemesterID));
+        const semId = (s: Row) => n(s.SemesterId ?? s.SemesterID);
+        const keep = restoredSemester.current;
+        restoredSemester.current = 0;
+        if (keep && r.semesters.some((s) => semId(s) === keep)) setSemesterId(keep);
+        else if (r.currentSemesterId) setSemesterId(r.currentSemesterId);
+        else if (r.semesters.length) setSemesterId(semId(r.semesters[0]));
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load semesters.'));
-  }, [locationId]);
+  }, [locationId]); // eslint-disable-line react-hooks/exhaustive-deps -- URL setter isn't identity-stable; run on location only
 
   const [shownPhones, setShownPhones] = useState<Set<string>>(new Set());
   const togglePhone = (key: string) =>

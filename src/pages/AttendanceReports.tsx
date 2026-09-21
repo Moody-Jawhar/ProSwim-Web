@@ -18,6 +18,7 @@ import {
   ArrowUpDown, ArrowUp, ArrowDown, User,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { DateInput } from '../components/DateInput';
 import { PageHero } from '../components/PageHero';
 
@@ -145,17 +146,21 @@ export function AttendanceSummaryPage() {
   const [coaches, setCoaches] = useState<Option[]>([]);
   const [classes, setClasses] = useState<Option[]>([]);
 
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
+  // These filters live in the URL so leaving the report and coming back keeps
+  // them. Semester and the date range stay local: the location cascade below
+  // re-defaults them on load (legacy behaviour), so restoring them would only
+  // be overwritten.
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
   const [semesterId, setSemesterId] = useState(0);
-  const [coachId, setCoachId] = useState(0);
-  const [classId, setClassId] = useState(0);
-  const [day, setDay] = useState('');
-  const [status, setStatus] = useState('');
+  const [coachId, setCoachId] = useUrlState('coachId', 0);
+  const [classId, setClassId] = useUrlState('classId', 0);
+  const [day, setDay] = useUrlState('day', '');
+  const [status, setStatus] = useUrlState('status', '');
   const [dateFrom, setDateFrom] = useState('');
   const [dateTo, setDateTo] = useState('');
-  const [search, setSearch] = useState(params.get('search') ?? '');
-  const [showActive, setShowActive] = useState(true);
-  const [showStopped, setShowStopped] = useState(true);
+  const [search, setSearch] = useUrlState('search', params.get('search') ?? '');
+  const [showActive, setShowActive] = useUrlState('showActive', true);
+  const [showStopped, setShowStopped] = useUrlState('showStopped', true);
 
   const [rows, setRows] = useState<Row[] | null>(null); // null = never searched (legacy: empty on load)
   const [loading, setLoading] = useState(false);
@@ -412,13 +417,17 @@ export function AttendanceDetailsPage() {
   const [coaches, setCoaches] = useState<Option[]>([]);
   const [classes, setClasses] = useState<Option[]>([]);
 
-  const [locationId, setLocationId] = useState(user?.primaryLocationId ?? 0);
+  // Neutral filters live in the URL so coming back keeps them. `search`,
+  // `dateFrom`/`dateTo` deliberately stay local: their presence in the URL is
+  // what marks a deep link (auto-load + all semesters), so persisting them
+  // would change that behaviour on every revisit.
+  const [locationId, setLocationId] = useUrlState('locationId', user?.primaryLocationId ?? 0);
   const [semesterSel, setSemesterSel] = useState<Set<number>>(new Set());
   const allSemesters = params.has('allSemesters');
-  const [coachId, setCoachId] = useState(0);
-  const [classId, setClassId] = useState(0);
-  const [day, setDay] = useState('');
-  const [status, setStatus] = useState('');
+  const [coachId, setCoachId] = useUrlState('coachId', 0);
+  const [classId, setClassId] = useUrlState('classId', 0);
+  const [day, setDay] = useUrlState('day', '');
+  const [status, setStatus] = useUrlState('status', '');
   const [dateFrom, setDateFrom] = useState(params.get('dateFrom') ?? rollingDefaultFrom());
   const [dateTo, setDateTo] = useState(params.get('dateTo') ?? `${new Date().getFullYear() + 1}-01-01`);
   const [search, setSearch] = useState(params.get('search') ?? '');

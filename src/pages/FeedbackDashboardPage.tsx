@@ -7,6 +7,7 @@ import {
   Loader2, AlertCircle, Star, Search, MessageSquare, Pencil, Save, Plus, X, Download,
 } from 'lucide-react';
 import { apiRequest, getStoredUser } from '../api/portalApi';
+import { useUrlState } from '../lib/urlState';
 import { DateInput } from '../components/DateInput';
 import { fmtDate as toDMY } from '../lib/dates';
 import { PageHero } from '../components/PageHero';
@@ -32,12 +33,13 @@ export function FeedbackDashboardPage() {
   const user = getStoredUser();
   const isSiteMaster = (user?.userType || '').toLowerCase() === 'sitemaster';
 
-  const [refType, setRefType] = useState('');
-  const [coach, setCoach] = useState('');
-  const [location, setLocation] = useState('');
+  // Filters live in the URL so leaving the dashboard and coming back restores them.
+  const [refType, setRefType] = useUrlState('refType', '');
+  const [coach, setCoach] = useUrlState('coach', '');
+  const [location, setLocation] = useUrlState('location', '');
   const [locations, setLocations] = useState<{ value: number; label: string }[]>([]);
-  const [dateFrom, setDateFrom] = useState('');
-  const [dateTo, setDateTo] = useState('');
+  const [dateFrom, setDateFrom] = useUrlState('dateFrom', '');
+  const [dateTo, setDateTo] = useUrlState('dateTo', '');
   const [summary, setSummary] = useState<Summary | null>(null);
   const [coaches, setCoaches] = useState<Row[]>([]);
   const [responses, setResponses] = useState<Row[]>([]);
