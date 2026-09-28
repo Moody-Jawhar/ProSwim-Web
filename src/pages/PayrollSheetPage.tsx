@@ -693,41 +693,36 @@ function CoachCard({
 
   function pickHistory(h: Row) { setActive(h); setEdits({}); setShowHist(false); }
 
-  const box = 'w-full rounded-lg border border-slate-200 bg-white px-2.5 py-1.5 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
-  const label = 'text-[11px] font-semibold uppercase tracking-wide text-slate-400';
-  const linkBtn = 'flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-xs font-semibold';
+  const box = 'w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-right text-[13px] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+  const label = 'text-[10px] font-semibold uppercase tracking-wide text-slate-400';
+  const linkBtn = 'flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold';
 
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
-      <div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        {/* header */}
-        <div className="border-b border-slate-100 p-4">
-          <div className="flex items-start justify-between gap-3">
-            <div>
-              <div className="mb-1 inline-flex items-center gap-1.5 rounded-full bg-[#e8f0f8] px-2.5 py-0.5 text-xs font-bold text-[#1e5c97]">
-                <History className="size-3" /> {monthLabel}
-              </div>
-              <h2 className="text-lg font-bold text-slate-800">{str(active, 'CoachFullName')}</h2>
-              <p className="text-sm text-slate-500">{str(active, 'LocationNickName')} · salary in {cur}{hrCur !== cur ? ` · hours in ${hrCur}` : ''}</p>
-            </div>
-            <button onClick={onClose} className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100"><X className="size-5" /></button>
-          </div>
-          {/* quick links */}
-          <div className="mt-3 flex flex-wrap gap-2">
-            <Link to={`/coaches/${coachId}`} onClick={onClose}
+      <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
+        {/* header: month · name · location, links on the right */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-slate-100 px-4 py-2.5">
+          <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f0f8] px-2 py-0.5 text-[11px] font-bold text-[#1e5c97]">
+            <History className="size-3" /> {monthLabel}
+          </span>
+          <h2 className="text-base font-bold text-slate-800 leading-tight">{str(active, 'CoachFullName')}</h2>
+          <span className="text-xs text-slate-500">{str(active, 'LocationNickName')} · {cur}{hrCur !== cur ? ` / hours ${hrCur}` : ''}</span>
+          <div className="ml-auto flex items-center gap-1.5">
+            <Link to={`/coaches/${coachId}`} onClick={onClose} title="Edit coach file & HR rate"
               className={`${linkBtn} border-slate-200 text-[#1e5c97] hover:bg-[#e8f0f8]`}>
-              <UserCog className="size-3.5" /> Edit coach file &amp; HR rate
+              <UserCog className="size-3.5" /> Coach file
             </Link>
-            <button onClick={() => setShowHist((s) => !s)}
+            <button onClick={() => setShowHist((s) => !s)} title="All payrolls of this coach"
               className={`${linkBtn} ${showHist ? 'border-[#1e5c97] bg-[#e8f0f8] text-[#1e5c97]' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-              <History className="size-3.5" /> All payrolls
+              <History className="size-3.5" /> History
             </button>
+            <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="size-4" /></button>
           </div>
         </div>
 
         {/* history panel */}
         {showHist && (
-          <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-3">
+          <div className="border-b border-slate-100 bg-slate-50/60 px-4 py-2">
             <p className={label + ' mb-2'}>Payroll history</p>
             {histLoading ? (
               <div className="flex items-center gap-2 text-sm text-slate-400"><Loader2 className="size-4 animate-spin" /> Loading…</div>
@@ -763,87 +758,73 @@ function CoachCard({
           </div>
         )}
 
-        <div className="p-4 space-y-3">
-          {/* salary */}
-          <div className="flex items-center gap-3">
-            <label className={label + ' shrink-0'}>Salary ({sym(cur)})</label>
-            <NumBox disabled={!canEdit} value={v('PayrollSalary')} onChange={(n) => setF('PayrollSalary', n)} className={box + ' max-w-[160px]'} />
-          </div>
-
-          {/* disciplines: Rate × Cnt = Total */}
-          <div>
-            <p className={label + ' mb-2'}>Hours</p>
-            {/* column header */}
-            <div className="grid grid-cols-12 items-center gap-2 px-3 pb-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
-              <span className="col-span-3">Section</span>
-              <span className="col-span-3 text-right">Rate / hr</span>
-              <span className="col-span-3 text-right">Cnt</span>
-              <span className="col-span-3 text-right">Total</span>
+        <div className="px-4 py-3 space-y-2.5">
+          {/* salary + adjustments on one row */}
+          <div className="grid grid-cols-5 gap-2">
+            <div>
+              <label className={label}>Salary ({sym(cur)})</label>
+              <NumBox disabled={!canEdit} value={v('PayrollSalary')} onChange={(n) => setF('PayrollSalary', n)} className={box + ' mt-0.5 font-semibold'} />
             </div>
-            <div className="divide-y divide-slate-100 rounded-lg border border-slate-100">
-              {DISCIPLINES.map((d) => (
-                <div key={d.key} className="grid grid-cols-12 items-center gap-2 px-3 py-0.5 odd:bg-slate-50/60">
-                  <span className="col-span-3 text-sm font-medium text-slate-700">{d.label}</span>
-                  <span className="col-span-3 text-right text-sm text-slate-400 tabular-nums" title="Hourly rate (from HR)">{sym(hrCur)} {money(num(active, d.rate))}</span>
-                  <div className="col-span-3">
-                    <NumBox disabled={!canEdit} value={v(d.cnt)} onChange={(n) => setF(d.cnt, n)}
-                      className="w-full rounded-md border border-sky-200 bg-sky-50/50 px-2 py-1 text-right text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
-                  </div>
-                  <span className="col-span-3 text-right text-sm font-semibold text-slate-600 tabular-nums">{sym(hrCur)} {money(amountOf(d))}</span>
-                </div>
-              ))}
-              <div className="grid grid-cols-12 items-center gap-2 px-3 py-1 bg-sky-50/60">
-                <span className="col-span-9 text-right text-[11px] font-semibold uppercase tracking-wide text-slate-400">Tot. Priv.</span>
-                <span className="col-span-3 text-right text-sm font-bold text-slate-700 tabular-nums">{sym(hrCur)} {money(totPriv)}</span>
-              </div>
-            </div>
-          </div>
-
-          {/* adjustments */}
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
             {ADJUSTMENTS.map(([al, f, sign]) => (
               <div key={f}>
                 <label className={label}>{al}{sign < 0 ? ' −' : ' +'}</label>
                 <NumBox disabled={!canEdit} value={v(f)} onChange={(n) => setF(f, n)} allowNegative
-                  className={`${box} mt-1 ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
+                  className={`${box} mt-0.5 ${sign < 0 ? 'text-rose-700' : 'text-emerald-700'}`} />
               </div>
             ))}
           </div>
 
-          {/* summary */}
-          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl bg-[#e8f0f8] px-4 py-2.5">
-            <div>
-              <p className={label}>SubTotal</p>
-              <p className="text-base font-bold text-slate-700 tabular-nums">{sym(cur)} {money(num(active, 'SubTotal'))}</p>
+          {/* disciplines: Rate × Cnt = Total */}
+          <div className="rounded-lg border border-slate-100">
+            <div className="grid grid-cols-12 items-center gap-2 border-b border-slate-100 bg-slate-50 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+              <span className="col-span-4">Hours</span>
+              <span className="col-span-2 text-right">Rate/hr</span>
+              <span className="col-span-3 text-right">Cnt</span>
+              <span className="col-span-3 text-right">Total</span>
             </div>
-            <div className="text-right">
-              <p className={label}>Net to Pay</p>
-              <p className="text-xl font-extrabold text-[#1e5c97] tabular-nums">{sym(cur)} {money(num(active, 'PayrollNetToPay'))}</p>
+            <div className="divide-y divide-slate-100">
+              {DISCIPLINES.map((d) => (
+                <div key={d.key} className="grid grid-cols-12 items-center gap-2 px-2.5 py-px odd:bg-slate-50/60">
+                  <span className="col-span-4 text-[13px] font-medium text-slate-700">{d.label}</span>
+                  <span className="col-span-2 text-right text-xs text-slate-400 tabular-nums" title="Hourly rate (from HR)">{sym(hrCur)} {money(num(active, d.rate))}</span>
+                  <div className="col-span-3">
+                    <NumBox disabled={!canEdit} value={v(d.cnt)} onChange={(n) => setF(d.cnt, n)}
+                      className="w-full rounded-md border border-sky-200 bg-sky-50/50 px-1.5 py-0.5 text-right text-[13px] tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
+                  </div>
+                  <span className="col-span-3 text-right text-[13px] font-semibold text-slate-600 tabular-nums">{sym(hrCur)} {money(amountOf(d))}</span>
+                </div>
+              ))}
+            </div>
+            <div className="grid grid-cols-12 items-center gap-2 border-t border-slate-100 bg-sky-50/60 px-2.5 py-1">
+              <span className="col-span-9 text-right text-[10px] font-bold uppercase tracking-wide text-slate-400">Tot. Priv.</span>
+              <span className="col-span-3 text-right text-[13px] font-bold text-slate-700 tabular-nums">{sym(hrCur)} {money(totPriv)}</span>
             </div>
           </div>
 
-          {/* toggles */}
-          <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
-              <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => toggleActive('paid', e.target.checked)} className="size-4 accent-emerald-600" />
+          {/* totals + toggles on one strip */}
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-1.5 rounded-lg bg-[#e8f0f8] px-3 py-1.5">
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 select-none">
+              <input type="checkbox" checked={paid} disabled={!canEdit} onChange={(e) => toggleActive('paid', e.target.checked)} className="size-3.5 accent-emerald-600" />
               Paid
             </label>
-            <label className="flex items-center gap-2 text-sm font-medium text-slate-600 select-none">
-              <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggleActive('nowork', e.target.checked)} className="size-4 accent-rose-500" />
-              No Work this month
+            <label className="flex items-center gap-1.5 text-xs font-medium text-slate-600 select-none">
+              <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggleActive('nowork', e.target.checked)} className="size-3.5 accent-rose-500" />
+              No Work
             </label>
+            <span className="ml-auto text-xs text-slate-500">SubTotal <b className="text-sm text-slate-700 tabular-nums">{sym(cur)} {money(num(active, 'SubTotal'))}</b></span>
+            <span className="text-xs text-slate-500">Net to Pay <b className="text-lg font-extrabold text-[#1e5c97] tabular-nums">{sym(cur)} {money(num(active, 'PayrollNetToPay'))}</b></span>
           </div>
         </div>
 
         {/* footer */}
-        <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-3">
-          <p className="mr-auto text-xs text-slate-400">Saving refreshes salary and rates from the coach profile and recomputes Net to Pay. Hours are kept.</p>
-          <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
+        <div className="flex items-center justify-end gap-2 border-t border-slate-100 px-4 py-2">
+          <p className="mr-auto text-[11px] text-slate-400">Hours are kept; salary &amp; rates refresh from the coach profile on save.</p>
+          <button onClick={onClose} className="rounded-lg border border-slate-200 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-50">Close</button>
           {canEdit && (
             <button onClick={() => saveActive(!paid)} disabled={saving}
               title={paid ? 'Saves this payroll (already paid, so rates are not refreshed).' : "Saves, then reloads this coach's salary, currencies and hourly rates from the coach profile. Hours are not changed."}
-              className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-5 py-2 text-sm font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} {paid ? 'Save' : 'Save & Recalc from HR'}
+              className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-4 py-1.5 text-xs font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
+              {saving ? <Loader2 className="size-3.5 animate-spin" /> : <Check className="size-3.5" />} {paid ? 'Save' : 'Save & Recalc from HR'}
             </button>
           )}
         </div>
