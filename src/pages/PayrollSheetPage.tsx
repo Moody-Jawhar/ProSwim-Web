@@ -106,8 +106,8 @@ const normalizeCols = (v: unknown): Cols => {
   return out;
 };
 
-// Plain numeric box (no up/down spinner): keeps what the user is typing as text
-// and reports the parsed number; an empty box means 0 but stays blank while editing.
+// Numeric box with the browser's up/down arrows: keeps what the user is typing as
+// text and reports the parsed number; an empty box means 0 but stays blank while editing.
 function NumBox({ value, onChange, disabled, className, allowNegative = false }: {
   value: number; onChange: (n: number) => void; disabled?: boolean; className?: string; allowNegative?: boolean;
 }) {
@@ -115,7 +115,7 @@ function NumBox({ value, onChange, disabled, className, allowNegative = false }:
   const [focused, setFocused] = useState(false);
   useEffect(() => { if (!focused) setText(String(value)); }, [value, focused]);
   return (
-    <input type="text" inputMode={allowNegative ? 'text' : 'numeric'} disabled={disabled} value={text} className={className}
+    <input type="number" step={1} min={allowNegative ? undefined : 0} disabled={disabled} value={text} className={className}
       onFocus={(e) => { setFocused(true); e.currentTarget.select(); }}
       onBlur={() => { setFocused(false); setText(String(value)); }}
       onChange={(e) => {
@@ -408,10 +408,10 @@ export function PayrollSheetPage() {
             <Download className="size-4" /> Export
           </button>
         )}
-        <button disabled={busy || loading} title="Reloads salary, rates, bonus/penalty add-ons and the supervisor hour counts from HR for unpaid rows"
+        <button disabled={busy || loading} title="Reloads salary, rates and bonus/penalty add-ons from the coach profiles for unpaid rows (hours are never changed)"
           onClick={() => {
-            const msg = 'Re-calculate from HR?\n\nFor every UNPAID coach this reloads the salary, hourly rates, bonus/penalty add-ons '
-              + 'and replaces the hour counts with the supervisor counts (Hours page). Manual edits made here will be overwritten.';
+            const msg = 'Re-calculate from HR?\n\nFor every UNPAID coach this reloads the salary, hourly rates and bonus/penalty add-ons '
+              + 'from the coach profiles. Hours are never changed by this. Unsaved edits on this page will be lost.';
             if (window.confirm(msg)) load(true);
           }}
           className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 text-[#1e5c97] text-sm font-semibold px-4 py-1.5 hover:bg-[#e8f0f8] disabled:opacity-50">

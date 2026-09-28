@@ -1,8 +1,8 @@
 // Supervisor per-discipline hours entry for a timesheet (TimeSheetPayrollHrs.aspx).
-// Each coach row shows the hours the system counted for pay (grey, …HrCnt) and
-// the supervisor's own count (editable, …HrCntSuperVisor), like the legacy
-// page; save writes all rows via P_TimeSheet_Payroll_UpdateHrs, whose
-// @Payroll{X}HrCnt params land in the …HrCntSuperVisor columns.
+// One editable hour count per coach per discipline. There is a single set of
+// hours (user decision 2026-09-28): the API writes both …HrCntSuperVisor and
+// the paid …HrCnt columns and recomputes the net, so this page and the Payroll
+// sheet always agree. Values shown are the paid …HrCnt columns.
 // NOTE: the "…Hr" columns are the HOURLY RATE, not hours — never show them here.
 
 import { useEffect, useState } from 'react';
@@ -15,15 +15,14 @@ import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
 const DISCIPLINES = [
-  // sys = count the system uses for pay; sup = supervisor's count (editable);
-  // param = the P_TimeSheet_Payroll_UpdateHrs parameter the supervisor count is sent as.
-  { label: 'Private', sys: 'PayrollPrivateHrCnt', sup: 'PayrollPrivateHrCntSuperVisor', param: 'PayrollPrivateHrCnt' },
-  { label: 'Team', sys: 'PayrollTeamHrCnt', sup: 'PayrollTeamHrCntSuperVisor', param: 'PayrollTeamHrCnt' },
-  { label: 'School', sys: 'PayrollSchoolHrCnt', sup: 'PayrollSchoolHrCntSuperVisor', param: 'PayrollSchoolHrCnt' },
-  { label: 'AquaBaby', sys: 'PayrollAquaBabyHrCnt', sup: 'PayrollAquaBabyHrCntSuperVisor', param: 'PayrollAquaBabyHrCnt' },
-  { label: 'AquaGym', sys: 'PayrollAquaGymHrCnt', sup: 'PayrollAquaGymHrCntSuperVisor', param: 'PayrollAquaGymHrCnt' },
-  { label: 'Physio', sys: 'PayrollPhysioHrCnt', sup: 'PayrollPhysioHrCntSuperVisor', param: 'PayrollPhysioHrCnt' },
-  { label: 'Misc', sys: 'PayrollMiscHrCnt', sup: 'PayrollMiscHrCntSuperVisor', param: 'PayrollMiscHrCnt' },
+  // cnt = the paid hour count column, also the P_TimeSheet_Payroll_UpdateHrs parameter name.
+  { label: 'Private', cnt: 'PayrollPrivateHrCnt' },
+  { label: 'Team', cnt: 'PayrollTeamHrCnt' },
+  { label: 'School', cnt: 'PayrollSchoolHrCnt' },
+  { label: 'AquaBaby', cnt: 'PayrollAquaBabyHrCnt' },
+  { label: 'AquaGym', cnt: 'PayrollAquaGymHrCnt' },
+  { label: 'Physio', cnt: 'PayrollPhysioHrCnt' },
+  { label: 'Misc', cnt: 'PayrollMiscHrCnt' },
 ] as const;
 
 type Row = Record<string, unknown> & { PayrollID: number };
@@ -85,7 +84,7 @@ export function PayrollHoursPage() {
     try {
       const payload = rows.map((r) => {
         const o: Record<string, unknown> = { PayrollID: r.PayrollID };
-        for (const d of DISCIPLINES) o[d.param] = Number(r[d.sup] ?? 0);
+        for (const d of DISCIPLINES) o[d.cnt] = Number(r[d.cnt] ?? 0);
         return o;
       });
       await apiRequest('/api/portal/edit/payroll-hours', { method: 'PUT', body: JSON.stringify({ rows: payload }) });
@@ -162,7 +161,7 @@ export function PayrollHoursPage() {
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      <p className="text-xs text-slate-400 mb-3">Grey = hours currently counted for pay · input = supervisor's count.</p>
+      <p className="text-xs text-slate-400 mb-3">Hours per discipline used for pay. The same numbers appear on the Payroll sheet.</p>
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
@@ -183,17 +182,14 @@ export function PayrollHoursPage() {
                   <td className="px-3 py-2 font-semibold text-slate-700 sticky left-0 bg-white">{String(r.CoachFullName ?? '')}</td>
                   {DISCIPLINES.map((d) => (
                     <td key={d.label} className="px-3 py-2 text-center">
-                      <div className="flex flex-col items-center gap-0.5">
-                        <span className="text-[10px] text-slate-400">{String(r[d.sys] ?? 0)}</span>
-                        <input
-                          type="number"
-                          min={0}
-                          disabled={!canSave}
-                          value={String(r[d.sup] ?? 0)}
-                          onChange={(e) => set(r.PayrollID, d.sup, e.target.value)}
-                          className={inputCls}
-                        />
-                      </div>
+                      <input
+                        type="number"
+                        min={0}
+                        disabled={!canSave}
+                        value={String(r[d.cnt] ?? 0)}
+                        onChange={(e) => set(r.PayrollID, d.cnt, e.target.value.replace(/[^0-9]/g, ''))}
+                        className={inputCls}
+                      />
                     </td>
                   ))}
                 </tr>
