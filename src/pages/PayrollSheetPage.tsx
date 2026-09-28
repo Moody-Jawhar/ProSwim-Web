@@ -44,12 +44,14 @@ const tsLabel = (r: Row): string => {
   if (t && !isNaN(t.getTime())) return `${t.getFullYear()}/${t.getMonth() + 1}`;
   return str(r, 'TimesheetTitle');
 };
+// The proc returns the payroll table's own column, spelled TimeSheetID (capital S).
+const tsIdOf = (r: Row): number => num(r, 'TimeSheetID') || num(r, 'TimesheetID');
 const tsTime = (r: Row): number => {
   const d = str(r, 'TimesheetEndDate');
   const t = d ? new Date(d).getTime() : NaN;
   if (!isNaN(t)) return t;
   const y = num(r, 'TimesheetYr'), m = num(r, 'TimesheetMonth');
-  return y ? y * 12 + m : num(r, 'TimesheetID');
+  return y ? y * 12 + m : tsIdOf(r);
 };
 
 // One payroll section per discipline. In tbl_TimeSheet_Payroll the "…Hr"
@@ -636,7 +638,7 @@ function CoachCard({
   useEffect(() => { if (showHist && !hist && !histLoading) loadHistory(); }, [showHist]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const id = num(active, 'PayrollID');
-  const activeTs = num(active, 'TimesheetID');
+  const activeTs = tsIdOf(active);
   const cur = curOf(active);
   const hrCur = hrCurOf(active);
   const paid = active.PayrollIndivPaid === true;
@@ -659,13 +661,16 @@ function CoachCard({
     } catch { /* ignore */ }
   }
 
-  async function saveActive() {
+  // Save the pending edits; with recalc=true also pull this coach's salary,
+  // currencies and hourly rates from the coach profile (hours are untouched).
+  async function saveActive(recalc = false) {
     setSaving(true);
     try {
       const body: Record<string, number> = {};
       for (const p of SAVE_FIELDS) body[p] = edits[p] ?? num(active, p);
       await apiRequest(`/api/portal/payroll/rows/${id}`, { method: 'PUT', body: JSON.stringify(body) });
-      toast.success('Payroll saved.');
+      if (recalc) await apiRequest(`/api/portal/payroll/rows/${id}/refresh-hr`, { method: 'POST' });
+      toast.success(recalc ? 'Saved and recalculated from HR.' : 'Payroll saved.');
       setEdits({});
       await refreshActive();
       if (activeTs === currentTimesheetId) onReloadCurrent?.();
@@ -731,7 +736,7 @@ function CoachCard({
             ) : (
               <div className="divide-y divide-slate-100 rounded-lg border border-slate-100 bg-white">
                 {[...hist].sort((a, b) => tsTime(b) - tsTime(a)).map((h) => {
-                  const hts = num(h, 'TimesheetID');
+                  const hts = tsIdOf(h);
                   const hcur = curOf(h);
                   const isActive = num(h, 'PayrollID') === id;
                   return (
@@ -834,8 +839,15 @@ function CoachCard({
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-3">
           <p className="mr-auto text-xs text-slate-400">Net to Pay is recomputed on save.</p>
           <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
+          {canEdit && !paid && (
+            <button onClick={() => saveActive(true)} disabled={saving}
+              title="Saves, then reloads this coach's salary, currencies and hourly rates from the coach profile. Hours are not changed."
+              className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 px-4 py-2 text-sm font-semibold text-[#1e5c97] hover:bg-[#e8f0f8] disabled:opacity-50">
+              <RefreshCw className="size-4" /> Save &amp; Recalc from HR
+            </button>
+          )}
           {canEdit && (
-            <button onClick={saveActive} disabled={saving}
+            <button onClick={() => saveActive()} disabled={saving}
               className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-5 py-2 text-sm font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
               {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save
             </button>
