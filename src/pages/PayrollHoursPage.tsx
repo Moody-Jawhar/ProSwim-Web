@@ -1,6 +1,9 @@
 // Supervisor per-discipline hours entry for a timesheet (TimeSheetPayrollHrs.aspx).
-// Each coach row shows the system-detected hours (grey) and an editable count
-// per discipline; save writes all rows via P_TimeSheet_Payroll_UpdateHrs.
+// Each coach row shows the hours the system counted for pay (grey, …HrCnt) and
+// the supervisor's own count (editable, …HrCntSuperVisor), like the legacy
+// page; save writes all rows via P_TimeSheet_Payroll_UpdateHrs, whose
+// @Payroll{X}HrCnt params land in the …HrCntSuperVisor columns.
+// NOTE: the "…Hr" columns are the HOURLY RATE, not hours — never show them here.
 
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -12,13 +15,15 @@ import { PageHero } from '../components/PageHero';
 import { toast } from '../components/Toast';
 
 const DISCIPLINES = [
-  { label: 'Private', sys: 'PayrollPrivateHr', cnt: 'PayrollPrivateHrCnt' },
-  { label: 'Team', sys: 'PayrollTeamHr', cnt: 'PayrollTeamHrCnt' },
-  { label: 'School', sys: 'PayrollSchoolHr', cnt: 'PayrollSchoolHrCnt' },
-  { label: 'AquaBaby', sys: 'PayrollAquaBabyHr', cnt: 'PayrollAquaBabyHrCnt' },
-  { label: 'AquaGym', sys: 'PayrollAquaGymHr', cnt: 'PayrollAquaGymHrCnt' },
-  { label: 'Physio', sys: 'PayrollPhysioHr', cnt: 'PayrollPhysioHrCnt' },
-  { label: 'Misc', sys: 'PayrollMiscHr', cnt: 'PayrollMiscHrCnt' },
+  // sys = count the system uses for pay; sup = supervisor's count (editable);
+  // param = the P_TimeSheet_Payroll_UpdateHrs parameter the supervisor count is sent as.
+  { label: 'Private', sys: 'PayrollPrivateHrCnt', sup: 'PayrollPrivateHrCntSuperVisor', param: 'PayrollPrivateHrCnt' },
+  { label: 'Team', sys: 'PayrollTeamHrCnt', sup: 'PayrollTeamHrCntSuperVisor', param: 'PayrollTeamHrCnt' },
+  { label: 'School', sys: 'PayrollSchoolHrCnt', sup: 'PayrollSchoolHrCntSuperVisor', param: 'PayrollSchoolHrCnt' },
+  { label: 'AquaBaby', sys: 'PayrollAquaBabyHrCnt', sup: 'PayrollAquaBabyHrCntSuperVisor', param: 'PayrollAquaBabyHrCnt' },
+  { label: 'AquaGym', sys: 'PayrollAquaGymHrCnt', sup: 'PayrollAquaGymHrCntSuperVisor', param: 'PayrollAquaGymHrCnt' },
+  { label: 'Physio', sys: 'PayrollPhysioHrCnt', sup: 'PayrollPhysioHrCntSuperVisor', param: 'PayrollPhysioHrCnt' },
+  { label: 'Misc', sys: 'PayrollMiscHrCnt', sup: 'PayrollMiscHrCntSuperVisor', param: 'PayrollMiscHrCnt' },
 ] as const;
 
 type Row = Record<string, unknown> & { PayrollID: number };
@@ -80,7 +85,7 @@ export function PayrollHoursPage() {
     try {
       const payload = rows.map((r) => {
         const o: Record<string, unknown> = { PayrollID: r.PayrollID };
-        for (const d of DISCIPLINES) o[d.cnt] = Number(r[d.cnt] ?? 0);
+        for (const d of DISCIPLINES) o[d.param] = Number(r[d.sup] ?? 0);
         return o;
       });
       await apiRequest('/api/portal/edit/payroll-hours', { method: 'PUT', body: JSON.stringify({ rows: payload }) });
@@ -157,7 +162,7 @@ export function PayrollHoursPage() {
           <p className="text-sm text-red-600">{error}</p>
         </div>
       )}
-      <p className="text-xs text-slate-400 mb-3">Grey = system-detected hours · input = supervisor count used for pay.</p>
+      <p className="text-xs text-slate-400 mb-3">Grey = hours currently counted for pay · input = supervisor's count.</p>
 
       {loading ? (
         <div className="flex items-center justify-center h-64">
@@ -184,8 +189,8 @@ export function PayrollHoursPage() {
                           type="number"
                           min={0}
                           disabled={!canSave}
-                          value={String(r[d.cnt] ?? 0)}
-                          onChange={(e) => set(r.PayrollID, d.cnt, e.target.value)}
+                          value={String(r[d.sup] ?? 0)}
+                          onChange={(e) => set(r.PayrollID, d.sup, e.target.value)}
                           className={inputCls}
                         />
                       </div>
