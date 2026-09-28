@@ -700,23 +700,31 @@ function CoachCard({
   return createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 p-4" onClick={onClose}>
       <div className="w-full max-w-xl max-h-[92vh] overflow-y-auto rounded-2xl bg-white shadow-2xl" onClick={(e) => e.stopPropagation()}>
-        {/* header: month · name · location, links on the right */}
-        <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5 border-b border-slate-100 px-4 py-2.5">
-          <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f0f8] px-2 py-0.5 text-[11px] font-bold text-[#1e5c97]">
-            <History className="size-3" /> {monthLabel}
-          </span>
-          <h2 className="text-base font-bold text-slate-800 leading-tight">{str(active, 'CoachFullName')}</h2>
-          <span className="text-xs text-slate-500">{str(active, 'LocationNickName')} · {cur}{hrCur !== cur ? ` / hours ${hrCur}` : ''}</span>
-          <div className="ml-auto flex items-center gap-1.5">
-            <Link to={`/coaches/${coachId}`} onClick={onClose} title="Edit coach file & HR rate"
-              className={`${linkBtn} border-slate-200 text-[#1e5c97] hover:bg-[#e8f0f8]`}>
-              <UserCog className="size-3.5" /> Coach file
-            </Link>
-            <button onClick={() => setShowHist((s) => !s)} title="All payrolls of this coach"
-              className={`${linkBtn} ${showHist ? 'border-[#1e5c97] bg-[#e8f0f8] text-[#1e5c97]' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
-              <History className="size-3.5" /> History
-            </button>
-            <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="size-4" /></button>
+        {/* header row 1: name + actions; row 2: payroll title + salary */}
+        <div className="border-b border-slate-100 px-4 py-2.5 space-y-2">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-800 leading-tight truncate">{str(active, 'CoachFullName')}</h2>
+            <div className="ml-auto flex items-center gap-1.5 shrink-0">
+              <Link to={`/coaches/${coachId}`} onClick={onClose} title="Edit coach file & HR rate"
+                className={`${linkBtn} border-slate-200 text-[#1e5c97] hover:bg-[#e8f0f8]`}>
+                <UserCog className="size-3.5" /> Edit coach file &amp; HR rate
+              </Link>
+              <button onClick={() => setShowHist((s) => !s)} title="All payrolls of this coach"
+                className={`${linkBtn} ${showHist ? 'border-[#1e5c97] bg-[#e8f0f8] text-[#1e5c97]' : 'border-slate-200 text-slate-600 hover:bg-slate-50'}`}>
+                <History className="size-3.5" /> All payrolls
+              </button>
+              <button onClick={onClose} className="rounded-lg p-1 text-slate-400 hover:bg-slate-100"><X className="size-4" /></button>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#e8f0f8] px-2 py-0.5 text-[11px] font-bold text-[#1e5c97]">
+              <History className="size-3" /> Payroll {monthLabel}
+            </span>
+            <span className="text-xs text-slate-500">{str(active, 'LocationNickName')} · {cur}{hrCur !== cur ? ` / hours ${hrCur}` : ''}</span>
+            <label className={`${label} ml-auto shrink-0`}>Salary ({sym(cur)})</label>
+            <div className="w-28 shrink-0">
+              <NumBox disabled={!canEdit} value={v('PayrollSalary')} onChange={(n) => setF('PayrollSalary', n)} className={box + ' font-semibold'} />
+            </div>
           </div>
         </div>
 
@@ -759,12 +767,8 @@ function CoachCard({
         )}
 
         <div className="px-4 py-3 space-y-2.5">
-          {/* salary + adjustments on one row */}
-          <div className="grid grid-cols-5 gap-2">
-            <div>
-              <label className={label}>Salary ({sym(cur)})</label>
-              <NumBox disabled={!canEdit} value={v('PayrollSalary')} onChange={(n) => setF('PayrollSalary', n)} className={box + ' mt-0.5 font-semibold'} />
-            </div>
+          {/* adjustments on one row */}
+          <div className="grid grid-cols-4 gap-2">
             {ADJUSTMENTS.map(([al, f, sign]) => (
               <div key={f}>
                 <label className={label}>{al}{sign < 0 ? ' −' : ' +'}</label>
