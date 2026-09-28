@@ -68,6 +68,20 @@ const DISCIPLINES: Discipline[] = [
   { key: 'Misc', label: 'Misc', rate: 'PayrollMiscHr', cnt: 'PayrollMiscHrCnt', total: 'PayrollMiscTotal' },
 ];
 
+// Live SubTotal / Net to Pay from the current (possibly edited) values, the
+// same formula the API applies on save (RecomputePayrollNet): salary + bonus
+// - (advance + loans + penalty) + all section totals converted to the salary
+// currency via PayrollRate; 0 when NoWork. SubTotal = net + advance + loans.
+const liveNet = (r: Row, v: (f: string) => number): { net: number; sub: number } => {
+  const hrs = DISCIPLINES.reduce((t, d) => t + num(r, d.rate) * v(d.cnt), 0);
+  const cur = curOf(r), hc = hrCurOf(r), rate = num(r, 'PayrollRate');
+  const f = hc === cur ? 1 : hc === 'USD' && cur === 'LBP' ? rate : hc === 'LBP' && cur === 'USD' && rate ? 1 / rate : 1;
+  const loans = v('PayrollLoansShort') + v('PayrollLoansLong');
+  const net = r.PayrollIndivNoWork === true ? 0
+    : Math.round(v('PayrollSalary') + v('PayrollBonus') - (loans + v('PayrollPenalty')) + hrs * f);
+  return { net, sub: net + loans };
+};
+
 // label, field, sign(- means it reduces net) for the adjustment columns
 const ADJUSTMENTS: [string, string, 1 | -1, string][] = [
   ['Bonus', 'PayrollBonus', 1, 'bonus'],
@@ -208,6 +222,7 @@ export function PayrollSheetPage() {
   // Live section amount (rate × edited count) and their sum ("Tot. Priv.").
   const amountOf = (r: Row, d: Discipline) => num(r, d.rate) * val(r, d.cnt);
   const totPrivOf = (r: Row) => DISCIPLINES.reduce((s, d) => s + amountOf(r, d), 0);
+  const netOf = (r: Row) => liveNet(r, (f) => val(r, f));
 
   async function toggle(r: Row, kind: 'paid' | 'nowork', on: boolean) {
     const id = num(r, 'PayrollID');
@@ -260,9 +275,9 @@ export function PayrollSheetPage() {
     return o;
   };
   const totals = useMemo(() => {
-    const net = sumCur((r) => num(r, 'PayrollNetToPay'));
+    const net = sumCur((r) => netOf(r).net);
     const paid: Record<Cur, number> = { USD: 0, LBP: 0 };
-    for (const r of viewRows) if (r.PayrollIndivPaid === true) paid[curOf(r)] += num(r, 'PayrollNetToPay');
+    for (const r of viewRows) if (r.PayrollIndivPaid === true) paid[curOf(r)] += netOf(r).net;
     return {
       salary: sumCur((r) => num(r, 'PayrollSalary')),
       cnt: Object.fromEntries(DISCIPLINES.map((d) => [d.key, viewRows.reduce((s, r) => s + val(r, d.cnt), 0)])),
@@ -272,7 +287,7 @@ export function PayrollSheetPage() {
       penalty: sumCur((r) => num(r, 'PayrollPenalty')),
       advance: sumCur((r) => num(r, 'PayrollLoansShort')),
       loans: sumCur((r) => num(r, 'PayrollLoansLong')),
-      subtotal: sumCur((r) => num(r, 'SubTotal')),
+      subtotal: sumCur((r) => netOf(r).sub),
       net,
       paid,
       balance: { USD: net.USD - paid.USD, LBP: net.LBP - paid.LBP } as Record<Cur, number>,
@@ -528,10 +543,10 @@ export function PayrollSheetPage() {
                       </td>
                     ))}
                     {cols.subtotal && (
-                      <td className="px-2 py-1 text-right tabular-nums font-semibold bg-slate-50 border-l border-slate-100">{money(num(r, 'SubTotal'))}</td>
+                      <td className="px-2 py-1 text-right tabular-nums font-semibold bg-slate-50 border-l border-slate-100">{money(netOf(r).sub)}</td>
                     )}
                     {cols.net && (
-                      <td className="px-2 py-1 text-right tabular-nums font-extrabold bg-amber-50/70">{sym(cur)} {money(num(r, 'PayrollNetToPay'))}</td>
+                      <td className="px-2 py-1 text-right tabular-nums font-extrabold bg-amber-50/70">{sym(cur)} {money(netOf(r).net)}</td>
                     )}
                     {cols.paid && (
                       <td className="px-1.5 py-1 text-center">
@@ -649,6 +664,7 @@ function CoachCard({
   const setF = (f: string, val: number) => setEdits((e) => ({ ...e, [f]: val }));
   const amountOf = (d: Discipline) => num(active, d.rate) * v(d.cnt);
   const totPriv = DISCIPLINES.reduce((s, d) => s + amountOf(d), 0);
+  const live = liveNet(active, v);
 
   // Pull fresh (recalculated) figures for the coach and re-point active at this row.
   async function refreshActive() {
@@ -815,8 +831,8 @@ function CoachCard({
               <input type="checkbox" checked={noWork} disabled={!canEdit} onChange={(e) => toggleActive('nowork', e.target.checked)} className="size-3.5 accent-rose-500" />
               No Work
             </label>
-            <span className="ml-auto text-xs text-slate-500">SubTotal <b className="text-sm text-slate-700 tabular-nums">{sym(cur)} {money(num(active, 'SubTotal'))}</b></span>
-            <span className="text-xs text-slate-500">Net to Pay <b className="text-lg font-extrabold text-[#1e5c97] tabular-nums">{sym(cur)} {money(num(active, 'PayrollNetToPay'))}</b></span>
+            <span className="ml-auto text-xs text-slate-500">SubTotal <b className="text-sm text-slate-700 tabular-nums">{sym(cur)} {money(live.sub)}</b></span>
+            <span className="text-xs text-slate-500">Net to Pay <b className="text-lg font-extrabold text-[#1e5c97] tabular-nums">{sym(cur)} {money(live.net)}</b></span>
           </div>
         </div>
 
