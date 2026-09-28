@@ -837,19 +837,13 @@ function CoachCard({
 
         {/* footer */}
         <div className="flex items-center justify-end gap-2 border-t border-slate-100 p-3">
-          <p className="mr-auto text-xs text-slate-400">Net to Pay is recomputed on save.</p>
+          <p className="mr-auto text-xs text-slate-400">Saving refreshes salary and rates from the coach profile and recomputes Net to Pay. Hours are kept.</p>
           <button onClick={onClose} className="rounded-lg border border-slate-200 px-4 py-2 text-sm font-semibold text-slate-600 hover:bg-slate-50">Close</button>
-          {canEdit && !paid && (
-            <button onClick={() => saveActive(true)} disabled={saving}
-              title="Saves, then reloads this coach's salary, currencies and hourly rates from the coach profile. Hours are not changed."
-              className="flex items-center gap-1.5 rounded-lg border border-[#1e5c97]/30 px-4 py-2 text-sm font-semibold text-[#1e5c97] hover:bg-[#e8f0f8] disabled:opacity-50">
-              <RefreshCw className="size-4" /> Save &amp; Recalc from HR
-            </button>
-          )}
           {canEdit && (
-            <button onClick={() => saveActive()} disabled={saving}
+            <button onClick={() => saveActive(!paid)} disabled={saving}
+              title={paid ? 'Saves this payroll (already paid, so rates are not refreshed).' : "Saves, then reloads this coach's salary, currencies and hourly rates from the coach profile. Hours are not changed."}
               className="flex items-center gap-1.5 rounded-lg bg-[#1e5c97] px-5 py-2 text-sm font-semibold text-white hover:bg-[#17497a] disabled:opacity-50">
-              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} Save
+              {saving ? <Loader2 className="size-4 animate-spin" /> : <Check className="size-4" />} {paid ? 'Save' : 'Save & Recalc from HR'}
             </button>
           )}
         </div>
