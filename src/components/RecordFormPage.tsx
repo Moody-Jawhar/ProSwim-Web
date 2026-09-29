@@ -22,6 +22,7 @@ export interface FormField {
   optionsKey?: string;         // key into a lookups map
   labelKey?: string;           // for 'student': record column holding the display name
   colSpan2?: boolean;
+  hint?: string;               // short grey note shown beside the label, e.g. "ex: $500 (3 days)"
 }
 
 // Type-ahead student picker (reuses /api/portal/edit/student-search). Sets the
@@ -101,6 +102,8 @@ export interface RecordFormConfig {
    *  (e.g. carry the last timesheet's USD→LBP rate into a new one). */
   createPrefill?: string;
   heroSlide?: number;
+  /** Client-side check before saving; return an error message to block the save. */
+  validate?: (form: Record<string, unknown>) => string | null;
 }
 
 function toDateInput(v: unknown): string {
@@ -162,8 +165,10 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
   }
 
   async function save() {
-    setSaving(true);
     setError('');
+    const problem = config.validate?.(form);
+    if (problem) { setError(problem); toast.error(problem); return; }
+    setSaving(true);
     try {
       // Merge in createDefaults for keys not on the form (proc needs every param).
       const payload = isNew ? { ...config.createDefaults, ...form } : form;
@@ -209,7 +214,7 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
       case 'textarea':
         return (
           <div key={fd.key} className="md:col-span-2">
-            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}{fd.hint && <span className="ml-1 font-normal text-slate-400">{fd.hint}</span>}</label>
             <textarea value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} rows={2} className={inputCls} />
           </div>
         );
@@ -218,7 +223,7 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
         const numeric = typeof opts[0]?.value === 'number';
         return (
           <div key={fd.key} className={fd.colSpan2 ? 'md:col-span-2' : ''}>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}{fd.hint && <span className="ml-1 font-normal text-slate-400">{fd.hint}</span>}</label>
             <select
               value={String(v ?? (numeric ? 0 : ''))}
               onChange={(e) => set(fd.key, numeric ? Number(e.target.value) : e.target.value)}
@@ -243,21 +248,21 @@ export function RecordFormPage({ config }: { config: RecordFormConfig }) {
       case 'number':
         return (
           <div key={fd.key} className={fd.colSpan2 ? 'md:col-span-2' : ''}>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}{fd.hint && <span className="ml-1 font-normal text-slate-400">{fd.hint}</span>}</label>
             <input type="number" value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value === '' ? '' : Number(e.target.value))} className={inputCls} />
           </div>
         );
       case 'date':
         return (
           <div key={fd.key}>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}{fd.hint && <span className="ml-1 font-normal text-slate-400">{fd.hint}</span>}</label>
             <DateInput value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
           </div>
         );
       default:
         return (
           <div key={fd.key} className={fd.colSpan2 ? 'md:col-span-2' : ''}>
-            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}</label>
+            <label className="block text-xs font-semibold text-slate-500 mb-1">{fd.label}{fd.hint && <span className="ml-1 font-normal text-slate-400">{fd.hint}</span>}</label>
             <input value={String(v ?? '')} onChange={(e) => set(fd.key, e.target.value)} className={inputCls} />
           </div>
         );

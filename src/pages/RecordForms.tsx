@@ -85,6 +85,15 @@ const coach: RecordFormConfig = {
     CoachStartingDate: new Date().toISOString().slice(0, 10),
     CoachPayrollSalaryCurrency: 'USD',
     CoachPayrollHrlyCurrency: 'USD',
+    CoachPayrollSalaryEffective: 0,
+    CoachPayrollAquaBabyHour: 0,
+    CoachPayrollAquaGymHour: 0,
+    CoachPayrollPhysioHour: 0,
+    CoachPayrollMiscHour: 0,
+  },
+  validate: (f) => {
+    const full = Number(f.CoachPayrollSalaryEffective ?? 0), paid = Number(f.CoachPayrollSalary ?? 0);
+    return full > 0 && paid > full ? 'Payroll salary cannot be higher than the full salary.' : null;
   },
   sections: [
     {
@@ -120,12 +129,19 @@ const coach: RecordFormConfig = {
     {
       title: 'Payroll',
       fields: [
+        // Same set as the legacy coach page: full salary vs the salary actually
+        // paid through payroll (part-time), then one hourly rate per discipline.
         { key: 'CoachPayrollSalaryCurrency', label: 'Salary currency', type: 'select', options: CURRENCY },
-        { key: 'CoachPayrollSalary', label: 'Monthly salary', type: 'number' },
+        { key: 'CoachPayrollSalaryEffective', label: 'Salary', type: 'number', hint: 'full monthly salary, ex: $800' },
+        { key: 'CoachPayrollSalary', label: 'Payroll salary', type: 'number', hint: 'amount paid on the timesheet, ex: $500 (3 days)' },
         { key: 'CoachPayrollHrlyCurrency', label: 'Hourly currency', type: 'select', options: CURRENCY },
         { key: 'CoachPayrollPRHour', label: 'Private / hour', type: 'number' },
         { key: 'CoachPayrollTeamHour', label: 'Team / hour', type: 'number' },
         { key: 'CoachPayrollSchoolHour', label: 'School / hour', type: 'number' },
+        { key: 'CoachPayrollAquaBabyHour', label: 'Aqua Baby / hour', type: 'number' },
+        { key: 'CoachPayrollAquaGymHour', label: 'Aqua Gym / hour', type: 'number' },
+        { key: 'CoachPayrollPhysioHour', label: 'Physio / hour', type: 'number' },
+        { key: 'CoachPayrollMiscHour', label: 'Misc / hour', type: 'number' },
       ],
     },
     {
