@@ -12,6 +12,13 @@ import { toast } from '../components/Toast';
 import { PageHero } from '../components/PageHero';
 import { SmartBack } from '../components/SmartBack';
 
+// Payroll periods run from the 26th to the 25th and are named after the month
+// they END in (timesheet 2026-08-26 → 2026-09-25 is "2026/9"). So a date on or
+// after the 26th already belongs to NEXT month's payroll: Sep 29 → October.
+function payrollMonthOf(year: number, month1: number, day: number): Date {
+  return new Date(year, month1 - 1 + (day >= 26 ? 1 : 0), 1);
+}
+
 type Row = Record<string, unknown>;
 type Option = { value: number | string; label: string };
 
@@ -47,8 +54,9 @@ export function AddonFormPage() {
   const [remarks, setRemarks] = useState('');
   const [payments, setPayments] = useState<PaymentLine[]>(() => {
     const now = new Date();
+    const base = payrollMonthOf(now.getFullYear(), now.getMonth() + 1, now.getDate());
     return Array.from({ length: 12 }, (_, i) => {
-      const d = new Date(now.getFullYear(), now.getMonth() + i, 1);
+      const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
       return { amount: 0, month: String(d.getMonth() + 1).padStart(2, '0'), year: String(d.getFullYear()) };
     });
   });
@@ -95,12 +103,13 @@ export function AddonFormPage() {
 
   function distribute() {
     // Legacy rounding: each payment = round(total / n), last one corrected so
-    // the sum matches the total exactly. Like the old system, the schedule
-    // starts from the add-on Date's month/year (parsed to avoid TZ drift).
+    // the sum matches the total exactly. The schedule starts from the PAYROLL
+    // month the add-on Date falls in (periods run 26th → 25th), parsed by hand
+    // to avoid TZ drift.
     const n = Math.min(Math.max(count, 1), 12);
     const per = Math.round(total / n);
-    const [by, bm] = date.split('-').map(Number);
-    const base = new Date(by, (bm || 1) - 1, 1);
+    const [by, bm, bd] = date.split('-').map(Number);
+    const base = payrollMonthOf(by, bm || 1, bd || 1);
     const next = payments.map((p, i) => {
       if (i >= n) return { ...p, amount: 0 };
       const d = new Date(base.getFullYear(), base.getMonth() + i, 1);
