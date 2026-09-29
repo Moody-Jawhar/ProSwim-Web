@@ -16,7 +16,7 @@
 // and a per-coach payroll card (click a coach) to review and edit one coach at
 // a time in a clean layout.
 
-import { Fragment, useEffect, useMemo, useRef, useState } from 'react';
+import { Fragment, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 import { useUrlParam } from '../lib/urlState';
 import { createPortal } from 'react-dom';
 import { useParams, Link } from 'react-router-dom';
@@ -154,6 +154,9 @@ export function PayrollSheetPage() {
   const [showNoWork, setShowNoWork] = useState(false);
   const [cols, setCols] = useState<Cols>(DEFAULT_COLS);
   const [colsOpen, setColsOpen] = useState(false);
+  // Click a header to sort: first click ascending, second descending, third back to the proc order.
+  const [sort, setSort] = useState<{ k: string; d: 1 | -1 } | null>(null);
+  const toggleSort = (k: string) => setSort((cur) => (cur?.k === k ? (cur.d > 0 ? { k, d: -1 } : null) : { k, d: 1 }));
   const colsSaveTimer = useRef<number | null>(null);
   const [loc, setLoc] = useUrlParam('loc', ''); // '' = all locations; kept in the URL so it survives leaving the page
   const [openId, setOpenId] = useState<number | null>(null);
@@ -230,6 +233,39 @@ export function PayrollSheetPage() {
   const amountOf = (r: Row, d: Discipline) => num(r, d.rate) * val(r, d.cnt);
   const totPrivOf = (r: Row) => DISCIPLINES.reduce((s, d) => s + amountOf(r, d), 0);
   const netOf = (r: Row) => liveNet(r, (f) => val(r, f));
+
+  // Sort keys: loc, coach, salary, totPriv, subtotal, net, paid, nowork, an
+  // adjustment field name, or rate:<disc> / cnt:<disc> / tot:<disc>.
+  const sortValue = (r: Row, k: string): number | string => {
+    if (k === 'loc') return str(r, 'LocationNickName');
+    if (k === 'coach') return str(r, 'CoachFullName');
+    if (k === 'salary') return num(r, 'PayrollSalary');
+    if (k === 'totPriv') return totPrivOf(r);
+    if (k === 'subtotal') return netOf(r).sub;
+    if (k === 'net') return netOf(r).net;
+    if (k === 'paid') return r.PayrollIndivPaid === true ? 1 : 0;
+    if (k === 'nowork') return r.PayrollIndivNoWork === true ? 1 : 0;
+    const [kind, key] = k.split(':');
+    const d = DISCIPLINES.find((x) => x.key === key);
+    if (d) return kind === 'rate' ? num(r, d.rate) : kind === 'tot' ? amountOf(r, d) : val(r, d.cnt);
+    return val(r, k);
+  };
+  const sortedRows = useMemo(() => {
+    if (!sort) return viewRows;
+    const { k, d } = sort;
+    return [...viewRows].sort((a, b) => {
+      const x = sortValue(a, k), y = sortValue(b, k);
+      const c = typeof x === 'string' || typeof y === 'string'
+        ? String(x).localeCompare(String(y)) : (x as number) - (y as number);
+      return c * d;
+    });
+  }, [viewRows, sort, edits]); // eslint-disable-line react-hooks/exhaustive-deps
+  const SortBtn = ({ k, children }: { k: string; children: ReactNode }) => (
+    <button type="button" onClick={() => toggleSort(k)} title="Click to sort"
+      className={`inline-flex items-center gap-0.5 uppercase hover:text-[#1e5c97] ${sort?.k === k ? 'text-[#1e5c97]' : ''}`}>
+      {children}<span className="w-2 text-[9px]">{sort?.k === k ? (sort.d > 0 ? '▲' : '▼') : ''}</span>
+    </button>
+  );
 
   async function toggle(r: Row, kind: 'paid' | 'nowork', on: boolean) {
     const id = num(r, 'PayrollID');
@@ -473,35 +509,35 @@ export function PayrollSheetPage() {
             <thead className="text-xs uppercase tracking-wide text-slate-500 bg-slate-50">
               <tr className={twoRowHeader ? '' : 'border-b-2 border-slate-200'}>
                 <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}></th>
-                <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-left`}>Loc</th>
-                <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-left`}>Coach</th>
-                {cols.salary && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right`}>Salary</th>}
+                <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-left`}><SortBtn k="loc">Loc</SortBtn></th>
+                <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-left`}><SortBtn k="coach">Coach</SortBtn></th>
+                {cols.salary && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right`}><SortBtn k="salary">Salary</SortBtn></th>}
                 {visibleDisciplines.map((d) => (
-                  <th key={d.key} colSpan={subCols} className={`${th} text-center border-l border-slate-200 ${twoRowHeader ? 'pb-0' : ''}`}>{d.label}</th>
+                  <th key={d.key} colSpan={subCols} className={`${th} text-center border-l border-slate-200 ${twoRowHeader ? 'pb-0' : ''}`}>{twoRowHeader ? d.label : <SortBtn k={'cnt:' + d.key}>{d.label}</SortBtn>}</th>
                 ))}
-                {cols.totPriv && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right border-l border-slate-200`}>Tot. Priv.</th>}
+                {cols.totPriv && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right border-l border-slate-200`}><SortBtn k="totPriv">Tot. Priv.</SortBtn></th>}
                 {ADJUSTMENTS.filter(([, , , k]) => cols[k]).map(([label, f], i) => (
-                  <th key={f} rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-right ${i === 0 ? 'border-l border-slate-200' : ''}`}>{label}</th>
+                  <th key={f} rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-right ${i === 0 ? 'border-l border-slate-200' : ''}`}><SortBtn k={f}>{label}</SortBtn></th>
                 ))}
-                {cols.subtotal && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right border-l border-slate-200`}>SubTotal</th>}
-                {cols.net && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right`}>Net2Pay</th>}
-                {cols.paid && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}>Paid</th>}
-                {cols.nowork && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}>NoWork</th>}
+                {cols.subtotal && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right border-l border-slate-200`}><SortBtn k="subtotal">SubTotal</SortBtn></th>}
+                {cols.net && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} px-2 text-right`}><SortBtn k="net">Net2Pay</SortBtn></th>}
+                {cols.paid && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}><SortBtn k="paid">Paid</SortBtn></th>}
+                {cols.nowork && <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}><SortBtn k="nowork">NoWork</SortBtn></th>}
               </tr>
               {twoRowHeader && (
                 <tr className="border-b-2 border-slate-200">
                   {visibleDisciplines.map((d) => (
                     <Fragment key={d.key}>
-                      {cols.rate && <th className={`${subTh} text-right border-l border-slate-200`}>Rate</th>}
-                      <th className={`${subTh} text-center ${!cols.rate ? 'border-l border-slate-200' : ''}`}>Cnt</th>
-                      {cols.amount && <th className={`${subTh} text-right`}>Total</th>}
+                      {cols.rate && <th className={`${subTh} text-right border-l border-slate-200`}><SortBtn k={'rate:' + d.key}>Rate</SortBtn></th>}
+                      <th className={`${subTh} text-center ${!cols.rate ? 'border-l border-slate-200' : ''}`}><SortBtn k={'cnt:' + d.key}>Cnt</SortBtn></th>
+                      {cols.amount && <th className={`${subTh} text-right`}><SortBtn k={'tot:' + d.key}>Total</SortBtn></th>}
                     </Fragment>
                   ))}
                 </tr>
               )}
             </thead>
             <tbody>
-              {viewRows.map((r) => {
+              {sortedRows.map((r) => {
                 const id = num(r, 'PayrollID');
                 const paid = r.PayrollIndivPaid === true;
                 const noWork = r.PayrollIndivNoWork === true;
