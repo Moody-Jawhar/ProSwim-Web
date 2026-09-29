@@ -35,14 +35,18 @@ export function isSuperUser(user: PortalUser | null = getStoredUser()): boolean 
   return t === "sitemaster" || t === "superuser";
 }
 
+export const LAST_ACTIVITY_KEY = "portalLastActivity";
+
 export function storeAuth(token: string, user: PortalUser): void {
   localStorage.setItem("portalToken", token);
   localStorage.setItem("portalUser", JSON.stringify(user));
+  localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())); // fresh idle clock
 }
 
 export function clearAuth(): void {
   localStorage.removeItem("portalToken");
   localStorage.removeItem("portalUser");
+  localStorage.removeItem(LAST_ACTIVITY_KEY);
 }
 
 export class ApiError extends Error {

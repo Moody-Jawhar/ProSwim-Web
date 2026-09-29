@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { LoginPage } from './pages/LoginPage';
 import { ForgotPasswordPage } from './pages/ForgotPasswordPage';
 import { ChangePasswordPage } from './pages/ChangePasswordPage';
@@ -62,7 +62,7 @@ import {
   WebClassesPage, WebClassForm, WebFaqsPage, WebFaqForm, WebLevelsPage, WebLevelForm,
   WebPressesPage, WebPressForm, WebVideosPage, WebVideoForm, WebFeedbackPage,
 } from './pages/WebCmsPages';
-import { getStoredToken } from './api/portalApi';
+import { getStoredToken, clearAuth, LAST_ACTIVITY_KEY } from './api/portalApi';
 import { AccessProvider, useAccess } from './components/AccessProvider';
 import { AccessControlPage } from './pages/AccessControlPage';
 import { OldSystemPage } from './pages/OldSystemPage';
@@ -71,6 +71,42 @@ import { LandingPage } from './pages/LandingPage';
 function RequireAuth({ children }: { children: React.ReactNode }) {
   if (!getStoredToken()) return <Navigate to="/login" replace />;
   return <>{children}</>;
+}
+
+/** Sign out after 30 minutes without any activity (mouse, keyboard, touch,
+ *  scroll) and send the user back to the login page. The last-activity time
+ *  lives in localStorage so every open tab shares one idle clock and a tab
+ *  that was left open in the background is checked when it becomes visible. */
+const IDLE_MS = 30 * 60 * 1000;
+function IdleLogout() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    const touch = () => { try { localStorage.setItem(LAST_ACTIVITY_KEY, String(Date.now())); } catch { /* ignore */ } };
+    const check = () => {
+      if (!getStoredToken()) return;
+      let last = 0;
+      try { last = Number(localStorage.getItem(LAST_ACTIVITY_KEY) || 0); } catch { /* ignore */ }
+      if (!last) { touch(); return; }
+      if (Date.now() - last > IDLE_MS) {
+        clearAuth();
+        navigate('/login', { replace: true, state: { reason: 'idle' } });
+      }
+    };
+    check();
+    let lastTouch = 0;
+    const onActivity = () => { const n = Date.now(); if (n - lastTouch > 15000) { lastTouch = n; touch(); } };
+    const events = ['mousemove', 'mousedown', 'keydown', 'scroll', 'touchstart', 'click'];
+    events.forEach((e) => window.addEventListener(e, onActivity, { passive: true }));
+    const onVisible = () => { if (document.visibilityState === 'visible') check(); };
+    document.addEventListener('visibilitychange', onVisible);
+    const id = window.setInterval(check, 30000);
+    return () => {
+      events.forEach((e) => window.removeEventListener(e, onActivity));
+      document.removeEventListener('visibilitychange', onVisible);
+      window.clearInterval(id);
+    };
+  }, [navigate]);
+  return null;
 }
 
 /** Analytics dashboard is Full-only (default: SiteMaster). Others sent home. */
@@ -100,6 +136,7 @@ export default function App() {
         <Route
           element={
             <RequireAuth>
+              <IdleLogout />
               <AccessProvider>
                 <Shell />
               </AccessProvider>

@@ -111,7 +111,10 @@ const DEFAULT_COLS: Cols = {
   ...Object.fromEntries(DISCIPLINES.map((d) => ['d:' + d.key, true])),
   rate: false, amount: true,
   ...Object.fromEntries(OTHER_COLS.map(([k]) => [k, true])),
+  hideZero: false, // hide sections that have no hours in the current view
 };
+// Every column on (rate + total in each section, all sections, everything else).
+const ALL_COLS: Cols = Object.fromEntries(Object.keys(DEFAULT_COLS).map((k) => [k, k !== 'hideZero']));
 const normalizeCols = (v: unknown): Cols => {
   const out: Cols = { ...DEFAULT_COLS };
   if (v && typeof v === 'object')
@@ -203,11 +206,15 @@ export function PayrollSheetPage() {
     [rows, loc],
   );
 
-  const visibleDisciplines = useMemo(() => DISCIPLINES.filter((d) => cols['d:' + d.key]), [cols]);
+  const visibleDisciplines = useMemo(
+    () => DISCIPLINES.filter((d) => cols['d:' + d.key] && (!cols.hideZero || viewRows.some((r) => val(r, d.cnt) > 0))),
+    [cols, viewRows, edits]); // eslint-disable-line react-hooks/exhaustive-deps
   const subCols = 1 + (cols.rate ? 1 : 0) + (cols.amount ? 1 : 0); // columns per discipline section
   const twoRowHeader = visibleDisciplines.length > 0 && subCols > 1;
   const colCount = 3 + (cols.salary ? 1 : 0) + visibleDisciplines.length * subCols
     + OTHER_COLS.filter(([k]) => k !== 'salary' && cols[k]).length;
+  // Fewer columns → bigger numbers. Cells and inputs inherit the table's size.
+  const fontCls = colCount <= 10 ? 'text-lg' : colCount <= 14 ? 'text-base' : colCount <= 18 ? 'text-[15px]' : 'text-sm';
 
   const title = rows.length > 0 ? tsLabel(rows[0]) : `Timesheet #${timesheetId}`;
 
@@ -333,7 +340,7 @@ export function PayrollSheetPage() {
 
   // ── shared cell styles ──────────────────────────────────────────────────
   const numInput =
-    'w-16 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
+    'w-[4.6em] rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[length:inherit] text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50';
   const th = 'px-1.5 py-2 font-semibold';
   const subTh = 'px-1.5 pb-1.5 text-[10px] font-semibold text-slate-400 normal-case tracking-normal';
   const CurStack = ({ v, cls = '' }: { v: Record<Cur, number>; cls?: string }) => (
@@ -406,8 +413,14 @@ export function PayrollSheetPage() {
                     {OTHER_COLS.map(([k, l]) => <CheckRow key={k} k={k} label={l} />)}
                   </div>
                 </div>
-                <div className="mt-2 flex items-center justify-between border-t border-slate-100 pt-2">
-                  <p className="text-[11px] text-slate-400">Saved to your account automatically.</p>
+                <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 border-t border-slate-100 pt-2">
+                  <button onClick={() => updateCols({ ...ALL_COLS, hideZero: cols.hideZero })}
+                    className="text-[11px] font-semibold text-[#1e5c97] hover:underline">Show all columns</button>
+                  <label className="flex items-center gap-1.5 text-[11px] font-semibold text-slate-600 select-none cursor-pointer">
+                    <input type="checkbox" checked={!!cols.hideZero} onChange={() => toggleCol('hideZero')} className="accent-[#1e5c97]" />
+                    Hide sections with no hours
+                  </label>
+                  <p className="ml-auto text-[11px] text-slate-400">Saved automatically.</p>
                   <button onClick={() => updateCols({ ...DEFAULT_COLS })}
                     className="flex items-center gap-1 text-[11px] font-semibold text-slate-500 hover:text-[#1e5c97]">
                     <RotateCcw className="size-3" /> Reset to default
@@ -456,7 +469,7 @@ export function PayrollSheetPage() {
         <div className="flex items-center justify-center h-40"><Loader2 className="size-8 text-[#1e5c97] animate-spin" /></div>
       ) : (
         <div className="bg-white rounded-2xl border border-slate-100 shadow-soft overflow-x-auto">
-          <table className="w-full text-sm whitespace-nowrap border-collapse">
+          <table className={`w-full whitespace-nowrap border-collapse ${fontCls}`}>
             <thead className="text-xs uppercase tracking-wide text-slate-500 bg-slate-50">
               <tr className={twoRowHeader ? '' : 'border-b-2 border-slate-200'}>
                 <th rowSpan={twoRowHeader ? 2 : 1} className={`${th} text-center`}></th>
@@ -516,16 +529,16 @@ export function PayrollSheetPage() {
                     {visibleDisciplines.map((d) => (
                       <Fragment key={d.key}>
                         {cols.rate && (
-                          <td className="px-1.5 py-1 text-right tabular-nums text-xs text-slate-500 border-l border-slate-100 bg-sky-50/40" title="Hourly rate (from HR)">
+                          <td className="px-1.5 py-1 text-right tabular-nums text-[0.85em] text-slate-500 border-l border-slate-100 bg-sky-50/40" title="Hourly rate (from HR)">
                             {money(num(r, d.rate))}
                           </td>
                         )}
                         <td className={`px-1.5 py-1 bg-sky-50/40 ${!cols.rate ? 'border-l border-slate-100' : ''}`}>
                           <NumBox disabled={!canEdit} value={val(r, d.cnt)} onChange={(n) => edit(id, d.cnt, n)}
-                            className="w-14 rounded-md border border-slate-200 bg-white px-1.5 py-1 text-sm text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
+                            className="w-[4em] rounded-md border border-slate-200 bg-white px-1.5 py-1 text-[length:inherit] text-right tabular-nums focus:outline-none focus:ring-2 focus:ring-[#1e5c97]/40 disabled:bg-slate-50" />
                         </td>
                         {cols.amount && (
-                          <td className="px-1.5 py-1 text-right tabular-nums text-xs font-semibold text-slate-600 bg-sky-50/40">
+                          <td className="px-1.5 py-1 text-right tabular-nums text-[0.9em] font-semibold text-slate-600 bg-sky-50/40">
                             {money(amountOf(r, d))}
                           </td>
                         )}

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { Bubbles } from '../components/Bubbles';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2, AlertCircle, ShieldCheck, ArrowLeft } from 'lucide-react';
 import {
   login, verifyMfa, resendMfa, storeAuth, storeDeviceToken,
@@ -24,6 +24,11 @@ export function LoginPage() {
   const [remember, setRemember] = useState(false);
   const [cooldown, setCooldown] = useState(0);
   const [notice, setNotice] = useState('');
+  const location = useLocation();
+  useEffect(() => {
+    if ((location.state as { reason?: string } | null)?.reason === 'idle')
+      setNotice('You were signed out after 30 minutes of inactivity. Please sign in again.');
+  }, [location.state]);
   const codeRef = useRef<HTMLInputElement>(null);
 
   // Resend cooldown ticker
